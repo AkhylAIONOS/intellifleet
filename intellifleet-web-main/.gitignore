@@ -1,0 +1,12 @@
+# --- Ignore Backend & Root Files ---
+backend/
+*.py
+*.ipynb
+mukulgit*
+requirements.txt
+package-lock.json
+
+# --- Ignore System Files ---
+.DS_Store
+.env
+node_modules/

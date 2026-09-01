@@ -1,0 +1,4 @@
+Country,City,NodeType,Name,Address,Inventory,ReorderLevel
+India,New Delhi,Capital,UPS New Delhi,"D-12/1, Okhla Industrial Area, Phase II, New Delhi 110020, India",130,28
+India,Mumbai,City,Mumbai,"Andheri-Kurla Road, Andheri East, Mumbai 400059, India",120,25
+India,Bengaluru,City,Bengaluru,"45 Outer Ring Road, Mahadevapura, Bengaluru 560048, India",110,23

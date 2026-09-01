@@ -1,0 +1,14 @@
+WarehouseName, VehicleType, VehicleCapacity, DepartureTime
+UPS New Delhi, Truck, 2000, 08:30
+UPS New Delhi, Car, 300, 10:00
+UPS New Delhi, Bike, 120, 12:15
+UPS New Delhi, Auto, 350, 15:40
+Mumbai, Truck, 1900, 09:10
+Mumbai, Car, 280, 11:45
+Mumbai, Bike, 110, 14:20
+Mumbai, Auto, 330, 17:00
+Bengaluru, Truck, 1800, 07:50
+Bengaluru, Car, 290, 09:30
+Bengaluru, Bike, 115, 13:10
+Bengaluru, Auto, 340, 16:30
+

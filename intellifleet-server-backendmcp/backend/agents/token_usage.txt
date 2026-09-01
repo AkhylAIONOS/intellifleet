@@ -1,0 +1,7 @@
+
+[2026-04-18 23:41:10] user_id=1 | call=tool_selection | input_tokens=1264 | output_tokens=4 | total_tokens=1268
+[2026-04-18 23:41:12] user_id=1 | call=param_extraction | input_tokens=189 | output_tokens=4 | total_tokens=193
+[2026-04-18 23:41:14] user_id=1 | call=llm_response | input_tokens=223 | output_tokens=81 | total_tokens=304
+[2026-04-18 23:41:37] user_id=1 | call=tool_selection | input_tokens=1361 | output_tokens=5 | total_tokens=1366
+[2026-04-18 23:41:38] user_id=1 | call=param_extraction | input_tokens=416 | output_tokens=28 | total_tokens=444
+[2026-04-18 23:41:41] user_id=1 | call=llm_response | input_tokens=293 | output_tokens=64 | total_tokens=357

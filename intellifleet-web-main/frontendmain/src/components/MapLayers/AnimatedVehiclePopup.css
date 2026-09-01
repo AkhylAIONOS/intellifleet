@@ -1,0 +1,91 @@
+/* AnimatedVehiclePopup.css */
+
+/* 1. Scoped Wrapper for Leaflet 
+   (We will apply className="vehicle-custom-popup" in the React component) 
+*/
+.vehicle-custom-popup .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border: none;
+}
+
+.vehicle-custom-popup .leaflet-popup-content {
+    margin: 0 !important;
+    width: 280px !important;
+}
+
+/* 2. Internal Card Styling */
+.vehicle-popup {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.vehicle-popup h3 {
+    margin: 0;
+    padding: 14px 16px;
+    background: white;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Data Rows */
+.vehicle-popup p {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f8fafc;
+}
+
+/* Labels (Left side of p) */
+.vehicle-popup p span.label {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Values (Right side of p) */
+.vehicle-popup p span.value {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* Special Styling for the "On Route" section */
+.vehicle-popup p:last-child {
+    border-bottom: none;
+    background: #f0fdf4;
+    /* Light Green Background */
+    margin: 8px 12px 12px 12px;
+    /* Margin to make it look like a card inside */
+    border-radius: 8px;
+    border: 1px dashed #86efac;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.vehicle-popup p:last-child span.label {
+    color: #166534;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vehicle-popup p:last-child span.value {
+    color: #14532d;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

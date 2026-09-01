@@ -1,0 +1,93 @@
+/* WarehousePopup.css */
+
+/* 1. Scoped Wrapper for Leaflet 
+   (We will apply className="warehouse-custom-popup" in the React component) 
+*/
+.warehouse-custom-popup .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border: none;
+}
+
+.warehouse-custom-popup .leaflet-popup-content {
+    margin: 0 !important;
+    width: 260px !important;
+    /* Fixed width for consistency */
+}
+
+/* 2. Internal Card Styling */
+.warehouse-popup {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #334155;
+}
+
+/* Header Section */
+.warehouse-popup h3 {
+    margin: 0;
+    padding: 14px 16px;
+    background: #f1f5f9;
+    /* Slate 100 */
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Add a building icon via CSS to the header */
+.warehouse-popup h3::before {
+    content: '🏭';
+    font-size: 16px;
+}
+
+/* Address/Body Section */
+.warehouse-popup p {
+    margin: 0;
+    padding: 12px 16px 8px 16px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* Vehicle Counts Grid */
+.warehouse-popup .vehicle-counts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Two columns */
+    gap: 12px;
+    padding: 0 16px 16px 16px;
+    margin-top: 8px;
+}
+
+.warehouse-popup .vehicle-counts small {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.warehouse-popup .vehicle-counts small:hover {
+    border-color: #cbd5e1;
+    background: #fff;
+}
+
+/* Highlight the numbers inside the small tag */
+.warehouse-popup .vehicle-counts small strong {
+    font-size: 16px;
+    color: #2563eb;
+    /* Brand Blue */
+    display: block;
+    margin-bottom: 2px;
+}

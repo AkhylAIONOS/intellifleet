@@ -1,0 +1,130 @@
+/* Route Popup Styling */
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    width: 100% !important;
+}
+
+.route-popup {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.route-popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    margin: 0;
+}
+
+.route-popup-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.route-popup-body {
+    padding: 16px 20px;
+}
+
+.route-popup-section {
+    margin-bottom: 16px;
+}
+
+.route-popup-section:last-child {
+    margin-bottom: 0;
+}
+
+.route-popup-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.route-popup-value {
+    font-size: 14px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.route-path {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.route-path-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.route-path-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.route-path-dot.start {
+    background-color: #10b981;
+}
+
+.route-path-dot.end {
+    background-color: #ef4444;
+}
+
+.route-path-arrow {
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+.route-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.route-stat-box {
+    text-align: center;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.route-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.route-stat-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.route-type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}

@@ -1,0 +1,5 @@
+Source,Destination,IntermediateLocation,RouteType
+UPS New Delhi,Mumbai,,road
+Mumbai,Bengaluru,,road
+UPS New Delhi,Bengaluru,,air
+UPS New Delhi,Mumbai,Bengaluru,road
