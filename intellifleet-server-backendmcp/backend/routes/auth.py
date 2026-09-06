@@ -1,6 +1,8 @@
 # auth.py
 
 from datetime import timedelta
+from contextlib import closing
+import secrets
 import jwt
 from fastapi import status
 from fastapi import APIRouter
@@ -14,6 +16,28 @@ from ..models.userSchema import *
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 security = HTTPBearer()    
+
+
+@router.post("/demo-access")
+async def demo_access():
+    if not settings.DEMO_ACCESS_ENABLED:
+        raise HTTPException(status_code=403, detail="Demo access is disabled")
+
+    # The canonical user schema requires a password column. Use an unknowable
+    # random password hash; visitors never supply credentials or receive it.
+    with closing(get_db_connection()) as conn, conn:
+        user = conn.execute("SELECT * FROM users WHERE email=?", ("demo@unifleet.local",)).fetchone()
+        if user is None:
+            conn.execute(
+                "INSERT OR IGNORE INTO users(first_name,last_name,email,password,verified) VALUES(?,?,?,?,1)",
+                ("UniFleet", "Demo", "demo@unifleet.local", get_password_hash(secrets.token_urlsafe(32))),
+            )
+            user = conn.execute("SELECT * FROM users WHERE email=?", ("demo@unifleet.local",)).fetchone()
+        public_user = {key: user[key] for key in ("id", "first_name", "last_name", "email")}
+
+    token = create_access_token({"user_id": public_user["id"],
+                                 **{key: value for key, value in public_user.items() if key != "id"}})
+    return {"success": True, "data": {"token": token, "user": public_user}}
 
 # ======================
 # ✅ SIGNUP

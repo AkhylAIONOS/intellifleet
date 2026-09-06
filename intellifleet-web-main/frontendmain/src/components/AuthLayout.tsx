@@ -4,7 +4,7 @@ import "../pages/Auth.css";
 
 interface AuthLayoutProps {
     children: React.ReactNode;
-    type: 'signin' | 'signup';
+    type: 'signin' | 'signup' | 'demo';
 }
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
@@ -113,7 +113,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
 
             {/* Right Panel — Auth Form */}
             <div className="auth-right-panel">
-                <div className="auth-right-inner">
+                <div className={`auth-right-inner ${type === 'demo' ? 'demo-welcome' : ''}`}>
                     {/* Mobile logo (hidden on desktop) */}
                     <div className="mobile-logo">
                         <div className="brand-logo-icon small">
@@ -123,23 +123,23 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
                                 <circle cx="21" cy="10" r="3" fill="#60efb0" />
                             </svg>
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: 18, color: '#1e1b4b' }}>IntelliFleet</span>
+                        <span style={{ fontWeight: 700, fontSize: 18, color: '#1e1b4b' }}>UniFleet</span>
                     </div>
 
                     {/* Heading */}
                     <div className="form-heading">
                         <h2 className="form-title">
-                            {type === 'signin' ? 'Welcome back' : 'Get started free'}
+                            {type === 'demo' ? 'Welcome to UniFleet' : type === 'signin' ? 'Welcome back' : 'Get started free'}
                         </h2>
                         <p className="form-subtitle">
-                            {type === 'signin'
+                            {type === 'demo' ? 'AI-Powered Supply-Chain Planning' : type === 'signin'
                                 ? 'Sign in to your fleet management dashboard'
                                 : 'Create your account and start managing smarter'}
                         </p>
                     </div>
 
                     {/* Tab switcher */}
-                    <div className="auth-tabs">
+                    {type !== 'demo' && <div className="auth-tabs">
                         <button
                             className={`auth-tab ${type === 'signin' ? 'active' : ''}`}
                             onClick={() => navigate('/login')}
@@ -153,7 +153,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
                             Sign Up
                         </button>
                         <div className={`auth-tab-indicator ${type === 'signup' ? 'right' : ''}`} />
-                    </div>
+                    </div>}
 
                     {/* Form content */}
                     <div className="auth-form-wrapper">
@@ -161,7 +161,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
                     </div>
 
                     {/* Footer */}
-                    <div className="auth-footer">
+                    {type !== 'demo' && <div className="auth-footer">
                         {/* <div className="trust-badges">
                             <span className="trust-badge">🔒 SSL Encrypted</span>
                             <span className="trust-badge">🛡️ SOC 2 Compliant</span>
@@ -174,7 +174,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
                                 <>Already have an account? <button className="auth-link" onClick={() => navigate('/login')}>Sign in</button></>
                             )}
                         </p>
-                    </div>
+                    </div>}
                 </div>
             </div>
         </div>

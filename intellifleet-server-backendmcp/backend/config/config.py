@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     GOOGLE_MAPS_API_KEY: Optional[str] = None
     
     FRONTEND_URL: Optional[str] = None
+    DEMO_ACCESS_ENABLED: bool = False
     BACKEND_URL: Optional[str] = None
 
     REDIS_URL: Optional[str] = None

@@ -424,6 +424,13 @@ body {
 }
 .auth-link:hover { color: #4f46e5; }
 
+.demo-welcome { text-align: center; }
+.demo-welcome .form-subtitle { color: #4f46e5; font-weight: 600; }
+.demo-description { color: #64748b; font-size: 16px; line-height: 1.8; margin: 0 0 28px; }
+.demo-welcome .auth-submit-btn { min-height: 54px; font-size: 17px; }
+.demo-continue { color: #64748b; font-size: 13px; margin-top: 18px; }
+.demo-entry-error { color: #b91c1c; font-size: 14px; line-height: 1.6; margin-top: 18px; }
+
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
   .auth-left-panel { display: none; }

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '../config/env';
+import { useAuthStore } from '../store/authStore';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -31,7 +32,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
-      localStorage.removeItem('authToken');
+      useAuthStore.getState().clearAuth();
       localStorage.removeItem('currentUser');
       window.location.href = '/';
     }
@@ -40,4 +41,3 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
-

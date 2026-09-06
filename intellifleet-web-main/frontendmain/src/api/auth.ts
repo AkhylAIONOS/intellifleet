@@ -2,6 +2,10 @@ import apiClient from './client';
 import type { ApiResponse, LoginRequest, SignupRequest, AuthResponse, User } from '../types/api';
 
 export const authApi = {
+  demoAccess: async (): Promise<ApiResponse<AuthResponse & { user: User }>> => {
+    const response = await apiClient.post<ApiResponse<AuthResponse & { user: User }>>('/auth/demo-access');
+    return response.data;
+  },
   // Sign in
   signin: async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
     const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/signin', credentials);
@@ -20,4 +24,3 @@ export const authApi = {
     return response.data;
   },
 };
-

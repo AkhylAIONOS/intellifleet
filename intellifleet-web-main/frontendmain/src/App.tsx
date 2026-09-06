@@ -4,6 +4,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { DemoLandingPage } from './pages/DemoLandingPage';
+import { DEMO_ACCESS_ENABLED } from './config/env';
 import './App.css';
 
 function App() {
@@ -11,8 +13,8 @@ function App() {
     <QueryProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={DEMO_ACCESS_ENABLED ? <DemoLandingPage /> : <LoginPage />} />
+          <Route path="/signup" element={DEMO_ACCESS_ENABLED ? <DemoLandingPage /> : <SignupPage />} />
           <Route
             path="/dashboard"
             element={
@@ -21,7 +23,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={DEMO_ACCESS_ENABLED ? <DemoLandingPage /> : <Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryProvider>
