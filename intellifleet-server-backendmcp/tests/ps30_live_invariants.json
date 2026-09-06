@@ -1,0 +1,30 @@
+{
+  "passed_checks": 24,
+  "checks": [
+    "plan invariants: Plan 6000 kg from Mumbai to Bengaluru using Ground.",
+    "plan invariants: Find the cheapest feasible route for 6000 kg from Bengaluru to Chennai.",
+    "plan invariants: Find the fastest feasible route for 6000 kg from Delhi to Bengaluru.",
+    "plan invariants: Plan 6000 kg from Ahmedabad to Surat balancing cost, time and risk.",
+    "plan invariants: Compare Ground and Express for 6000 kg from Kolkata to Guwahati.",
+    "plan invariants: Plan 6000 kg Mumbai to Pune with a 20% margin.",
+    "plan invariants: Plan 18000 kg Mumbai to Pune using Ground and show exact assigned loads.",
+    "plan invariants: Should I use road or air for 6000 kg from Mumbai to Bengaluru?",
+    "PS16 exact warehouse scope",
+    "plan invariants: Optimize a multi-stop 3000 kg shipment from Delhi to Mumbai stopping at Jaipur and Ahmedabad.",
+    "plan invariants: Plan 5000 kg from Delhi to Frankfurt using the best feasible international option.",
+    "plan invariants: Plan 6000 kg from Delhi to Mumbai using Ground.",
+    "plan invariants: The direct route is unavailable. Replan this shipment and show exact changes.",
+    "plan invariants: Plan 6000 kg from Mumbai to Bengaluru using Ground.",
+    "plan invariants: It broke down at Mumbai. Recover the shipment from there.",
+    "plan invariants: Plan 6000 kg from Mumbai to Bengaluru.",
+    "plan invariants: Why did you choose that option?",
+    "draft retains baseline: What if I need it 8 hours earlier?",
+    "plan invariants: Can air meet that?",
+    "draft retains baseline: What happens if fuel cost increases by 20%?",
+    "draft retains baseline: Compare it with my baseline.",
+    "PS29 apply updates active plan",
+    "draft retains baseline: Create another draft with fuel cost increased by 10%.",
+    "PS29 discard retains baseline"
+  ],
+  "scope": "Numeric and lifecycle checks only; not complete PS acceptance."
+}

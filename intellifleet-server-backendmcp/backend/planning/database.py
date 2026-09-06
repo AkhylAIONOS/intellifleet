@@ -1,10 +1,16 @@
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
+
+from backend.database.database import initialize_base_schema
 
 
 def migrate_planning_schema(db_path: str = "users.db") -> None:
-    with sqlite3.connect(db_path) as conn:
+    with closing(sqlite3.connect(db_path)) as conn, conn:
+        # The planning router can instantiate its service before app lifespan.
+        # Reuse the canonical schema, including on a fresh or partial database.
+        initialize_base_schema(conn)
         columns = {row[1] for row in conn.execute("PRAGMA table_info(warehouse_inventory)")}
         for name, definition in {
             "storage_capacity": "REAL NOT NULL DEFAULT 0",

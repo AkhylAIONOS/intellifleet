@@ -1,0 +1,1017 @@
+[
+  {
+    "group": 8,
+    "requirement": "Route Comparison",
+    "question_number": 1,
+    "question": "Compare the feasible route alternatives for 3000 kg Delhi to Mumbai. Show exact cost, ETA, risk, SLA and utilization differences and recommend one.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "candidate_count": 3,
+      "comparison_count": 2,
+      "recommended_plan_id": "1f9f23b8-da88-4154-b033-986801ff6643"
+    },
+    "latency": {
+      "planner_ms": 3.323,
+      "mcp_ms": 16.502,
+      "chat_ms": 6366.093
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 8,
+    "requirement": "Route Comparison",
+    "question_number": 2,
+    "question": "For 1200 kg Delhi to Mumbai, compare every route by cost, travel time, risk, SLA and vehicle utilization. Which route should I take?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "candidate_count": 3,
+      "comparison_count": 2,
+      "recommended_plan_id": "79cf2898-7789-44e3-8c14-b56657b9f5a8"
+    },
+    "latency": {
+      "planner_ms": 6.943,
+      "mcp_ms": 6.835,
+      "chat_ms": 5617.412
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 8,
+    "requirement": "Route Comparison",
+    "question_number": 3,
+    "question": "What are the exact differences between the cheapest route alternatives from Delhi to Mumbai for a 500 kg load?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "candidate_count": 3,
+      "comparison_count": 2,
+      "recommended_plan_id": "936efec6-7a75-4c6f-b9d1-d28f29866969"
+    },
+    "latency": {
+      "planner_ms": 7.101,
+      "mcp_ms": 6.935,
+      "chat_ms": 14916.795
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 8,
+    "requirement": "Route Comparison",
+    "question_number": 4,
+    "question": "Compare Delhi to Mumbai routes for 6000 kg and recommend the fastest feasible one, with exact deltas.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "candidate_count": 3,
+      "comparison_count": 2,
+      "recommended_plan_id": "1ff2f29c-f36b-426a-aad2-bb134d633574"
+    },
+    "latency": {
+      "planner_ms": 6.977,
+      "mcp_ms": 6.941,
+      "chat_ms": 9216.515
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 8,
+    "requirement": "Route Comparison",
+    "question_number": 5,
+    "question": "I need the lowest-risk route for 2500 kg Delhi to Mumbai. Compare alternatives including cost, ETA, SLA, risk, and utilization differences.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "candidate_count": 3,
+      "comparison_count": 2,
+      "recommended_plan_id": "cffef175-936d-467d-bf2f-e51677ce0db9"
+    },
+    "latency": {
+      "planner_ms": 7.273,
+      "mcp_ms": 6.993,
+      "chat_ms": 6026.434
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 9,
+    "requirement": "Disruption Risk",
+    "question_number": 1,
+    "question": "Assess disruption risk for 3000 kg Delhi to Mumbai and recommend a balanced plan.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "risk_score": 0.1815,
+      "risk_breakdown": {
+        "route": 0.28,
+        "vehicle": 0.15,
+        "weather": 0.06,
+        "warehouse": 0.1,
+        "mode": 0.18,
+        "overall": 0.1815
+      },
+      "tool": "unified_supply_chain_plan"
+    },
+    "latency": {
+      "planner_ms": 6.578,
+      "mcp_ms": 24.53,
+      "chat_ms": 5986.165
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 9,
+    "requirement": "Disruption Risk",
+    "question_number": 2,
+    "question": "Find the lowest-risk way to ship 1200 kg from Delhi to Mumbai and show the risk components.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "risk_score": 0.1076,
+      "risk_breakdown": {
+        "route": 0.166,
+        "vehicle": 0.08,
+        "weather": 0.03,
+        "warehouse": 0.1,
+        "mode": 0.1,
+        "overall": 0.1076
+      },
+      "tool": "unified_supply_chain_plan"
+    },
+    "latency": {
+      "planner_ms": 6.413,
+      "mcp_ms": 7.31,
+      "chat_ms": 3987.5
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 9,
+    "requirement": "Disruption Risk",
+    "question_number": 3,
+    "question": "What is the risk of the cheapest feasible Delhi to Mumbai route for 500 kg?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "risk_score": 0.169,
+      "risk_breakdown": {
+        "route": 0.28,
+        "vehicle": 0.1,
+        "weather": 0.06,
+        "warehouse": 0.1,
+        "mode": 0.18,
+        "overall": 0.169
+      },
+      "tool": "unified_supply_chain_plan"
+    },
+    "latency": {
+      "planner_ms": 7.161,
+      "mcp_ms": 7.348,
+      "chat_ms": 3876.366
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 9,
+    "requirement": "Disruption Risk",
+    "question_number": 4,
+    "question": "Can 6000 kg go Delhi to Mumbai with maximum risk 0.20? Show the deterministic risk breakdown.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "risk_score": 0.1765,
+      "risk_breakdown": {
+        "route": 0.28,
+        "vehicle": 0.13,
+        "weather": 0.06,
+        "warehouse": 0.1,
+        "mode": 0.18,
+        "overall": 0.1765
+      },
+      "tool": "unified_supply_chain_plan"
+    },
+    "latency": {
+      "planner_ms": 7.224,
+      "mcp_ms": 7.331,
+      "chat_ms": 4179.833
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 9,
+    "requirement": "Disruption Risk",
+    "question_number": 5,
+    "question": "Assess route, vehicle, warehouse, weather and mode risk for the fastest 2500 kg Delhi to Mumbai plan.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "risk_score": 0.1076,
+      "risk_breakdown": {
+        "route": 0.166,
+        "vehicle": 0.08,
+        "weather": 0.03,
+        "warehouse": 0.1,
+        "mode": 0.1,
+        "overall": 0.1076
+      },
+      "tool": "unified_supply_chain_plan"
+    },
+    "latency": {
+      "planner_ms": 6.255,
+      "mcp_ms": 7.306,
+      "chat_ms": 4494.877
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 10,
+    "requirement": "Disruption Mitigation",
+    "question_number": 1,
+    "question": "The direct route from Delhi to Mumbai is blocked. Run disruption mitigation for 3000 kg Delhi to Mumbai and compare the recovery plan.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "mode": "road",
+      "cost": 186956.7,
+      "risk": 0.168
+    },
+    "latency": {
+      "planner_ms": 15.899,
+      "mcp_ms": 35.301,
+      "chat_ms": 12947.02
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 10,
+    "requirement": "Disruption Mitigation",
+    "question_number": 2,
+    "question": "Truck TRK-003 is unavailable. Mitigate that vehicle disruption and replan 3000 kg from Delhi to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "mode": "road",
+      "cost": 227970.0,
+      "risk": 0.1673
+    },
+    "latency": {
+      "planner_ms": 14.842,
+      "mcp_ms": 15.178,
+      "chat_ms": 7334.549
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 10,
+    "requirement": "Disruption Mitigation",
+    "question_number": 3,
+    "question": "The Jaipur warehouse is unavailable. Run warehouse disruption mitigation for 3000 kg from Delhi to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "mode": "road",
+      "cost": 188505.0,
+      "risk": 0.1815
+    },
+    "latency": {
+      "planner_ms": 14.116,
+      "mcp_ms": 14.785,
+      "chat_ms": 8373.271
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 10,
+    "requirement": "Disruption Mitigation",
+    "question_number": 4,
+    "question": "Assume disruption risk increases by 0.2. Mitigate and replan 3000 kg from Delhi to Mumbai with a baseline comparison.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "mode": "road",
+      "cost": 188505.0,
+      "risk": 0.2515
+    },
+    "latency": {
+      "planner_ms": 14.195,
+      "mcp_ms": 14.675,
+      "chat_ms": 6504.465
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 10,
+    "requirement": "Disruption Mitigation",
+    "question_number": 5,
+    "question": "Air is the only available mode after a mode disruption. Replan 3000 kg Delhi to Mumbai and compare it with baseline.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "mode": "air",
+      "cost": 724930.0,
+      "risk": 0.1076
+    },
+    "latency": {
+      "planner_ms": 13.708,
+      "mcp_ms": 14.422,
+      "chat_ms": 11421.484
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 11,
+    "requirement": "Vehicle Selection",
+    "question_number": 1,
+    "question": "Select a suitable vehicle for a small 50 kg road shipment from Delhi to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "vehicles": [
+        "TRK-001"
+      ],
+      "capacity": 12000,
+      "utilization": 0.0042
+    },
+    "latency": {
+      "planner_ms": 9.165,
+      "mcp_ms": 26.109,
+      "chat_ms": 7153.622
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 11,
+    "requirement": "Vehicle Selection",
+    "question_number": 2,
+    "question": "Select vehicles for a 6000 kg road shipment from Delhi to Mumbai and show capacity and utilization.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "vehicles": [
+        "TRK-002"
+      ],
+      "capacity": 7000,
+      "utilization": 0.8571
+    },
+    "latency": {
+      "planner_ms": 8.595,
+      "mcp_ms": 9.886,
+      "chat_ms": 7056.127
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 11,
+    "requirement": "Vehicle Selection",
+    "question_number": 3,
+    "question": "Plan road vehicle capacity for a 9000 kg load Delhi to Mumbai; use multiple vehicles if required.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "vehicles": [
+        "TRK-001"
+      ],
+      "capacity": 12000,
+      "utilization": 0.75
+    },
+    "latency": {
+      "planner_ms": 16.811,
+      "mcp_ms": 17.957,
+      "chat_ms": 8368.52
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 11,
+    "requirement": "Vehicle Selection",
+    "question_number": 4,
+    "question": "TRK-003 is unavailable. Select other road vehicles for 3000 kg Delhi to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "vehicles": [
+        "TRK-002"
+      ],
+      "capacity": 7000,
+      "utilization": 0.4286
+    },
+    "latency": {
+      "planner_ms": 11.173,
+      "mcp_ms": 11.11,
+      "chat_ms": 9373.497
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 11,
+    "requirement": "Vehicle Selection",
+    "question_number": 5,
+    "question": "Choose a reliable road vehicle with enough range and capacity for 2500 kg from Delhi to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "vehicles": [
+        "TRK-001"
+      ],
+      "capacity": 12000,
+      "utilization": 0.2083
+    },
+    "latency": {
+      "planner_ms": 9.322,
+      "mcp_ms": 9.982,
+      "chat_ms": 9909.424
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 12,
+    "requirement": "Road vs Air",
+    "question_number": 1,
+    "question": "Urgently compare road versus air for 500 kg Delhi to Mumbai and recommend the fastest option.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "recommended_mode": "air",
+      "additional_cost": 386745.0,
+      "time_saved": 12.67
+    },
+    "latency": {
+      "planner_ms": 18.53,
+      "mcp_ms": 35.854,
+      "chat_ms": 8111.345
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 12,
+    "requirement": "Road vs Air",
+    "question_number": 2,
+    "question": "Compare ground versus express for a heavy 9000 kg Delhi to Mumbai shipment and recommend the best overall tradeoff.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "recommended_mode": "road",
+      "additional_cost": 1006940.0,
+      "time_saved": 13.33
+    },
+    "latency": {
+      "planner_ms": 17.454,
+      "mcp_ms": 17.995,
+      "chat_ms": 6642.88
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 12,
+    "requirement": "Road vs Air",
+    "question_number": 3,
+    "question": "Compare road versus air for 3000 kg Delhi to Mumbai with delivery deadline 2026-09-03T22:17:32+00:00. Show SLA results.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "recommended_mode": "air",
+      "additional_cost": 524275.0,
+      "time_saved": 13.0
+    },
+    "latency": {
+      "planner_ms": 17.563,
+      "mcp_ms": 19.066,
+      "chat_ms": 4915.273
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 12,
+    "requirement": "Road vs Air",
+    "question_number": 4,
+    "question": "Cost matters most: compare road versus air for 6000 kg Delhi to Mumbai and recommend the cheapest.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "recommended_mode": "road",
+      "additional_cost": 771775.0,
+      "time_saved": 13.0
+    },
+    "latency": {
+      "planner_ms": 17.941,
+      "mcp_ms": 18.561,
+      "chat_ms": 4364.784
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 12,
+    "requirement": "Road vs Air",
+    "question_number": 5,
+    "question": "Risk matters most: compare road versus air for 2500 kg Delhi to Mumbai and recommend the safest.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "recommended_mode": "air",
+      "additional_cost": 467895.4,
+      "time_saved": 17.82
+    },
+    "latency": {
+      "planner_ms": 17.694,
+      "mcp_ms": 18.446,
+      "chat_ms": 4448.712
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 13,
+    "requirement": "Vehicle Breakdown Recovery",
+    "question_number": 1,
+    "question": "TRK-003 broke down at Delhi with 500 kg remaining. Recover shipment to Mumbai.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "replacement_vehicles": [
+        "TRK-002"
+      ],
+      "additional_cost": 0,
+      "duration_hours": 20.84,
+      "sla_met": null
+    },
+    "latency": {
+      "planner_ms": 13.748,
+      "mcp_ms": 31.254,
+      "chat_ms": 9045.147
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 13,
+    "requirement": "Vehicle Breakdown Recovery",
+    "question_number": 2,
+    "question": "TRK-002 broke down at Delhi with 6000 kg remaining. Recover shipment to Mumbai and assign enough replacement capacity.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "replacement_vehicles": [
+        "TRK-001"
+      ],
+      "additional_cost": 0,
+      "duration_hours": 21.5,
+      "sla_met": null
+    },
+    "latency": {
+      "planner_ms": 13.428,
+      "mcp_ms": 14.113,
+      "chat_ms": 5701.839
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 13,
+    "requirement": "Vehicle Breakdown Recovery",
+    "question_number": 3,
+    "question": "TRK-001 broke down at Delhi with 9000 kg remaining. Recover shipment to Mumbai using multiple replacements if needed.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "replacement_vehicles": [
+        "AIR-079"
+      ],
+      "additional_cost": 0,
+      "duration_hours": 9.09,
+      "sla_met": null
+    },
+    "latency": {
+      "planner_ms": 13.034,
+      "mcp_ms": 13.912,
+      "chat_ms": 7239.97
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 13,
+    "requirement": "Vehicle Breakdown Recovery",
+    "question_number": 4,
+    "question": "CAR-004 broke down at Delhi with 250 kg remaining. Recover shipment to Mumbai and show transfer and repositioning.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "replacement_vehicles": [
+        "TRK-001"
+      ],
+      "additional_cost": 0,
+      "duration_hours": 21.5,
+      "sla_met": null
+    },
+    "latency": {
+      "planner_ms": 12.999,
+      "mcp_ms": 13.975,
+      "chat_ms": 5198.708
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 13,
+    "requirement": "Vehicle Breakdown Recovery",
+    "question_number": 5,
+    "question": "BIK-005 broke down at Delhi with 50 kg remaining. Recover shipment to Mumbai by 2026-09-03T20:28:49+00:00 and show SLA impact.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "replacement_vehicles": [
+        "AIR-078"
+      ],
+      "additional_cost": 0,
+      "duration_hours": 9.75,
+      "sla_met": false
+    },
+    "latency": {
+      "planner_ms": 13.135,
+      "mcp_ms": 13.869,
+      "chat_ms": 6220.138
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 14,
+    "requirement": "Alternative Warehouse",
+    "question_number": 1,
+    "question": "Find the best alternative warehouse to fulfill 100 units totaling 1000 kg to Noida using the cheapest option.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Delhi NCR Mega Hub"
+      ],
+      "allocation_total": 100,
+      "total_cost": 5786.0,
+      "eta_hours": 2.42
+    },
+    "latency": {
+      "planner_ms": 76.42,
+      "mcp_ms": 100.131,
+      "chat_ms": 6365.591
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 14,
+    "requirement": "Alternative Warehouse",
+    "question_number": 2,
+    "question": "Which alternative warehouse should fulfill 80 units totaling 800 kg to Gurugram with the fastest delivery?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Delhi NCR Mega Hub"
+      ],
+      "allocation_total": 80,
+      "total_cost": 6308.0,
+      "eta_hours": 2.67
+    },
+    "latency": {
+      "planner_ms": 73.761,
+      "mcp_ms": 75.312,
+      "chat_ms": 6704.988
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 14,
+    "requirement": "Alternative Warehouse",
+    "question_number": 3,
+    "question": "Rank alternative warehouses to fulfill 120 units totaling 1200 kg to Mysuru with the lowest risk.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Bengaluru South Hub"
+      ],
+      "allocation_total": 120,
+      "total_cost": 18471.83,
+      "eta_hours": 4.36
+    },
+    "latency": {
+      "planner_ms": 76.587,
+      "mcp_ms": 77.105,
+      "chat_ms": 6502.931
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 14,
+    "requirement": "Alternative Warehouse",
+    "question_number": 4,
+    "question": "Find an alternative warehouse to fulfill 90 units totaling 900 kg to Nashik using the best overall tradeoff.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Delhi NCR Mega Hub"
+      ],
+      "allocation_total": 90,
+      "total_cost": 129751.8,
+      "eta_hours": 24.17
+    },
+    "latency": {
+      "planner_ms": 75.516,
+      "mcp_ms": 76.672,
+      "chat_ms": 6402.204
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 14,
+    "requirement": "Alternative Warehouse",
+    "question_number": 5,
+    "question": "Rank connected alternative warehouses to fulfill 100 units totaling 1000 kg to Coimbatore using the cheapest allocation.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Mumbai West Hub"
+      ],
+      "allocation_total": 100,
+      "total_cost": 321620.0,
+      "eta_hours": 23.25
+    },
+    "latency": {
+      "planner_ms": 76.733,
+      "mcp_ms": 85.05,
+      "chat_ms": 7919.115
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 15,
+    "requirement": "Multi-Warehouse Fulfilment",
+    "question_number": 1,
+    "question": "Can multiple warehouses cover 1,500 units totaling 12000 kg to Mumbai using the cheapest allocation?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Mumbai West Hub",
+        "IF Delhi NCR Mega Hub"
+      ],
+      "allocation_total": 1500,
+      "total_cost": 497484.6,
+      "eta_hours": 24.49
+    },
+    "latency": {
+      "planner_ms": 72.272,
+      "mcp_ms": 75.391,
+      "chat_ms": 9067.88
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 15,
+    "requirement": "Multi-Warehouse Fulfilment",
+    "question_number": 2,
+    "question": "Build a multi-warehouse allocation to fulfill 1,000 units totaling 8000 kg to Kochi using the cheapest option.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Kochi South Hub",
+        "IF Mumbai West Hub"
+      ],
+      "allocation_total": 1000,
+      "total_cost": 520829.99,
+      "eta_hours": 33.14
+    },
+    "latency": {
+      "planner_ms": 74.995,
+      "mcp_ms": 74.993,
+      "chat_ms": 9476.634
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 15,
+    "requirement": "Multi-Warehouse Fulfilment",
+    "question_number": 3,
+    "question": "Can warehouses cover 1,200 units totaling 9000 kg to Nashik with the fastest feasible allocation?",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Delhi NCR Mega Hub",
+        "IF Mumbai West Hub"
+      ],
+      "allocation_total": 1200,
+      "total_cost": 1401381.0,
+      "eta_hours": 9.92
+    },
+    "latency": {
+      "planner_ms": 84.862,
+      "mcp_ms": 77.269,
+      "chat_ms": 7411.699
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 15,
+    "requirement": "Multi-Warehouse Fulfilment",
+    "question_number": 4,
+    "question": "Use multiple warehouses to fulfill 1,000 units totaling 8000 kg to Mysuru with the lowest risk.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Mumbai West Hub",
+        "IF Bengaluru South Hub"
+      ],
+      "allocation_total": 1000,
+      "total_cost": 1091821.99,
+      "eta_hours": 8.61
+    },
+    "latency": {
+      "planner_ms": 75.405,
+      "mcp_ms": 76.072,
+      "chat_ms": 5797.079
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  },
+  {
+    "group": 15,
+    "requirement": "Multi-Warehouse Fulfilment",
+    "question_number": 5,
+    "question": "Find a multi-warehouse allocation to fulfill 1,200 units totaling 9000 kg to Coimbatore using the best overall tradeoff.",
+    "service_status": "PASS",
+    "mcp_status": "PASS",
+    "chat_status": "PASS",
+    "validation": {
+      "warehouses": [
+        "IF Bengaluru South Hub",
+        "IF Mumbai West Hub"
+      ],
+      "allocation_total": 1200,
+      "total_cost": 1440950.0,
+      "eta_hours": 23.25
+    },
+    "latency": {
+      "planner_ms": 76.35,
+      "mcp_ms": 76.873,
+      "chat_ms": 8641.878
+    },
+    "failure_reason": null,
+    "root_cause": null,
+    "bugs_fixed": [],
+    "final_status": "PASS"
+  }
+]

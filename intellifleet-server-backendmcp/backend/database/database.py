@@ -1,6 +1,7 @@
 # database.py
 
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from passlib.context import CryptContext
 from backend.config.logger import logger
@@ -16,9 +17,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Database setup
 DATABASE_URL = settings.DATABASE_URL
 
-def init_db():
-    
-    conn = sqlite3.connect('users.db')
+def init_db(db_path: str = "users.db"):
+    """Create the canonical empty schema without replacing existing tables or rows."""
+    with closing(sqlite3.connect(db_path)) as conn, conn:
+        initialize_base_schema(conn)
+    logger.info("Database initialized successfully")
+
+
+def initialize_base_schema(conn: sqlite3.Connection) -> None:
+    """Create base tables on the caller's connection before additive migrations."""
     cursor = conn.cursor()
     
     cursor.execute("PRAGMA foreign_keys = ON;")
@@ -241,10 +248,6 @@ def init_db():
 
     # multimodal_routes
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_multimodal_routes_user ON multimodal_routes(user_id)')
-
-    conn.commit()
-    conn.close()
-    logger.info("Database initialized successfully")
 
 
 def get_db_connection():

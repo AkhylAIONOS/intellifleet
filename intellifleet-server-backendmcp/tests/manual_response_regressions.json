@@ -1,0 +1,47 @@
+[
+  {
+    "case": "PS1",
+    "status": "PASS",
+    "latency_ms": 4932.618,
+    "failure": null,
+    "tool": "unified_supply_chain_plan",
+    "mode": "multimodal",
+    "candidate_count": 3
+  },
+  {
+    "case": "PS2",
+    "status": "PASS",
+    "latency_ms": 4813.034,
+    "failure": null,
+    "tool": "unified_supply_chain_plan",
+    "mode": "road",
+    "candidate_count": 3
+  },
+  {
+    "case": "PS3",
+    "status": "PASS",
+    "latency_ms": 8084.663,
+    "failure": null,
+    "tool": "unified_supply_chain_plan",
+    "mode": "air",
+    "candidate_count": 3
+  },
+  {
+    "case": "PS4",
+    "status": "PASS",
+    "latency_ms": 3583.37,
+    "failure": null,
+    "tool": "unified_supply_chain_plan",
+    "mode": "road",
+    "candidate_count": 3
+  },
+  {
+    "case": "PS5",
+    "status": "PASS",
+    "latency_ms": 6051.284,
+    "failure": null,
+    "tool": "supply_chain_planning_operation",
+    "mode": "road",
+    "candidate_count": 5
+  }
+]

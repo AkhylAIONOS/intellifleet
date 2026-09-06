@@ -1,0 +1,4895 @@
+[
+  {
+    "name": "context_6000",
+    "passed": true,
+    "first": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "For this shipment, I'd recommend the Ground plan.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nShipment: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub; weight 6000.0 kg; quantity 1.\n\nRoute:\n- IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub (road, 1400.0 km, 18.5 hours)\n\nVehicles:\n- TRK-002 (Truck): capacity 7000 kg, assigned load 6,000 kg, utilization 85.71%\n\nOperational cost: \u20b9349,155.00.\nCost breakdown\n- Base Transport: \u20b9297,000.00\n- Distance Cost: \u20b937,800.00\n- Toll Cost: \u20b94,300.00\n- Fixed Dispatch Cost: \u20b92,100.00\n- Driver Time Cost: \u20b97,955.00\n\nETA: 19.67 hours; expected arrival 06 Sep 2026, 03:32 UTC.\n\nRisk: 17.65%; reliability 94.00%.\nRisk profile\n- Route: 28.00%\n- Vehicle: 13.00%\n- Weather: 6.00%\n- Warehouse: 10.00%\n- Mode: 18.00%\n- Overall: 17.65%\n\nSLA was not evaluated because no delivery deadline was provided.\n\nBalanced score: 0.5483.\nBalanced scoring\n- Normalized Cost: 0.9968\n- Normalized Time: 0.8032\n- Normalized Risk: 0.1765\n- Reliability Penalty: 0.0600\n- Utilization Penalty: 0.1429\n- Weighted Contributions Cost: 0.2990\n- Weighted Contributions Eta: 0.2008\n- Weighted Contributions Risk: 0.0353\n- Weighted Contributions Reliability: 0.0060\n- Weighted Contributions Utilization: 0.0071\n- Balanced Score: 0.5483\n\nFeasible alternatives:\n- Ground / Road alternative: cost \u20b9350,284.60, ETA 24.49 hours, risk 0.153, reliability 0.96, score 0.6096; cost delta 1129.6, ETA delta 4.82 hours, Ground / Road lowers risk by 2.35 percentage points, utilization delta -0.3571. Route: IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub \u2192 IF Ahmedabad West Hub \u2192 IF Mumbai West Hub",
+        "actions": [
+          {
+            "type": "unified_supply_chain_plan",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 6000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [
+                {
+                  "plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:33.956984+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                },
+                {
+                  "plan_id": "d67e3878-6912-4d32-ab68-42791e3b0256",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:21:45.956750+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                }
+              ],
+              "recommended_plan": {
+                "plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+                "mode": "road",
+                "route_legs": [
+                  {
+                    "route_id": 5,
+                    "from_location": "IF Delhi NCR Mega Hub",
+                    "to_location": "IF Mumbai West Hub",
+                    "distance": 1400.0,
+                    "duration": 18.5,
+                    "cost": 49500.0,
+                    "route_type": "road",
+                    "reliability": 0.94,
+                    "weather_risk": 0.06,
+                    "operational_risk": 0.08,
+                    "toll_cost": 4300.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 49500.0,
+                    "capacity_per_day_kg": 36000.0,
+                    "current_utilization_pct": 82.0,
+                    "service_class": "Ground",
+                    "express_eligible": 0,
+                    "sla_hours": 24.0,
+                    "carbon_kg": 1210.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 28.5355,
+                      "lng": 77.271
+                    },
+                    "destination_coords": {
+                      "lat": 19.1136,
+                      "lng": 72.8697
+                    }
+                  }
+                ],
+                "distance_km": 1400.0,
+                "duration_hours": 19.67,
+                "eta": "2026-09-06T03:32:33.956984+00:00",
+                "operational_cost": 349155.0,
+                "cost_breakdown": {
+                  "base_transport": 297000.0,
+                  "distance_cost": 37800.0,
+                  "fuel_cost": 0.0,
+                  "toll_cost": 4300.0,
+                  "fixed_dispatch_cost": 2100.0,
+                  "driver_time_cost": 7955.0,
+                  "vehicle_cost": 0.0,
+                  "handling_cost": 0.0,
+                  "air_cost": 0.0,
+                  "other_cost": 0.0
+                },
+                "selling_price": 436443.75,
+                "expected_revenue": 436443.75,
+                "profit": 87288.75,
+                "margin_percentage": 20.0,
+                "risk_score": 0.1765,
+                "risk_breakdown": {
+                  "route": 0.28,
+                  "vehicle": 0.13,
+                  "weather": 0.06,
+                  "warehouse": 0.1,
+                  "mode": 0.18,
+                  "overall": 0.1765
+                },
+                "reliability": 0.94,
+                "sla_met": null,
+                "deadline": null,
+                "sla_slack_hours": null,
+                "sla_delay_hours": null,
+                "vehicles": [
+                  {
+                    "id": 11006,
+                    "label": "TRK-002",
+                    "type": "Truck",
+                    "capacity": 7000,
+                    "assigned_load_kg": 6000.0,
+                    "utilization_percentage": 85.71
+                  }
+                ],
+                "vehicle_utilization": 0.8571,
+                "product": "Ground",
+                "warnings": [],
+                "inventory_allocation": [
+                  {
+                    "warehouse_id": 1,
+                    "warehouse": "IF Delhi NCR Mega Hub",
+                    "quantity": 1,
+                    "available_before": 1100
+                  }
+                ],
+                "score_components": {
+                  "normalized_cost": 0.996775,
+                  "normalized_time": 0.803185,
+                  "normalized_risk": 0.1765,
+                  "reliability_penalty": 0.06,
+                  "sla_penalty": 0,
+                  "utilization_penalty": 0.1429,
+                  "weighted_contributions": {
+                    "cost": 0.299033,
+                    "eta": 0.200796,
+                    "risk": 0.0353,
+                    "reliability": 0.006,
+                    "sla": 0.0,
+                    "utilization": 0.007145
+                  },
+                  "balanced_score": 0.5483
+                },
+                "score": 0.5483
+              },
+              "reason": "Choose plan bb798f8c-6e95-4511-819b-5518ffe285f4 (road): calculated cost \u20b9349,155.00, ETA 19.67 hours, risk 17.6%; SLA was not evaluated because no delivery deadline was provided.",
+              "comparison": [
+                {
+                  "plan_id": "d67e3878-6912-4d32-ab68-42791e3b0256",
+                  "cost_difference": 1129.6,
+                  "money_saved": 1129.6,
+                  "money_lost": 0,
+                  "time_difference_hours": 4.82,
+                  "time_saved_hours": 4.82,
+                  "time_lost_hours": 0,
+                  "risk_difference": -0.0235,
+                  "sla_difference": {
+                    "recommended": null,
+                    "alternative": null
+                  },
+                  "utilization_difference": -0.3571
+                }
+              ],
+              "recommended_plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+              "explanation_inputs": {
+                "recommended": {
+                  "plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:33.956984+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                },
+                "comparisons": [
+                  {
+                    "plan_id": "d67e3878-6912-4d32-ab68-42791e3b0256",
+                    "cost_difference": 1129.6,
+                    "money_saved": 1129.6,
+                    "money_lost": 0,
+                    "time_difference_hours": 4.82,
+                    "time_saved_hours": 4.82,
+                    "time_lost_hours": 0,
+                    "risk_difference": -0.0235,
+                    "sla_difference": {
+                      "recommended": null,
+                      "alternative": null
+                    },
+                    "utilization_difference": -0.3571
+                  }
+                ]
+              },
+              "warnings": [],
+              "feasibility": null
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 6000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 6000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 5,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 1400.0,
+              "duration": 18.5,
+              "cost": 49500.0,
+              "route_type": "road",
+              "reliability": 0.94,
+              "weather_risk": 0.06,
+              "operational_risk": 0.08,
+              "toll_cost": 4300.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 49500.0,
+              "capacity_per_day_kg": 36000.0,
+              "current_utilization_pct": 82.0,
+              "service_class": "Ground",
+              "express_eligible": 0,
+              "sla_hours": 24.0,
+              "carbon_kg": 1210.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1400.0,
+          "duration_hours": 19.67,
+          "eta": "2026-09-06T03:32:33.956984+00:00",
+          "operational_cost": 349155.0,
+          "cost_breakdown": {
+            "base_transport": 297000.0,
+            "distance_cost": 37800.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 4300.0,
+            "fixed_dispatch_cost": 2100.0,
+            "driver_time_cost": 7955.0,
+            "vehicle_cost": 0.0,
+            "handling_cost": 0.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 436443.75,
+          "expected_revenue": 436443.75,
+          "profit": 87288.75,
+          "margin_percentage": 20.0,
+          "risk_score": 0.1765,
+          "risk_breakdown": {
+            "route": 0.28,
+            "vehicle": 0.13,
+            "weather": 0.06,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.1765
+          },
+          "reliability": 0.94,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11006,
+              "label": "TRK-002",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6000.0,
+              "utilization_percentage": 85.71
+            }
+          ],
+          "vehicle_utilization": 0.8571,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.996775,
+            "normalized_time": 0.803185,
+            "normalized_risk": 0.1765,
+            "reliability_penalty": 0.06,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.1429,
+            "weighted_contributions": {
+              "cost": 0.299033,
+              "eta": 0.200796,
+              "risk": 0.0353,
+              "reliability": 0.006,
+              "sla": 0.0,
+              "utilization": 0.007145
+            },
+            "balanced_score": 0.5483
+          },
+          "score": 0.5483
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+        "route_legs": [
+          {
+            "route_id": 5,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 1400.0,
+            "duration": 18.5,
+            "cost": 49500.0,
+            "route_type": "road",
+            "reliability": 0.94,
+            "weather_risk": 0.06,
+            "operational_risk": 0.08,
+            "toll_cost": 4300.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 49500.0,
+            "capacity_per_day_kg": 36000.0,
+            "current_utilization_pct": 82.0,
+            "service_class": "Ground",
+            "express_eligible": 0,
+            "sla_hours": 24.0,
+            "carbon_kg": 1210.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          5
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11006,
+            "label": "TRK-002",
+            "type": "Truck",
+            "capacity": 7000,
+            "assigned_load_kg": 6000.0,
+            "utilization_percentage": 85.71
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 349155.0,
+        "eta": "2026-09-06T03:32:33.956984+00:00",
+        "duration_hours": 19.67,
+        "risk": 0.1765,
+        "reliability": 0.94
+      }
+    },
+    "second": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "For this shipment, I'd recommend the Ground plan.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nWhat changed (before \u2192 after):\n- Mode: Ground / Road \u2192 Ground / Road\n- Route: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub \u2192 IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub \u2192 IF Ahmedabad West Hub \u2192 IF Mumbai West Hub\n- Vehicle: TRK-002 \u2192 TRK-001\n- Cost: \u20b9349,155.00 \u2192 \u20b9350,284.60 (delta \u20b91,129.60)\n- ETA: 19.67 hours \u2192 24.49 hours (delta +4.82 hours)\n- Risk: 17.65% \u2192 15.30% (delta -2.35 percentage points)\n\nShipment: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub; weight 6000.0 kg; quantity 1.\n\nRoute:\n- IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub (road, 303.32 km, 4.4 hours)\n- IF Jaipur North Hub \u2192 IF Ahmedabad West Hub (road, 657.1 km, 9.54 hours)\n- IF Ahmedabad West Hub \u2192 IF Mumbai West Hub (road, 554.58 km, 8.05 hours)\n\nVehicles:\n- TRK-001 (Truck): capacity 12000 kg, assigned load 6,000 kg, utilization 50.0%\n\nOperational cost: \u20b9350,284.60.\nCost breakdown\n- Base Transport: \u20b9273,000.00\n- Distance Cost: \u20b951,510.00\n- Toll Cost: \u20b910,800.00\n- Fixed Dispatch Cost: \u20b92,600.00\n- Driver Time Cost: \u20b911,874.60\n- Handling Cost: \u20b9500.00\n\nETA: 24.49 hours; expected arrival 06 Sep 2026, 08:21 UTC.\n\nRisk: 15.30%; reliability 96.00%.\nRisk profile\n- Route: 25.00%\n- Vehicle: 9.00%\n- Weather: 4.00%\n- Warehouse: 10.00%\n- Mode: 18.00%\n- Overall: 15.30%\n\nSLA was not evaluated because no delivery deadline was provided.\n\nBalanced score: 0.6096.\nBalanced scoring\n- Normalized Cost: 1.0000\n- Normalized Time: 1.0000\n- Normalized Risk: 0.1530\n- Reliability Penalty: 0.0400\n- Utilization Penalty: 0.5000\n- Weighted Contributions Cost: 0.3000\n- Weighted Contributions Eta: 0.2500\n- Weighted Contributions Risk: 0.0306\n- Weighted Contributions Reliability: 0.0040\n- Weighted Contributions Utilization: 0.0250\n- Balanced Score: 0.6096",
+        "actions": [
+          {
+            "type": "supply_chain_planning_operation",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 6000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [
+                {
+                  "plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:21:52.342503+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                }
+              ],
+              "recommended_plan": {
+                "plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+                "mode": "road",
+                "route_legs": [
+                  {
+                    "route_id": 600,
+                    "from_location": "IF Delhi NCR Mega Hub",
+                    "to_location": "IF Jaipur North Hub",
+                    "distance": 303.32,
+                    "duration": 4.4,
+                    "cost": 9109.64,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 9109.64,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 28.5355,
+                      "lng": 77.271
+                    },
+                    "destination_coords": {
+                      "lat": 26.7732,
+                      "lng": 75.8415
+                    }
+                  },
+                  {
+                    "route_id": 601,
+                    "from_location": "IF Jaipur North Hub",
+                    "to_location": "IF Ahmedabad West Hub",
+                    "distance": 657.1,
+                    "duration": 9.54,
+                    "cost": 19734.56,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 19734.56,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 26.7732,
+                      "lng": 75.8415
+                    },
+                    "destination_coords": {
+                      "lat": 23.0753,
+                      "lng": 72.6401
+                    }
+                  },
+                  {
+                    "route_id": 602,
+                    "from_location": "IF Ahmedabad West Hub",
+                    "to_location": "IF Mumbai West Hub",
+                    "distance": 554.58,
+                    "duration": 8.05,
+                    "cost": 16655.8,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 16655.8,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 23.0753,
+                      "lng": 72.6401
+                    },
+                    "destination_coords": {
+                      "lat": 19.1136,
+                      "lng": 72.8697
+                    }
+                  }
+                ],
+                "distance_km": 1515.0,
+                "duration_hours": 24.49,
+                "eta": "2026-09-06T08:21:52.342503+00:00",
+                "operational_cost": 350284.6,
+                "cost_breakdown": {
+                  "base_transport": 273000.0,
+                  "distance_cost": 51510.0,
+                  "fuel_cost": 0.0,
+                  "toll_cost": 10800.0,
+                  "fixed_dispatch_cost": 2600.0,
+                  "driver_time_cost": 11874.6,
+                  "vehicle_cost": 0.0,
+                  "handling_cost": 500.0,
+                  "air_cost": 0.0,
+                  "other_cost": 0.0
+                },
+                "selling_price": 437855.75,
+                "expected_revenue": 437855.75,
+                "profit": 87571.15,
+                "margin_percentage": 20.0,
+                "risk_score": 0.153,
+                "risk_breakdown": {
+                  "route": 0.25,
+                  "vehicle": 0.09,
+                  "weather": 0.04,
+                  "warehouse": 0.1,
+                  "mode": 0.18,
+                  "overall": 0.153
+                },
+                "reliability": 0.96,
+                "sla_met": null,
+                "deadline": null,
+                "sla_slack_hours": null,
+                "sla_delay_hours": null,
+                "vehicles": [
+                  {
+                    "id": 11005,
+                    "label": "TRK-001",
+                    "type": "Truck",
+                    "capacity": 12000,
+                    "assigned_load_kg": 6000.0,
+                    "utilization_percentage": 50.0
+                  }
+                ],
+                "vehicle_utilization": 0.5,
+                "product": "Ground",
+                "warnings": [],
+                "inventory_allocation": [
+                  {
+                    "warehouse_id": 1,
+                    "warehouse": "IF Delhi NCR Mega Hub",
+                    "quantity": 1,
+                    "available_before": 1100
+                  }
+                ],
+                "score_components": {
+                  "normalized_cost": 1.0,
+                  "normalized_time": 1.0,
+                  "normalized_risk": 0.153,
+                  "reliability_penalty": 0.04,
+                  "sla_penalty": 0,
+                  "utilization_penalty": 0.5,
+                  "weighted_contributions": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.0306,
+                    "reliability": 0.004,
+                    "sla": 0.0,
+                    "utilization": 0.025
+                  },
+                  "balanced_score": 0.6096
+                },
+                "score": 0.6096
+              },
+              "reason": "Choose plan 4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c (road): calculated cost \u20b9350,284.60, ETA 24.49 hours, risk 15.3%; SLA was not evaluated because no delivery deadline was provided.",
+              "comparison": [],
+              "recommended_plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+              "explanation_inputs": {
+                "recommended": {
+                  "plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:21:52.342503+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                },
+                "comparisons": []
+              },
+              "warnings": [],
+              "feasibility": null,
+              "planning_operation": "route_alternatives",
+              "baseline": {
+                "planning_request": {
+                  "source": "IF Delhi NCR Mega Hub",
+                  "destination": "IF Mumbai West Hub",
+                  "shipment": {
+                    "weight_kg": 6000.0,
+                    "quantity": 1,
+                    "sku": null
+                  },
+                  "objective": "balanced",
+                  "deadline": null,
+                  "allowed_modes": [
+                    "road"
+                  ],
+                  "target_margin": 0.2,
+                  "max_risk": null,
+                  "intermediate_stops": [],
+                  "handling_cost_per_stop": 250.0,
+                  "fuel_cost_multiplier": 1.0,
+                  "sla_mandatory": false,
+                  "scoring_weights": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.2,
+                    "reliability": 0.1,
+                    "sla": 0.1,
+                    "utilization": 0.05
+                  },
+                  "source_country": null,
+                  "destination_country": null
+                },
+                "recommended_plan": {
+                  "plan_id": "bb798f8c-6e95-4511-819b-5518ffe285f4",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:33.956984+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                }
+              },
+              "applied_changes": {
+                "blocked_routes": [
+                  [
+                    "IF Delhi NCR Mega Hub",
+                    "IF Mumbai West Hub"
+                  ]
+                ]
+              },
+              "replan_comparison": {
+                "cost_difference": 1129.6,
+                "eta_difference_hours": 4.82,
+                "risk_difference": -0.0235
+              }
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 6000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 6000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 600,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Jaipur North Hub",
+              "distance": 303.32,
+              "duration": 4.4,
+              "cost": 9109.64,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 9109.64,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 26.7732,
+                "lng": 75.8415
+              }
+            },
+            {
+              "route_id": 601,
+              "from_location": "IF Jaipur North Hub",
+              "to_location": "IF Ahmedabad West Hub",
+              "distance": 657.1,
+              "duration": 9.54,
+              "cost": 19734.56,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 19734.56,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 26.7732,
+                "lng": 75.8415
+              },
+              "destination_coords": {
+                "lat": 23.0753,
+                "lng": 72.6401
+              }
+            },
+            {
+              "route_id": 602,
+              "from_location": "IF Ahmedabad West Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 554.58,
+              "duration": 8.05,
+              "cost": 16655.8,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 16655.8,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 23.0753,
+                "lng": 72.6401
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1515.0,
+          "duration_hours": 24.49,
+          "eta": "2026-09-06T08:21:52.342503+00:00",
+          "operational_cost": 350284.6,
+          "cost_breakdown": {
+            "base_transport": 273000.0,
+            "distance_cost": 51510.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 10800.0,
+            "fixed_dispatch_cost": 2600.0,
+            "driver_time_cost": 11874.6,
+            "vehicle_cost": 0.0,
+            "handling_cost": 500.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 437855.75,
+          "expected_revenue": 437855.75,
+          "profit": 87571.15,
+          "margin_percentage": 20.0,
+          "risk_score": 0.153,
+          "risk_breakdown": {
+            "route": 0.25,
+            "vehicle": 0.09,
+            "weather": 0.04,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.153
+          },
+          "reliability": 0.96,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11005,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 12000,
+              "assigned_load_kg": 6000.0,
+              "utilization_percentage": 50.0
+            }
+          ],
+          "vehicle_utilization": 0.5,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1.0,
+            "normalized_time": 1.0,
+            "normalized_risk": 0.153,
+            "reliability_penalty": 0.04,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.5,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.0306,
+              "reliability": 0.004,
+              "sla": 0.0,
+              "utilization": 0.025
+            },
+            "balanced_score": 0.6096
+          },
+          "score": 0.6096
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "4ca6c75a-9273-4ca6-8d56-e7d72bf38f9c",
+        "route_legs": [
+          {
+            "route_id": 600,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Jaipur North Hub",
+            "distance": 303.32,
+            "duration": 4.4,
+            "cost": 9109.64,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 9109.64,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 26.7732,
+              "lng": 75.8415
+            }
+          },
+          {
+            "route_id": 601,
+            "from_location": "IF Jaipur North Hub",
+            "to_location": "IF Ahmedabad West Hub",
+            "distance": 657.1,
+            "duration": 9.54,
+            "cost": 19734.56,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 19734.56,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 26.7732,
+              "lng": 75.8415
+            },
+            "destination_coords": {
+              "lat": 23.0753,
+              "lng": 72.6401
+            }
+          },
+          {
+            "route_id": 602,
+            "from_location": "IF Ahmedabad West Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 554.58,
+            "duration": 8.05,
+            "cost": 16655.8,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 16655.8,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 23.0753,
+              "lng": 72.6401
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          600,
+          601,
+          602
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11005,
+            "label": "TRK-001",
+            "type": "Truck",
+            "capacity": 12000,
+            "assigned_load_kg": 6000.0,
+            "utilization_percentage": 50.0
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 350284.6,
+        "eta": "2026-09-06T08:21:52.342503+00:00",
+        "duration_hours": 24.49,
+        "risk": 0.153,
+        "reliability": 0.96,
+        "planning_changes": {
+          "blocked_routes": [
+            [
+              "IF Delhi NCR Mega Hub",
+              "IF Mumbai West Hub"
+            ]
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "explicit_6000",
+    "passed": true,
+    "first": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "For this shipment, I'd recommend the Ground plan.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nShipment: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub; weight 6000.0 kg; quantity 1.\n\nRoute:\n- IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub (road, 1400.0 km, 18.5 hours)\n\nVehicles:\n- TRK-002 (Truck): capacity 7000 kg, assigned load 6,000 kg, utilization 85.71%\n\nOperational cost: \u20b9349,155.00.\nCost breakdown\n- Base Transport: \u20b9297,000.00\n- Distance Cost: \u20b937,800.00\n- Toll Cost: \u20b94,300.00\n- Fixed Dispatch Cost: \u20b92,100.00\n- Driver Time Cost: \u20b97,955.00\n\nETA: 19.67 hours; expected arrival 06 Sep 2026, 03:32 UTC.\n\nRisk: 17.65%; reliability 94.00%.\nRisk profile\n- Route: 28.00%\n- Vehicle: 13.00%\n- Weather: 6.00%\n- Warehouse: 10.00%\n- Mode: 18.00%\n- Overall: 17.65%\n\nSLA was not evaluated because no delivery deadline was provided.\n\nBalanced score: 0.5483.\nBalanced scoring\n- Normalized Cost: 0.9968\n- Normalized Time: 0.8032\n- Normalized Risk: 0.1765\n- Reliability Penalty: 0.0600\n- Utilization Penalty: 0.1429\n- Weighted Contributions Cost: 0.2990\n- Weighted Contributions Eta: 0.2008\n- Weighted Contributions Risk: 0.0353\n- Weighted Contributions Reliability: 0.0060\n- Weighted Contributions Utilization: 0.0071\n- Balanced Score: 0.5483\n\nFeasible alternatives:\n- Ground / Road alternative: cost \u20b9350,284.60, ETA 24.49 hours, risk 0.153, reliability 0.96, score 0.6096; cost delta 1129.6, ETA delta 4.82 hours, Ground / Road lowers risk by 2.35 percentage points, utilization delta -0.3571. Route: IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub \u2192 IF Ahmedabad West Hub \u2192 IF Mumbai West Hub",
+        "actions": [
+          {
+            "type": "unified_supply_chain_plan",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 6000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [
+                {
+                  "plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:49.829385+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                },
+                {
+                  "plan_id": "5414c587-3438-406c-80a3-6df37aac4255",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:22:01.829142+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                }
+              ],
+              "recommended_plan": {
+                "plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+                "mode": "road",
+                "route_legs": [
+                  {
+                    "route_id": 5,
+                    "from_location": "IF Delhi NCR Mega Hub",
+                    "to_location": "IF Mumbai West Hub",
+                    "distance": 1400.0,
+                    "duration": 18.5,
+                    "cost": 49500.0,
+                    "route_type": "road",
+                    "reliability": 0.94,
+                    "weather_risk": 0.06,
+                    "operational_risk": 0.08,
+                    "toll_cost": 4300.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 49500.0,
+                    "capacity_per_day_kg": 36000.0,
+                    "current_utilization_pct": 82.0,
+                    "service_class": "Ground",
+                    "express_eligible": 0,
+                    "sla_hours": 24.0,
+                    "carbon_kg": 1210.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 28.5355,
+                      "lng": 77.271
+                    },
+                    "destination_coords": {
+                      "lat": 19.1136,
+                      "lng": 72.8697
+                    }
+                  }
+                ],
+                "distance_km": 1400.0,
+                "duration_hours": 19.67,
+                "eta": "2026-09-06T03:32:49.829385+00:00",
+                "operational_cost": 349155.0,
+                "cost_breakdown": {
+                  "base_transport": 297000.0,
+                  "distance_cost": 37800.0,
+                  "fuel_cost": 0.0,
+                  "toll_cost": 4300.0,
+                  "fixed_dispatch_cost": 2100.0,
+                  "driver_time_cost": 7955.0,
+                  "vehicle_cost": 0.0,
+                  "handling_cost": 0.0,
+                  "air_cost": 0.0,
+                  "other_cost": 0.0
+                },
+                "selling_price": 436443.75,
+                "expected_revenue": 436443.75,
+                "profit": 87288.75,
+                "margin_percentage": 20.0,
+                "risk_score": 0.1765,
+                "risk_breakdown": {
+                  "route": 0.28,
+                  "vehicle": 0.13,
+                  "weather": 0.06,
+                  "warehouse": 0.1,
+                  "mode": 0.18,
+                  "overall": 0.1765
+                },
+                "reliability": 0.94,
+                "sla_met": null,
+                "deadline": null,
+                "sla_slack_hours": null,
+                "sla_delay_hours": null,
+                "vehicles": [
+                  {
+                    "id": 11006,
+                    "label": "TRK-002",
+                    "type": "Truck",
+                    "capacity": 7000,
+                    "assigned_load_kg": 6000.0,
+                    "utilization_percentage": 85.71
+                  }
+                ],
+                "vehicle_utilization": 0.8571,
+                "product": "Ground",
+                "warnings": [],
+                "inventory_allocation": [
+                  {
+                    "warehouse_id": 1,
+                    "warehouse": "IF Delhi NCR Mega Hub",
+                    "quantity": 1,
+                    "available_before": 1100
+                  }
+                ],
+                "score_components": {
+                  "normalized_cost": 0.996775,
+                  "normalized_time": 0.803185,
+                  "normalized_risk": 0.1765,
+                  "reliability_penalty": 0.06,
+                  "sla_penalty": 0,
+                  "utilization_penalty": 0.1429,
+                  "weighted_contributions": {
+                    "cost": 0.299033,
+                    "eta": 0.200796,
+                    "risk": 0.0353,
+                    "reliability": 0.006,
+                    "sla": 0.0,
+                    "utilization": 0.007145
+                  },
+                  "balanced_score": 0.5483
+                },
+                "score": 0.5483
+              },
+              "reason": "Choose plan cbecea52-5dfe-4da5-bf65-9e04dea904ce (road): calculated cost \u20b9349,155.00, ETA 19.67 hours, risk 17.6%; SLA was not evaluated because no delivery deadline was provided.",
+              "comparison": [
+                {
+                  "plan_id": "5414c587-3438-406c-80a3-6df37aac4255",
+                  "cost_difference": 1129.6,
+                  "money_saved": 1129.6,
+                  "money_lost": 0,
+                  "time_difference_hours": 4.82,
+                  "time_saved_hours": 4.82,
+                  "time_lost_hours": 0,
+                  "risk_difference": -0.0235,
+                  "sla_difference": {
+                    "recommended": null,
+                    "alternative": null
+                  },
+                  "utilization_difference": -0.3571
+                }
+              ],
+              "recommended_plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+              "explanation_inputs": {
+                "recommended": {
+                  "plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:49.829385+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                },
+                "comparisons": [
+                  {
+                    "plan_id": "5414c587-3438-406c-80a3-6df37aac4255",
+                    "cost_difference": 1129.6,
+                    "money_saved": 1129.6,
+                    "money_lost": 0,
+                    "time_difference_hours": 4.82,
+                    "time_saved_hours": 4.82,
+                    "time_lost_hours": 0,
+                    "risk_difference": -0.0235,
+                    "sla_difference": {
+                      "recommended": null,
+                      "alternative": null
+                    },
+                    "utilization_difference": -0.3571
+                  }
+                ]
+              },
+              "warnings": [],
+              "feasibility": null
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 6000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 6000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 5,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 1400.0,
+              "duration": 18.5,
+              "cost": 49500.0,
+              "route_type": "road",
+              "reliability": 0.94,
+              "weather_risk": 0.06,
+              "operational_risk": 0.08,
+              "toll_cost": 4300.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 49500.0,
+              "capacity_per_day_kg": 36000.0,
+              "current_utilization_pct": 82.0,
+              "service_class": "Ground",
+              "express_eligible": 0,
+              "sla_hours": 24.0,
+              "carbon_kg": 1210.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1400.0,
+          "duration_hours": 19.67,
+          "eta": "2026-09-06T03:32:49.829385+00:00",
+          "operational_cost": 349155.0,
+          "cost_breakdown": {
+            "base_transport": 297000.0,
+            "distance_cost": 37800.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 4300.0,
+            "fixed_dispatch_cost": 2100.0,
+            "driver_time_cost": 7955.0,
+            "vehicle_cost": 0.0,
+            "handling_cost": 0.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 436443.75,
+          "expected_revenue": 436443.75,
+          "profit": 87288.75,
+          "margin_percentage": 20.0,
+          "risk_score": 0.1765,
+          "risk_breakdown": {
+            "route": 0.28,
+            "vehicle": 0.13,
+            "weather": 0.06,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.1765
+          },
+          "reliability": 0.94,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11006,
+              "label": "TRK-002",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6000.0,
+              "utilization_percentage": 85.71
+            }
+          ],
+          "vehicle_utilization": 0.8571,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.996775,
+            "normalized_time": 0.803185,
+            "normalized_risk": 0.1765,
+            "reliability_penalty": 0.06,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.1429,
+            "weighted_contributions": {
+              "cost": 0.299033,
+              "eta": 0.200796,
+              "risk": 0.0353,
+              "reliability": 0.006,
+              "sla": 0.0,
+              "utilization": 0.007145
+            },
+            "balanced_score": 0.5483
+          },
+          "score": 0.5483
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+        "route_legs": [
+          {
+            "route_id": 5,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 1400.0,
+            "duration": 18.5,
+            "cost": 49500.0,
+            "route_type": "road",
+            "reliability": 0.94,
+            "weather_risk": 0.06,
+            "operational_risk": 0.08,
+            "toll_cost": 4300.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 49500.0,
+            "capacity_per_day_kg": 36000.0,
+            "current_utilization_pct": 82.0,
+            "service_class": "Ground",
+            "express_eligible": 0,
+            "sla_hours": 24.0,
+            "carbon_kg": 1210.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          5
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11006,
+            "label": "TRK-002",
+            "type": "Truck",
+            "capacity": 7000,
+            "assigned_load_kg": 6000.0,
+            "utilization_percentage": 85.71
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 349155.0,
+        "eta": "2026-09-06T03:32:49.829385+00:00",
+        "duration_hours": 19.67,
+        "risk": 0.1765,
+        "reliability": 0.94
+      }
+    },
+    "second": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "For this shipment, I'd recommend the Ground plan.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nWhat changed (before \u2192 after):\n- Mode: Ground / Road \u2192 Ground / Road\n- Route: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub \u2192 IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub \u2192 IF Ahmedabad West Hub \u2192 IF Mumbai West Hub\n- Vehicle: TRK-002 \u2192 TRK-001\n- Cost: \u20b9349,155.00 \u2192 \u20b9350,284.60 (delta \u20b91,129.60)\n- ETA: 19.67 hours \u2192 24.49 hours (delta +4.82 hours)\n- Risk: 17.65% \u2192 15.30% (delta -2.35 percentage points)\n\nShipment: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub; weight 6000.0 kg; quantity 1.\n\nRoute:\n- IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub (road, 303.32 km, 4.4 hours)\n- IF Jaipur North Hub \u2192 IF Ahmedabad West Hub (road, 657.1 km, 9.54 hours)\n- IF Ahmedabad West Hub \u2192 IF Mumbai West Hub (road, 554.58 km, 8.05 hours)\n\nVehicles:\n- TRK-001 (Truck): capacity 12000 kg, assigned load 6,000 kg, utilization 50.0%\n\nOperational cost: \u20b9350,284.60.\nCost breakdown\n- Base Transport: \u20b9273,000.00\n- Distance Cost: \u20b951,510.00\n- Toll Cost: \u20b910,800.00\n- Fixed Dispatch Cost: \u20b92,600.00\n- Driver Time Cost: \u20b911,874.60\n- Handling Cost: \u20b9500.00\n\nETA: 24.49 hours; expected arrival 06 Sep 2026, 08:22 UTC.\n\nRisk: 15.30%; reliability 96.00%.\nRisk profile\n- Route: 25.00%\n- Vehicle: 9.00%\n- Weather: 4.00%\n- Warehouse: 10.00%\n- Mode: 18.00%\n- Overall: 15.30%\n\nSLA was not evaluated because no delivery deadline was provided.\n\nBalanced score: 0.6096.\nBalanced scoring\n- Normalized Cost: 1.0000\n- Normalized Time: 1.0000\n- Normalized Risk: 0.1530\n- Reliability Penalty: 0.0400\n- Utilization Penalty: 0.5000\n- Weighted Contributions Cost: 0.3000\n- Weighted Contributions Eta: 0.2500\n- Weighted Contributions Risk: 0.0306\n- Weighted Contributions Reliability: 0.0040\n- Weighted Contributions Utilization: 0.0250\n- Balanced Score: 0.6096",
+        "actions": [
+          {
+            "type": "supply_chain_planning_operation",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 6000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [
+                {
+                  "plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:22:11.107849+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                }
+              ],
+              "recommended_plan": {
+                "plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+                "mode": "road",
+                "route_legs": [
+                  {
+                    "route_id": 600,
+                    "from_location": "IF Delhi NCR Mega Hub",
+                    "to_location": "IF Jaipur North Hub",
+                    "distance": 303.32,
+                    "duration": 4.4,
+                    "cost": 9109.64,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 9109.64,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 28.5355,
+                      "lng": 77.271
+                    },
+                    "destination_coords": {
+                      "lat": 26.7732,
+                      "lng": 75.8415
+                    }
+                  },
+                  {
+                    "route_id": 601,
+                    "from_location": "IF Jaipur North Hub",
+                    "to_location": "IF Ahmedabad West Hub",
+                    "distance": 657.1,
+                    "duration": 9.54,
+                    "cost": 19734.56,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 19734.56,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 26.7732,
+                      "lng": 75.8415
+                    },
+                    "destination_coords": {
+                      "lat": 23.0753,
+                      "lng": 72.6401
+                    }
+                  },
+                  {
+                    "route_id": 602,
+                    "from_location": "IF Ahmedabad West Hub",
+                    "to_location": "IF Mumbai West Hub",
+                    "distance": 554.58,
+                    "duration": 8.05,
+                    "cost": 16655.8,
+                    "route_type": "road",
+                    "reliability": 0.96,
+                    "weather_risk": 0.04,
+                    "operational_risk": 0.06,
+                    "toll_cost": 3600.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 16655.8,
+                    "capacity_per_day_kg": 42000.0,
+                    "current_utilization_pct": 69.0,
+                    "service_class": "EconomyGround",
+                    "express_eligible": 0,
+                    "sla_hours": 28.0,
+                    "carbon_kg": 1280.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 23.0753,
+                      "lng": 72.6401
+                    },
+                    "destination_coords": {
+                      "lat": 19.1136,
+                      "lng": 72.8697
+                    }
+                  }
+                ],
+                "distance_km": 1515.0,
+                "duration_hours": 24.49,
+                "eta": "2026-09-06T08:22:11.107849+00:00",
+                "operational_cost": 350284.6,
+                "cost_breakdown": {
+                  "base_transport": 273000.0,
+                  "distance_cost": 51510.0,
+                  "fuel_cost": 0.0,
+                  "toll_cost": 10800.0,
+                  "fixed_dispatch_cost": 2600.0,
+                  "driver_time_cost": 11874.6,
+                  "vehicle_cost": 0.0,
+                  "handling_cost": 500.0,
+                  "air_cost": 0.0,
+                  "other_cost": 0.0
+                },
+                "selling_price": 437855.75,
+                "expected_revenue": 437855.75,
+                "profit": 87571.15,
+                "margin_percentage": 20.0,
+                "risk_score": 0.153,
+                "risk_breakdown": {
+                  "route": 0.25,
+                  "vehicle": 0.09,
+                  "weather": 0.04,
+                  "warehouse": 0.1,
+                  "mode": 0.18,
+                  "overall": 0.153
+                },
+                "reliability": 0.96,
+                "sla_met": null,
+                "deadline": null,
+                "sla_slack_hours": null,
+                "sla_delay_hours": null,
+                "vehicles": [
+                  {
+                    "id": 11005,
+                    "label": "TRK-001",
+                    "type": "Truck",
+                    "capacity": 12000,
+                    "assigned_load_kg": 6000.0,
+                    "utilization_percentage": 50.0
+                  }
+                ],
+                "vehicle_utilization": 0.5,
+                "product": "Ground",
+                "warnings": [],
+                "inventory_allocation": [
+                  {
+                    "warehouse_id": 1,
+                    "warehouse": "IF Delhi NCR Mega Hub",
+                    "quantity": 1,
+                    "available_before": 1100
+                  }
+                ],
+                "score_components": {
+                  "normalized_cost": 1.0,
+                  "normalized_time": 1.0,
+                  "normalized_risk": 0.153,
+                  "reliability_penalty": 0.04,
+                  "sla_penalty": 0,
+                  "utilization_penalty": 0.5,
+                  "weighted_contributions": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.0306,
+                    "reliability": 0.004,
+                    "sla": 0.0,
+                    "utilization": 0.025
+                  },
+                  "balanced_score": 0.6096
+                },
+                "score": 0.6096
+              },
+              "reason": "Choose plan 9e9f59bd-5c47-45bd-a23f-83c5f2fb6295 (road): calculated cost \u20b9350,284.60, ETA 24.49 hours, risk 15.3%; SLA was not evaluated because no delivery deadline was provided.",
+              "comparison": [],
+              "recommended_plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+              "explanation_inputs": {
+                "recommended": {
+                  "plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 600,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Jaipur North Hub",
+                      "distance": 303.32,
+                      "duration": 4.4,
+                      "cost": 9109.64,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 9109.64,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      }
+                    },
+                    {
+                      "route_id": 601,
+                      "from_location": "IF Jaipur North Hub",
+                      "to_location": "IF Ahmedabad West Hub",
+                      "distance": 657.1,
+                      "duration": 9.54,
+                      "cost": 19734.56,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 19734.56,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 26.7732,
+                        "lng": 75.8415
+                      },
+                      "destination_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      }
+                    },
+                    {
+                      "route_id": 602,
+                      "from_location": "IF Ahmedabad West Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 554.58,
+                      "duration": 8.05,
+                      "cost": 16655.8,
+                      "route_type": "road",
+                      "reliability": 0.96,
+                      "weather_risk": 0.04,
+                      "operational_risk": 0.06,
+                      "toll_cost": 3600.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 16655.8,
+                      "capacity_per_day_kg": 42000.0,
+                      "current_utilization_pct": 69.0,
+                      "service_class": "EconomyGround",
+                      "express_eligible": 0,
+                      "sla_hours": 28.0,
+                      "carbon_kg": 1280.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 23.0753,
+                        "lng": 72.6401
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1515.0,
+                  "duration_hours": 24.49,
+                  "eta": "2026-09-06T08:22:11.107849+00:00",
+                  "operational_cost": 350284.6,
+                  "cost_breakdown": {
+                    "base_transport": 273000.0,
+                    "distance_cost": 51510.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 10800.0,
+                    "fixed_dispatch_cost": 2600.0,
+                    "driver_time_cost": 11874.6,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 500.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 437855.75,
+                  "expected_revenue": 437855.75,
+                  "profit": 87571.15,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.153,
+                  "risk_breakdown": {
+                    "route": 0.25,
+                    "vehicle": 0.09,
+                    "weather": 0.04,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.153
+                  },
+                  "reliability": 0.96,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 50.0
+                    }
+                  ],
+                  "vehicle_utilization": 0.5,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.153,
+                    "reliability_penalty": 0.04,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.5,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0306,
+                      "reliability": 0.004,
+                      "sla": 0.0,
+                      "utilization": 0.025
+                    },
+                    "balanced_score": 0.6096
+                  },
+                  "score": 0.6096
+                },
+                "comparisons": []
+              },
+              "warnings": [],
+              "feasibility": null,
+              "planning_operation": "route_alternatives",
+              "baseline": {
+                "planning_request": {
+                  "source": "IF Delhi NCR Mega Hub",
+                  "destination": "IF Mumbai West Hub",
+                  "shipment": {
+                    "weight_kg": 6000.0,
+                    "quantity": 1,
+                    "sku": null
+                  },
+                  "objective": "balanced",
+                  "deadline": null,
+                  "allowed_modes": [
+                    "road"
+                  ],
+                  "target_margin": 0.2,
+                  "max_risk": null,
+                  "intermediate_stops": [],
+                  "handling_cost_per_stop": 250.0,
+                  "fuel_cost_multiplier": 1.0,
+                  "sla_mandatory": false,
+                  "scoring_weights": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.2,
+                    "reliability": 0.1,
+                    "sla": 0.1,
+                    "utilization": 0.05
+                  },
+                  "source_country": null,
+                  "destination_country": null
+                },
+                "recommended_plan": {
+                  "plan_id": "cbecea52-5dfe-4da5-bf65-9e04dea904ce",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 19.67,
+                  "eta": "2026-09-06T03:32:49.829385+00:00",
+                  "operational_cost": 349155.0,
+                  "cost_breakdown": {
+                    "base_transport": 297000.0,
+                    "distance_cost": 37800.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 2100.0,
+                    "driver_time_cost": 7955.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 436443.75,
+                  "expected_revenue": 436443.75,
+                  "profit": 87288.75,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1765,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.13,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1765
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6000.0,
+                      "utilization_percentage": 85.71
+                    }
+                  ],
+                  "vehicle_utilization": 0.8571,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 0.996775,
+                    "normalized_time": 0.803185,
+                    "normalized_risk": 0.1765,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.1429,
+                    "weighted_contributions": {
+                      "cost": 0.299033,
+                      "eta": 0.200796,
+                      "risk": 0.0353,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.007145
+                    },
+                    "balanced_score": 0.5483
+                  },
+                  "score": 0.5483
+                }
+              },
+              "applied_changes": {
+                "blocked_routes": [
+                  [
+                    "IF Delhi NCR Mega Hub",
+                    "IF Mumbai West Hub"
+                  ]
+                ]
+              },
+              "replan_comparison": {
+                "cost_difference": 1129.6,
+                "eta_difference_hours": 4.82,
+                "risk_difference": -0.0235
+              }
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 6000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 6000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 600,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Jaipur North Hub",
+              "distance": 303.32,
+              "duration": 4.4,
+              "cost": 9109.64,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 9109.64,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 26.7732,
+                "lng": 75.8415
+              }
+            },
+            {
+              "route_id": 601,
+              "from_location": "IF Jaipur North Hub",
+              "to_location": "IF Ahmedabad West Hub",
+              "distance": 657.1,
+              "duration": 9.54,
+              "cost": 19734.56,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 19734.56,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 26.7732,
+                "lng": 75.8415
+              },
+              "destination_coords": {
+                "lat": 23.0753,
+                "lng": 72.6401
+              }
+            },
+            {
+              "route_id": 602,
+              "from_location": "IF Ahmedabad West Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 554.58,
+              "duration": 8.05,
+              "cost": 16655.8,
+              "route_type": "road",
+              "reliability": 0.96,
+              "weather_risk": 0.04,
+              "operational_risk": 0.06,
+              "toll_cost": 3600.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 16655.8,
+              "capacity_per_day_kg": 42000.0,
+              "current_utilization_pct": 69.0,
+              "service_class": "EconomyGround",
+              "express_eligible": 0,
+              "sla_hours": 28.0,
+              "carbon_kg": 1280.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 23.0753,
+                "lng": 72.6401
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1515.0,
+          "duration_hours": 24.49,
+          "eta": "2026-09-06T08:22:11.107849+00:00",
+          "operational_cost": 350284.6,
+          "cost_breakdown": {
+            "base_transport": 273000.0,
+            "distance_cost": 51510.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 10800.0,
+            "fixed_dispatch_cost": 2600.0,
+            "driver_time_cost": 11874.6,
+            "vehicle_cost": 0.0,
+            "handling_cost": 500.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 437855.75,
+          "expected_revenue": 437855.75,
+          "profit": 87571.15,
+          "margin_percentage": 20.0,
+          "risk_score": 0.153,
+          "risk_breakdown": {
+            "route": 0.25,
+            "vehicle": 0.09,
+            "weather": 0.04,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.153
+          },
+          "reliability": 0.96,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11005,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 12000,
+              "assigned_load_kg": 6000.0,
+              "utilization_percentage": 50.0
+            }
+          ],
+          "vehicle_utilization": 0.5,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1.0,
+            "normalized_time": 1.0,
+            "normalized_risk": 0.153,
+            "reliability_penalty": 0.04,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.5,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.0306,
+              "reliability": 0.004,
+              "sla": 0.0,
+              "utilization": 0.025
+            },
+            "balanced_score": 0.6096
+          },
+          "score": 0.6096
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "9e9f59bd-5c47-45bd-a23f-83c5f2fb6295",
+        "route_legs": [
+          {
+            "route_id": 600,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Jaipur North Hub",
+            "distance": 303.32,
+            "duration": 4.4,
+            "cost": 9109.64,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 9109.64,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 26.7732,
+              "lng": 75.8415
+            }
+          },
+          {
+            "route_id": 601,
+            "from_location": "IF Jaipur North Hub",
+            "to_location": "IF Ahmedabad West Hub",
+            "distance": 657.1,
+            "duration": 9.54,
+            "cost": 19734.56,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 19734.56,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 26.7732,
+              "lng": 75.8415
+            },
+            "destination_coords": {
+              "lat": 23.0753,
+              "lng": 72.6401
+            }
+          },
+          {
+            "route_id": 602,
+            "from_location": "IF Ahmedabad West Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 554.58,
+            "duration": 8.05,
+            "cost": 16655.8,
+            "route_type": "road",
+            "reliability": 0.96,
+            "weather_risk": 0.04,
+            "operational_risk": 0.06,
+            "toll_cost": 3600.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 16655.8,
+            "capacity_per_day_kg": 42000.0,
+            "current_utilization_pct": 69.0,
+            "service_class": "EconomyGround",
+            "express_eligible": 0,
+            "sla_hours": 28.0,
+            "carbon_kg": 1280.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 23.0753,
+              "lng": 72.6401
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          600,
+          601,
+          602
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11005,
+            "label": "TRK-001",
+            "type": "Truck",
+            "capacity": 12000,
+            "assigned_load_kg": 6000.0,
+            "utilization_percentage": 50.0
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 350284.6,
+        "eta": "2026-09-06T08:22:11.107849+00:00",
+        "duration_hours": 24.49,
+        "risk": 0.153,
+        "reliability": 0.96,
+        "planning_changes": {
+          "blocked_routes": [
+            [
+              "IF Delhi NCR Mega Hub",
+              "IF Mumbai West Hub"
+            ]
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "context_18000",
+    "passed": true,
+    "first": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "For this shipment, I'd recommend the Ground plan.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nShipment: IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub; weight 18000.0 kg; quantity 1.\n\nRoute:\n- IF Delhi NCR Mega Hub \u2192 IF Mumbai West Hub (road, 1400.0 km, 18.5 hours)\n\nVehicles:\n- TRK-001 (Truck): capacity 12000 kg, assigned load 11,368.42 kg, utilization 94.74%\n- TRK-002 (Truck): capacity 7000 kg, assigned load 6,631.58 kg, utilization 94.74%\n\nOperational cost: \u20b91,003,345.00.\nCost breakdown\n- Base Transport: \u20b9891,000.00\n- Distance Cost: \u20b985,400.00\n- Toll Cost: \u20b94,300.00\n- Fixed Dispatch Cost: \u20b94,700.00\n- Driver Time Cost: \u20b917,945.00\n\nETA: 21.17 hours; expected arrival 06 Sep 2026, 05:03 UTC.\n\nRisk: 17.45%; reliability 94.00%.\nRisk profile\n- Route: 28.00%\n- Vehicle: 12.19%\n- Weather: 6.00%\n- Warehouse: 10.00%\n- Mode: 18.00%\n- Overall: 17.45%\n\nSLA was not evaluated because no delivery deadline was provided.\n\nBalanced score: 0.5935.\nBalanced scoring\n- Normalized Cost: 1.0000\n- Normalized Time: 1.0000\n- Normalized Risk: 0.1745\n- Reliability Penalty: 0.0600\n- Utilization Penalty: 0.0526\n- Weighted Contributions Cost: 0.3000\n- Weighted Contributions Eta: 0.2500\n- Weighted Contributions Risk: 0.0349\n- Weighted Contributions Reliability: 0.0060\n- Weighted Contributions Utilization: 0.0026\n- Balanced Score: 0.5935",
+        "actions": [
+          {
+            "type": "unified_supply_chain_plan",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 18000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [
+                {
+                  "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 21.17,
+                  "eta": "2026-09-06T05:03:14.327718+00:00",
+                  "operational_cost": 1003345.0,
+                  "cost_breakdown": {
+                    "base_transport": 891000.0,
+                    "distance_cost": 85400.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 4700.0,
+                    "driver_time_cost": 17945.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 1254181.25,
+                  "expected_revenue": 1254181.25,
+                  "profit": 250836.25,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1745,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.1219,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1745
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 11368.421053,
+                      "utilization_percentage": 94.74
+                    },
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6631.578947,
+                      "utilization_percentage": 94.74
+                    }
+                  ],
+                  "vehicle_utilization": 0.9474,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.1745,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.0526,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0349,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.00263
+                    },
+                    "balanced_score": 0.5935
+                  },
+                  "score": 0.5935
+                }
+              ],
+              "recommended_plan": {
+                "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+                "mode": "road",
+                "route_legs": [
+                  {
+                    "route_id": 5,
+                    "from_location": "IF Delhi NCR Mega Hub",
+                    "to_location": "IF Mumbai West Hub",
+                    "distance": 1400.0,
+                    "duration": 18.5,
+                    "cost": 49500.0,
+                    "route_type": "road",
+                    "reliability": 0.94,
+                    "weather_risk": 0.06,
+                    "operational_risk": 0.08,
+                    "toll_cost": 4300.0,
+                    "handling_cost": 0.0,
+                    "fuel_cost": 0.0,
+                    "air_cost": 0.0,
+                    "base_transport_cost": 49500.0,
+                    "capacity_per_day_kg": 36000.0,
+                    "current_utilization_pct": 82.0,
+                    "service_class": "Ground",
+                    "express_eligible": 0,
+                    "sla_hours": 24.0,
+                    "carbon_kg": 1210.0,
+                    "status": "active",
+                    "source_coords": {
+                      "lat": 28.5355,
+                      "lng": 77.271
+                    },
+                    "destination_coords": {
+                      "lat": 19.1136,
+                      "lng": 72.8697
+                    }
+                  }
+                ],
+                "distance_km": 1400.0,
+                "duration_hours": 21.17,
+                "eta": "2026-09-06T05:03:14.327718+00:00",
+                "operational_cost": 1003345.0,
+                "cost_breakdown": {
+                  "base_transport": 891000.0,
+                  "distance_cost": 85400.0,
+                  "fuel_cost": 0.0,
+                  "toll_cost": 4300.0,
+                  "fixed_dispatch_cost": 4700.0,
+                  "driver_time_cost": 17945.0,
+                  "vehicle_cost": 0.0,
+                  "handling_cost": 0.0,
+                  "air_cost": 0.0,
+                  "other_cost": 0.0
+                },
+                "selling_price": 1254181.25,
+                "expected_revenue": 1254181.25,
+                "profit": 250836.25,
+                "margin_percentage": 20.0,
+                "risk_score": 0.1745,
+                "risk_breakdown": {
+                  "route": 0.28,
+                  "vehicle": 0.1219,
+                  "weather": 0.06,
+                  "warehouse": 0.1,
+                  "mode": 0.18,
+                  "overall": 0.1745
+                },
+                "reliability": 0.94,
+                "sla_met": null,
+                "deadline": null,
+                "sla_slack_hours": null,
+                "sla_delay_hours": null,
+                "vehicles": [
+                  {
+                    "id": 11005,
+                    "label": "TRK-001",
+                    "type": "Truck",
+                    "capacity": 12000,
+                    "assigned_load_kg": 11368.421053,
+                    "utilization_percentage": 94.74
+                  },
+                  {
+                    "id": 11006,
+                    "label": "TRK-002",
+                    "type": "Truck",
+                    "capacity": 7000,
+                    "assigned_load_kg": 6631.578947,
+                    "utilization_percentage": 94.74
+                  }
+                ],
+                "vehicle_utilization": 0.9474,
+                "product": "Ground",
+                "warnings": [],
+                "inventory_allocation": [
+                  {
+                    "warehouse_id": 1,
+                    "warehouse": "IF Delhi NCR Mega Hub",
+                    "quantity": 1,
+                    "available_before": 1100
+                  }
+                ],
+                "score_components": {
+                  "normalized_cost": 1.0,
+                  "normalized_time": 1.0,
+                  "normalized_risk": 0.1745,
+                  "reliability_penalty": 0.06,
+                  "sla_penalty": 0,
+                  "utilization_penalty": 0.0526,
+                  "weighted_contributions": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.0349,
+                    "reliability": 0.006,
+                    "sla": 0.0,
+                    "utilization": 0.00263
+                  },
+                  "balanced_score": 0.5935
+                },
+                "score": 0.5935
+              },
+              "reason": "Choose plan bd4bd695-62dd-4c62-b838-b6c5cc0b5861 (road): calculated cost \u20b91,003,345.00, ETA 21.17 hours, risk 17.4%; SLA was not evaluated because no delivery deadline was provided.",
+              "comparison": [],
+              "recommended_plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+              "explanation_inputs": {
+                "recommended": {
+                  "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 21.17,
+                  "eta": "2026-09-06T05:03:14.327718+00:00",
+                  "operational_cost": 1003345.0,
+                  "cost_breakdown": {
+                    "base_transport": 891000.0,
+                    "distance_cost": 85400.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 4700.0,
+                    "driver_time_cost": 17945.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 1254181.25,
+                  "expected_revenue": 1254181.25,
+                  "profit": 250836.25,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1745,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.1219,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1745
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 11368.421053,
+                      "utilization_percentage": 94.74
+                    },
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6631.578947,
+                      "utilization_percentage": 94.74
+                    }
+                  ],
+                  "vehicle_utilization": 0.9474,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.1745,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.0526,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0349,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.00263
+                    },
+                    "balanced_score": 0.5935
+                  },
+                  "score": 0.5935
+                },
+                "comparisons": []
+              },
+              "warnings": [],
+              "feasibility": null
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 18000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 18000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 5,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 1400.0,
+              "duration": 18.5,
+              "cost": 49500.0,
+              "route_type": "road",
+              "reliability": 0.94,
+              "weather_risk": 0.06,
+              "operational_risk": 0.08,
+              "toll_cost": 4300.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 49500.0,
+              "capacity_per_day_kg": 36000.0,
+              "current_utilization_pct": 82.0,
+              "service_class": "Ground",
+              "express_eligible": 0,
+              "sla_hours": 24.0,
+              "carbon_kg": 1210.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1400.0,
+          "duration_hours": 21.17,
+          "eta": "2026-09-06T05:03:14.327718+00:00",
+          "operational_cost": 1003345.0,
+          "cost_breakdown": {
+            "base_transport": 891000.0,
+            "distance_cost": 85400.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 4300.0,
+            "fixed_dispatch_cost": 4700.0,
+            "driver_time_cost": 17945.0,
+            "vehicle_cost": 0.0,
+            "handling_cost": 0.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 1254181.25,
+          "expected_revenue": 1254181.25,
+          "profit": 250836.25,
+          "margin_percentage": 20.0,
+          "risk_score": 0.1745,
+          "risk_breakdown": {
+            "route": 0.28,
+            "vehicle": 0.1219,
+            "weather": 0.06,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.1745
+          },
+          "reliability": 0.94,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11005,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 12000,
+              "assigned_load_kg": 11368.421053,
+              "utilization_percentage": 94.74
+            },
+            {
+              "id": 11006,
+              "label": "TRK-002",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6631.578947,
+              "utilization_percentage": 94.74
+            }
+          ],
+          "vehicle_utilization": 0.9474,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1.0,
+            "normalized_time": 1.0,
+            "normalized_risk": 0.1745,
+            "reliability_penalty": 0.06,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.0526,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.0349,
+              "reliability": 0.006,
+              "sla": 0.0,
+              "utilization": 0.00263
+            },
+            "balanced_score": 0.5935
+          },
+          "score": 0.5935
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+        "route_legs": [
+          {
+            "route_id": 5,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 1400.0,
+            "duration": 18.5,
+            "cost": 49500.0,
+            "route_type": "road",
+            "reliability": 0.94,
+            "weather_risk": 0.06,
+            "operational_risk": 0.08,
+            "toll_cost": 4300.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 49500.0,
+            "capacity_per_day_kg": 36000.0,
+            "current_utilization_pct": 82.0,
+            "service_class": "Ground",
+            "express_eligible": 0,
+            "sla_hours": 24.0,
+            "carbon_kg": 1210.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          5
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11005,
+            "label": "TRK-001",
+            "type": "Truck",
+            "capacity": 12000,
+            "assigned_load_kg": 11368.421053,
+            "utilization_percentage": 94.74
+          },
+          {
+            "id": 11006,
+            "label": "TRK-002",
+            "type": "Truck",
+            "capacity": 7000,
+            "assigned_load_kg": 6631.578947,
+            "utilization_percentage": 94.74
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 1003345.0,
+        "eta": "2026-09-06T05:03:14.327718+00:00",
+        "duration_hours": 21.17,
+        "risk": 0.1745,
+        "reliability": 0.94
+      }
+    },
+    "second": {
+      "http": 200,
+      "body": {
+        "success": true,
+        "response": "I could not produce a safe revised plan for the current shipment. An alternate route exists (IF Delhi NCR Mega Hub \u2192 IF Jaipur North Hub \u2192 IF Ahmedabad West Hub \u2192 IF Mumbai West Hub), but no available compatible source-vehicle combination satisfies the 18000.0 kg load and full-route range requirements. The current plan remains unchanged.",
+        "actions": [
+          {
+            "type": "supply_chain_planning_operation",
+            "data": {
+              "planning_request": {
+                "source": "IF Delhi NCR Mega Hub",
+                "destination": "IF Mumbai West Hub",
+                "shipment": {
+                  "weight_kg": 18000.0,
+                  "quantity": 1,
+                  "sku": null
+                },
+                "objective": "balanced",
+                "deadline": null,
+                "allowed_modes": [
+                  "road"
+                ],
+                "target_margin": 0.2,
+                "max_risk": null,
+                "intermediate_stops": [],
+                "handling_cost_per_stop": 250.0,
+                "fuel_cost_multiplier": 1.0,
+                "sla_mandatory": false,
+                "scoring_weights": {
+                  "cost": 0.3,
+                  "eta": 0.25,
+                  "risk": 0.2,
+                  "reliability": 0.1,
+                  "sla": 0.1,
+                  "utilization": 0.05
+                },
+                "source_country": null,
+                "destination_country": null
+              },
+              "candidate_plans": [],
+              "recommended_plan": null,
+              "reason": "An alternative path exists, but no available compatible source-vehicle combination satisfies the shipment capacity and full-route range requirements.",
+              "comparison": [],
+              "recommended_plan_id": null,
+              "explanation_inputs": null,
+              "warnings": [
+                "No feasible route found"
+              ],
+              "feasibility": {
+                "constraint": "vehicle_capacity_or_full_route_range",
+                "shipment_weight_kg": 18000.0,
+                "alternative_route": [
+                  "IF Delhi NCR Mega Hub",
+                  "IF Jaipur North Hub",
+                  "IF Ahmedabad West Hub",
+                  "IF Mumbai West Hub"
+                ],
+                "distance_km": 1515.0
+              },
+              "planning_operation": "route_alternatives",
+              "baseline": {
+                "planning_request": {
+                  "source": "IF Delhi NCR Mega Hub",
+                  "destination": "IF Mumbai West Hub",
+                  "shipment": {
+                    "weight_kg": 18000.0,
+                    "quantity": 1,
+                    "sku": null
+                  },
+                  "objective": "balanced",
+                  "deadline": null,
+                  "allowed_modes": [
+                    "road"
+                  ],
+                  "target_margin": 0.2,
+                  "max_risk": null,
+                  "intermediate_stops": [],
+                  "handling_cost_per_stop": 250.0,
+                  "fuel_cost_multiplier": 1.0,
+                  "sla_mandatory": false,
+                  "scoring_weights": {
+                    "cost": 0.3,
+                    "eta": 0.25,
+                    "risk": 0.2,
+                    "reliability": 0.1,
+                    "sla": 0.1,
+                    "utilization": 0.05
+                  },
+                  "source_country": null,
+                  "destination_country": null
+                },
+                "recommended_plan": {
+                  "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+                  "mode": "road",
+                  "route_legs": [
+                    {
+                      "route_id": 5,
+                      "from_location": "IF Delhi NCR Mega Hub",
+                      "to_location": "IF Mumbai West Hub",
+                      "distance": 1400.0,
+                      "duration": 18.5,
+                      "cost": 49500.0,
+                      "route_type": "road",
+                      "reliability": 0.94,
+                      "weather_risk": 0.06,
+                      "operational_risk": 0.08,
+                      "toll_cost": 4300.0,
+                      "handling_cost": 0.0,
+                      "fuel_cost": 0.0,
+                      "air_cost": 0.0,
+                      "base_transport_cost": 49500.0,
+                      "capacity_per_day_kg": 36000.0,
+                      "current_utilization_pct": 82.0,
+                      "service_class": "Ground",
+                      "express_eligible": 0,
+                      "sla_hours": 24.0,
+                      "carbon_kg": 1210.0,
+                      "status": "active",
+                      "source_coords": {
+                        "lat": 28.5355,
+                        "lng": 77.271
+                      },
+                      "destination_coords": {
+                        "lat": 19.1136,
+                        "lng": 72.8697
+                      }
+                    }
+                  ],
+                  "distance_km": 1400.0,
+                  "duration_hours": 21.17,
+                  "eta": "2026-09-06T05:03:14.327718+00:00",
+                  "operational_cost": 1003345.0,
+                  "cost_breakdown": {
+                    "base_transport": 891000.0,
+                    "distance_cost": 85400.0,
+                    "fuel_cost": 0.0,
+                    "toll_cost": 4300.0,
+                    "fixed_dispatch_cost": 4700.0,
+                    "driver_time_cost": 17945.0,
+                    "vehicle_cost": 0.0,
+                    "handling_cost": 0.0,
+                    "air_cost": 0.0,
+                    "other_cost": 0.0
+                  },
+                  "selling_price": 1254181.25,
+                  "expected_revenue": 1254181.25,
+                  "profit": 250836.25,
+                  "margin_percentage": 20.0,
+                  "risk_score": 0.1745,
+                  "risk_breakdown": {
+                    "route": 0.28,
+                    "vehicle": 0.1219,
+                    "weather": 0.06,
+                    "warehouse": 0.1,
+                    "mode": 0.18,
+                    "overall": 0.1745
+                  },
+                  "reliability": 0.94,
+                  "sla_met": null,
+                  "deadline": null,
+                  "sla_slack_hours": null,
+                  "sla_delay_hours": null,
+                  "vehicles": [
+                    {
+                      "id": 11005,
+                      "label": "TRK-001",
+                      "type": "Truck",
+                      "capacity": 12000,
+                      "assigned_load_kg": 11368.421053,
+                      "utilization_percentage": 94.74
+                    },
+                    {
+                      "id": 11006,
+                      "label": "TRK-002",
+                      "type": "Truck",
+                      "capacity": 7000,
+                      "assigned_load_kg": 6631.578947,
+                      "utilization_percentage": 94.74
+                    }
+                  ],
+                  "vehicle_utilization": 0.9474,
+                  "product": "Ground",
+                  "warnings": [],
+                  "inventory_allocation": [
+                    {
+                      "warehouse_id": 1,
+                      "warehouse": "IF Delhi NCR Mega Hub",
+                      "quantity": 1,
+                      "available_before": 1100
+                    }
+                  ],
+                  "score_components": {
+                    "normalized_cost": 1.0,
+                    "normalized_time": 1.0,
+                    "normalized_risk": 0.1745,
+                    "reliability_penalty": 0.06,
+                    "sla_penalty": 0,
+                    "utilization_penalty": 0.0526,
+                    "weighted_contributions": {
+                      "cost": 0.3,
+                      "eta": 0.25,
+                      "risk": 0.0349,
+                      "reliability": 0.006,
+                      "sla": 0.0,
+                      "utilization": 0.00263
+                    },
+                    "balanced_score": 0.5935
+                  },
+                  "score": 0.5935
+                }
+              },
+              "applied_changes": {
+                "blocked_routes": [
+                  [
+                    "IF Delhi NCR Mega Hub",
+                    "IF Mumbai West Hub"
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "context": {
+        "planning_request": {
+          "source": "IF Delhi NCR Mega Hub",
+          "destination": "IF Mumbai West Hub",
+          "shipment": {
+            "weight_kg": 18000.0,
+            "quantity": 1,
+            "sku": null
+          },
+          "objective": "balanced",
+          "deadline": null,
+          "allowed_modes": [
+            "road"
+          ],
+          "target_margin": 0.2,
+          "max_risk": null,
+          "intermediate_stops": [],
+          "handling_cost_per_stop": 250.0,
+          "fuel_cost_multiplier": 1.0,
+          "sla_mandatory": false,
+          "scoring_weights": {
+            "cost": 0.3,
+            "eta": 0.25,
+            "risk": 0.2,
+            "reliability": 0.1,
+            "sla": 0.1,
+            "utilization": 0.05
+          },
+          "source_country": null,
+          "destination_country": null
+        },
+        "allowed_modes": [
+          "road"
+        ],
+        "source": "IF Delhi NCR Mega Hub",
+        "destination": "IF Mumbai West Hub",
+        "objective": "balanced",
+        "weight_kg": 18000.0,
+        "quantity": 1,
+        "selected_plan": {
+          "plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 5,
+              "from_location": "IF Delhi NCR Mega Hub",
+              "to_location": "IF Mumbai West Hub",
+              "distance": 1400.0,
+              "duration": 18.5,
+              "cost": 49500.0,
+              "route_type": "road",
+              "reliability": 0.94,
+              "weather_risk": 0.06,
+              "operational_risk": 0.08,
+              "toll_cost": 4300.0,
+              "handling_cost": 0.0,
+              "fuel_cost": 0.0,
+              "air_cost": 0.0,
+              "base_transport_cost": 49500.0,
+              "capacity_per_day_kg": 36000.0,
+              "current_utilization_pct": 82.0,
+              "service_class": "Ground",
+              "express_eligible": 0,
+              "sla_hours": 24.0,
+              "carbon_kg": 1210.0,
+              "status": "active",
+              "source_coords": {
+                "lat": 28.5355,
+                "lng": 77.271
+              },
+              "destination_coords": {
+                "lat": 19.1136,
+                "lng": 72.8697
+              }
+            }
+          ],
+          "distance_km": 1400.0,
+          "duration_hours": 21.17,
+          "eta": "2026-09-06T05:03:14.327718+00:00",
+          "operational_cost": 1003345.0,
+          "cost_breakdown": {
+            "base_transport": 891000.0,
+            "distance_cost": 85400.0,
+            "fuel_cost": 0.0,
+            "toll_cost": 4300.0,
+            "fixed_dispatch_cost": 4700.0,
+            "driver_time_cost": 17945.0,
+            "vehicle_cost": 0.0,
+            "handling_cost": 0.0,
+            "air_cost": 0.0,
+            "other_cost": 0.0
+          },
+          "selling_price": 1254181.25,
+          "expected_revenue": 1254181.25,
+          "profit": 250836.25,
+          "margin_percentage": 20.0,
+          "risk_score": 0.1745,
+          "risk_breakdown": {
+            "route": 0.28,
+            "vehicle": 0.1219,
+            "weather": 0.06,
+            "warehouse": 0.1,
+            "mode": 0.18,
+            "overall": 0.1745
+          },
+          "reliability": 0.94,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 11005,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 12000,
+              "assigned_load_kg": 11368.421053,
+              "utilization_percentage": 94.74
+            },
+            {
+              "id": 11006,
+              "label": "TRK-002",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6631.578947,
+              "utilization_percentage": 94.74
+            }
+          ],
+          "vehicle_utilization": 0.9474,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "IF Delhi NCR Mega Hub",
+              "quantity": 1,
+              "available_before": 1100
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1.0,
+            "normalized_time": 1.0,
+            "normalized_risk": 0.1745,
+            "reliability_penalty": 0.06,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.0526,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.0349,
+              "reliability": 0.006,
+              "sla": 0.0,
+              "utilization": 0.00263
+            },
+            "balanced_score": 0.5935
+          },
+          "score": 0.5935
+        },
+        "selected_mode": "road",
+        "selected_plan_id": "bd4bd695-62dd-4c62-b838-b6c5cc0b5861",
+        "route_legs": [
+          {
+            "route_id": 5,
+            "from_location": "IF Delhi NCR Mega Hub",
+            "to_location": "IF Mumbai West Hub",
+            "distance": 1400.0,
+            "duration": 18.5,
+            "cost": 49500.0,
+            "route_type": "road",
+            "reliability": 0.94,
+            "weather_risk": 0.06,
+            "operational_risk": 0.08,
+            "toll_cost": 4300.0,
+            "handling_cost": 0.0,
+            "fuel_cost": 0.0,
+            "air_cost": 0.0,
+            "base_transport_cost": 49500.0,
+            "capacity_per_day_kg": 36000.0,
+            "current_utilization_pct": 82.0,
+            "service_class": "Ground",
+            "express_eligible": 0,
+            "sla_hours": 24.0,
+            "carbon_kg": 1210.0,
+            "status": "active",
+            "source_coords": {
+              "lat": 28.5355,
+              "lng": 77.271
+            },
+            "destination_coords": {
+              "lat": 19.1136,
+              "lng": 72.8697
+            }
+          }
+        ],
+        "route_ids": [
+          5
+        ],
+        "assigned_vehicles": [
+          {
+            "id": 11005,
+            "label": "TRK-001",
+            "type": "Truck",
+            "capacity": 12000,
+            "assigned_load_kg": 11368.421053,
+            "utilization_percentage": 94.74
+          },
+          {
+            "id": 11006,
+            "label": "TRK-002",
+            "type": "Truck",
+            "capacity": 7000,
+            "assigned_load_kg": 6631.578947,
+            "utilization_percentage": 94.74
+          }
+        ],
+        "selected_warehouses": [
+          {
+            "warehouse_id": 1,
+            "warehouse": "IF Delhi NCR Mega Hub",
+            "quantity": 1,
+            "available_before": 1100
+          }
+        ],
+        "cost": 1003345.0,
+        "eta": "2026-09-06T05:03:14.327718+00:00",
+        "duration_hours": 21.17,
+        "risk": 0.1745,
+        "reliability": 0.94
+      }
+    }
+  }
+]

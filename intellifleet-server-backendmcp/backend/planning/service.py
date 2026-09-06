@@ -386,6 +386,13 @@ class PlanningService:
     def plan(self, user_id: int, request: PlanningRequest, network: dict | None = None,
              changes: dict | None = None) -> dict:
         network = copy.deepcopy(network or self.load_network(user_id))
+        if not network["warehouses"] or not network["routes"]:
+            reason = "Network not loaded. Upload the warehouse, vehicle and route CSVs before planning."
+            return {"planning_request": request.model_dump(mode="json"),
+                    "candidate_plans": [], "recommended_plan": None,
+                    "recommended_plan_id": None, "reason": reason,
+                    "comparison": [], "explanation_inputs": None,
+                    "warnings": [reason], "feasibility": {"constraint": "network_not_loaded"}}
         def resolve_location(value: str) -> str:
             wanted = _norm(value)
             exact = [w for w in network["warehouses"]
