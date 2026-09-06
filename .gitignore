@@ -20,3 +20,6 @@ node_modules/
 
 # Local database/test data
 intellifleet-server-backendmcp/users.db
+
+# Local broken virtualenv backup
+intellifleet-server-backendmcp/.venv_requirements_broken/

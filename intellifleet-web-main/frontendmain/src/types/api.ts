@@ -60,6 +60,10 @@ export interface Warehouse {
   created_at?: string;
   updated_at?: string;
   inventory?: number;
+  storage_capacity?: number;
+  available_inventory?: number;
+  available_storage?: number;
+  utilization_percentage?: number;
   reorder_level?: number;
 }
 
@@ -98,6 +102,8 @@ export interface Vehicle {
 }
 
 export interface RouteAssignment {
+  assigned_load_kg?: number;
+  utilization_percentage?: number;
   route_id: number;
   route_data: any;
   waypoints: string[];
@@ -186,7 +192,7 @@ export interface ChatMessage {
 
 export interface ChatAction {
   type: 'display_route' | 'plan_route' | 'assign_vehicles' | 'list_vehicles' |
-  'clear_chat' | 'clear_map' | 'satellite_view' | 'street_view' |
+  'clear_chat' | 'clear_map' | 'satellite_view' | 'street_view' | 'unified_supply_chain_plan' | 'supply_chain_planning_operation' |
   'remove_route' | 'alternative_route' | 'reset_vehicle' | 'multimodal_route' | "assign_vehicle_multimodal" | "remove_multimodal_route" | "connect_hub" | "warehouse_status_update" | "reset_all_vehicles" | "fetch_routes" | "assign_plane" | "vehicle_status_update" | "route_status_update" | "air_intermediate_route" | "partial_assignment_start" | "animate_segment" | "manage_disruption_tool";
   data?: any;
 }
@@ -256,9 +262,9 @@ export interface WarehouseInventory {
 }
 
 export interface InventoryResponse {
-  status: boolean;
+  success: boolean;
   message: string;
-  data: WarehouseInventory[];
+  data: { inventory: WarehouseInventory[] };
 }
 
 // Vehicle Completion Types

@@ -57,6 +57,7 @@ const formatRouteResponse = (data: any): string => {
 export const useRouteAgent = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const sessionIdRef = useRef<string | undefined>(undefined);
+    const startNewSession = () => { sessionIdRef.current = crypto.randomUUID(); };
 
     const {
         vehicles,
@@ -80,6 +81,7 @@ export const useRouteAgent = () => {
 
         try {
             // Call /agent endpoint
+            if (!sessionIdRef.current) startNewSession();
             const response = await chatApi.sendMessage(message, sessionIdRef.current);
 
             // Update session ID
@@ -227,6 +229,10 @@ export const useRouteAgent = () => {
                 break;
             case "manage_disruption_tool":
                 handleManageDisruption(action.data);
+                break;
+            case "unified_supply_chain_plan":
+            case "supply_chain_planning_operation":
+                handlePlanningResult(action.data);
                 break;
             default:
                 console.warn('Unknown action type:', action.type);
@@ -448,6 +454,10 @@ export const useRouteAgent = () => {
 
     const handleStreetView = () => {
         setMapViewMode('street');
+    };
+
+    const handlePlanningResult = (data: any) => {
+        useAppStore.getState().applyPlanningMapPlan(data);
     };
 
     const handleDisplayRouteAction = (data: any) => {
@@ -1731,6 +1741,7 @@ export const useRouteAgent = () => {
     return {
         processMessage,
         isProcessing,
+        startNewSession,
         handleClearMap,
         handleRemoveRouteAction // Exporting this as it might be used by a "Clear Map" button
     };

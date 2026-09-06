@@ -208,6 +208,7 @@ export const RouteUploadTable = ({ isOpen, onClose }: RouteUploadTableProps) => 
                             isActive: true,
                             routeData: {
                                 route_id: route.route_id,
+                                route_type: route.route_type || route.type || 'road',
                                 source: route.source,
                                 destination: route.destination,
                                 optimal_routes: route.optimal_routes,

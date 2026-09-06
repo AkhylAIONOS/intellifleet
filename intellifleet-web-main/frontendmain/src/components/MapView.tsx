@@ -9,6 +9,9 @@ import { VehiclesLayer } from './MapLayers/VehiclesLayer';
 import { indiaBoundary } from '../assets/india-boundary';
 import { useAppStore } from '../store/appStore';
 import type { Warehouse } from '../types/api';
+import { GuardedJourney } from './JourneyBoundary';
+import { WarehouseFocusLayer } from './MapLayers/WarehouseFocusLayer';
+import { MapLegend } from './MapLayers/MapLegend';
 import { PlanesLayer } from './MapLayers/PlanesLayer';
 import { decodePolyline } from '../utils/decodePolyline';
 
@@ -77,7 +80,7 @@ const VehicleAssignmentZoomController = () => {
     if (lastAssignedRouteId === null) return;
 
     const route = activeRoutes[lastAssignedRouteId];
-    if (!route) return;
+    if (!route || route.routeData?.planning || useAppStore.getState().selectedPlan) return;
 
     const bounds = L.latLngBounds([]);
     let hasValidBounds = false;
@@ -229,6 +232,9 @@ export const MapView = () => {
         <VehiclesLayer />
         <PlanesLayer />
         <VehicleAssignmentZoomController />
+        <GuardedJourney />
+        <WarehouseFocusLayer />
+        <MapLegend />
       </MapContainer>
     </div>
   );

@@ -13,19 +13,17 @@ FRONTEND_URL = settings.FRONTEND_URL
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
  
 
-SECRET_KEY = 'a20007fd7961778b931836ee9b2e650e96fd5357b53dd2a90d120365a98e4376'
-ALGORITHM = "HS256"
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM or "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 20
-TOKEN_EXPIRE_TIME_HOURS = 24
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES or 20
+TOKEN_EXPIRE_TIME_HOURS = settings.TOKEN_EXPIRE_TIME_HOURS or 24
  
 # Configuration validation
 def validate_config():
     """Validate that all required configuration is present"""
     if not SECRET_KEY:
-        logger.warning("Using fallback SECRET_KEY - this is insecure for production!")
-    if not SECRET_KEY:
-        logger.error("SECRET_KEY is not set in configuration")
+        raise RuntimeError("SECRET_KEY is not set. Configure it in the backend .env file.")
  
 # Validate configuration on module load
 validate_config()
@@ -48,19 +46,15 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
  
 def get_current_user(request: Request) -> int:
-    print('request: ', request)
     """Extract user_id from JWT token"""
     try:
         authorization = request.headers.get("Authorization")
-        print('authorization: ', authorization)
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="No valid token provided")
  
         token = authorization.split(" ")[1]
-        print('token : ', token )
         # Decode token to get user info
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print('payload : ', payload )
         return payload
     except jwt.ExpiredSignatureError:  # Updated: Use imported exception directly
         raise HTTPException(status_code=401, detail="Token has expired")

@@ -37,23 +37,23 @@ async def agent_chat(
     
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
+
+    if supervisor.llm is None:
+        raise HTTPException(
+            status_code=503,
+            detail=supervisor.llm_status.message or "AI chat is unavailable due to incomplete configuration.",
+        )
     
     
     input_message = req.message
     logger.info(f'input_message {type(input_message)}: {input_message}')
-    print(f"🔄 Processing message for user {user_id}: {req.message}")
     
     # Use enhanced schema-aware supervisor
     result = await supervisor.process_message(user_id, req.message)
-    print(f"🔄 Raw agent result:======================================================================")
-    print(f"==>> result:  {result}")
-    
-    
-    print(f"✅ Agent result: {result.get('success', False)}")
+    logger.info("Agent request completed for user=%s success=%s", user_id, result.get("success", False))
     
     return {
         "success": result.get("success", True),
         "response": result.get("response", "No response generated"),
         "actions": result.get("actions", [])
     }
-

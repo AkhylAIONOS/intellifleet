@@ -2,7 +2,7 @@ import { useAppStore } from '../store/appStore';
 import { formatDuration } from '../utils/formatDuration';
 import './ActiveRoutesDashboard.css';
 
-export const ActiveRoutesDashboard = () => {
+export const ActiveRoutesDashboard = ({hideTrigger=false}:{hideTrigger?:boolean}) => {
     const { activeRoutes, activeDashboard, setActiveDashboard } = useAppStore();
     const isOpen = activeDashboard === 'activeRoutes';
 
@@ -69,6 +69,7 @@ export const ActiveRoutesDashboard = () => {
 
     // Minimized View (Button)
     if (!isOpen) {
+        if(hideTrigger) return null;
         return (
             <div className="active-routes-trigger-container">
                 <button className="active-routes-trigger-btn" onClick={toggleDashboard}>

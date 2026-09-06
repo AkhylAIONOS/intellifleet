@@ -1,3 +1,4 @@
+import { PlanSnapshot } from './PlanVisuals';
 // import { useState, useEffect } from 'react';
 // import { useAppStore } from '../store/appStore';
 // import './VehicleDashboard.css';
@@ -174,12 +175,13 @@ const getVehicleTypeColor = (type: string): string => {
     }
 };
 
-export const VehicleDashboard = () => {
+export const VehicleDashboard = ({hideTrigger=false}:{hideTrigger?:boolean}) => {
     const { vehicles, activeDashboard, setActiveDashboard } = useAppStore();
     const isOpen = activeDashboard === 'vehicleDashboard';
 
     // Filter only assigned vehicles
-    const assignedVehicles = vehicles.filter(v => v.status === 'assigned' && v.assigned_route);
+    const selectedPlan = useAppStore(state => state.selectedPlan);
+    const assignedVehicles = vehicles.filter(v => selectedPlan ? v.assigned_route?.route_data?.planning && v.assigned_route?.route_data?.plan_id === selectedPlan.plan_id : v.status === 'assigned' && v.assigned_route);
 
     const toggleDashboard = () => {
         setActiveDashboard(isOpen ? null : 'vehicleDashboard');
@@ -219,6 +221,7 @@ export const VehicleDashboard = () => {
 
     // Minimized View (Button)
     if (!isOpen) {
+        if(hideTrigger) return null;
         return (
             <button className="dashboard-toggle" onClick={toggleDashboard}>
                 <span className="trigger-icon">🚚</span>
@@ -233,6 +236,7 @@ export const VehicleDashboard = () => {
     // Expanded View (Table)
     return (
         <div className="vehicle-dashboard open">
+            {selectedPlan && <PlanSnapshot plan={selectedPlan} />}
             <div className="dashboard-header">
                 <h3>Assigned Vehicles</h3>
                 <div className="header-actions">

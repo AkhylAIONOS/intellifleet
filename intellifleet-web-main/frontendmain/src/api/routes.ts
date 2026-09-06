@@ -46,4 +46,6 @@ export const routesApi = {
         });
         return response.data;
     },
+    updateRoute: async (routeId: number, updates: { is_active: boolean; distance: number; duration: number; cost: number }) =>
+        (await apiClient.patch(`/routes/${routeId}`, updates)).data,
 };

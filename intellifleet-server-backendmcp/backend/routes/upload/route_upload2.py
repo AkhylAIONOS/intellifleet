@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
+import json
+import sqlite3
 from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import status
@@ -20,6 +22,12 @@ class RouteItem(BaseModel):
 
 class BulkRouteRequest(BaseModel):
     routes: List[RouteItem]
+
+class RouteUpdateRequest(BaseModel):
+    is_active: bool
+    distance: float
+    duration: float
+    cost: float
 
 
 # async def upload_routes_json_function(user_id: int, payload: BulkRouteRequest):
@@ -310,6 +318,26 @@ async def upload_routes_json_function(user_id: int, payload: BulkRouteRequest):
     }
 
 router = APIRouter(tags=["Upload Routes JSON"])
+
+@router.patch("/routes/{route_id}")
+async def update_route(route_id: int, payload: RouteUpdateRequest, current_user: int = Depends(get_current_user)):
+    """Safely edit mutable persisted-route metadata without invalidating geometry."""
+    if payload.distance <= 0 or payload.duration <= 0 or payload.cost < 0:
+        raise HTTPException(422, "Distance and duration must be positive; cost cannot be negative")
+    user_id=current_user.get("user_id")
+    with sqlite3.connect("users.db") as conn:
+        conn.row_factory=sqlite3.Row
+        row=conn.execute("SELECT * FROM persistent_routes WHERE user_id=? AND route_id=?",(user_id,route_id)).fetchone()
+        if not row: raise HTTPException(404,"Route not found")
+        data=json.loads(row["route_data"]); data.update({"distance":payload.distance,"duration":payload.duration,"route_cost":payload.cost})
+        if data.get("optimal_routes"):
+            data["optimal_routes"][0].update({"distance":payload.distance,"duration":payload.duration})
+        conn.execute("UPDATE persistent_routes SET route_data=?,is_active=?,updated_at=CURRENT_TIMESTAMP WHERE user_id=? AND route_id=?",
+                     (json.dumps(data),int(payload.is_active),user_id,route_id))
+        conn.execute("UPDATE nodes SET distance=?,duration=?,cost=? WHERE user_id=? AND route_id=?",
+                     (payload.distance,payload.duration,payload.cost,user_id,route_id))
+        conn.commit()
+    return {"route_id":route_id,"is_active":payload.is_active,"route_data":data}
 
 @router.post("/upload-routes-json")
 async def upload_routes_json(

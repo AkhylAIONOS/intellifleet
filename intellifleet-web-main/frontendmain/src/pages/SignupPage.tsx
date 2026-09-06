@@ -9,6 +9,7 @@ export const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,12 @@ export const SignupPage = () => {
     setError('');
     setSuccess('');
     setLoading(true);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
     // Split full name into first and last name for API
     const nameParts = fullName.trim().split(' ');
@@ -95,6 +102,12 @@ export const SignupPage = () => {
             minLength={6}
             placeholder="Create a password (min. 6 characters)"
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6}
+            placeholder="Confirm your password" />
         </div>
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}

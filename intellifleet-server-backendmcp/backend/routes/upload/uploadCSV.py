@@ -20,13 +20,14 @@ import io
 
 router = APIRouter(tags=["Upload CSV"])
 
-# current_user = Depends(get_current_user),
 @router.post("/upload_csv")
-async def upload_csv_unified( file: UploadFile = File(...)):
+async def upload_csv_unified(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+):
 
     try:
-        # user_id = current_user.get("user_id")
-        user_id = 1
+        user_id = current_user.get("user_id")
         
         if not user_id:
             return JSONResponse(

@@ -35,7 +35,7 @@ const getStatusColor = (status: string): string => {
     }
 };
 
-export const VehicleInfoDashboard = () => {
+export const VehicleInfoDashboard = ({hideTrigger=false}:{hideTrigger?:boolean}) => {
     const { vehicles, activeDashboard, setActiveDashboard } = useAppStore();
     const isOpen = activeDashboard === 'vehicleInfo';
 
@@ -76,6 +76,7 @@ export const VehicleInfoDashboard = () => {
 
     // Minimized View (Button)
     if (!isOpen) {
+        if(hideTrigger) return null;
         return (
             <div className="vehicle-info-trigger-container">
                 <button className="vehicle-info-trigger-btn" onClick={toggleDashboard}>

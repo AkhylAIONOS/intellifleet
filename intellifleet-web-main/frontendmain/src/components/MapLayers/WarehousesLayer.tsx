@@ -88,7 +88,7 @@ export const WarehousesLayer = () => {
     return (
         <>
             {validWarehouses.map((warehouse) => {
-                const isActive = warehouse.is_active === 1;
+                const isActive = warehouse.is_active !== 0;
 
                 return (
                     <Marker
@@ -100,6 +100,11 @@ export const WarehousesLayer = () => {
                             <div className="warehouse-popup">
                                 <h3>{warehouse.name}</h3>
                                 <p>{warehouse.address}</p>
+                                {warehouse.inventory != null && <div>Inventory: {warehouse.inventory.toLocaleString()}</div>}
+                                {warehouse.storage_capacity != null && <div>Storage capacity: {warehouse.storage_capacity.toLocaleString()}</div>}
+                                {warehouse.available_inventory != null && <div>Available: {warehouse.available_inventory.toLocaleString()}</div>}
+                                {warehouse.available_storage != null && <div>Free storage: {warehouse.available_storage.toLocaleString()}</div>}
+                                {warehouse.utilization_percentage != null && <div>Utilization: {warehouse.utilization_percentage}%</div>}
                                 {!isActive && (
                                     <p style={{ color: '#dc3545', fontWeight: 'bold' }}>
                                         ⚠️ Non-Functional

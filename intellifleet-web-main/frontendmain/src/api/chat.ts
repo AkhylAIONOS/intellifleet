@@ -16,10 +16,13 @@ export const chatApi = {
     return response.data;
   },
 
+  clearChat: async (): Promise<void> => {
+    await apiClient.delete('/chat/history');
+  },
+
   // Check AI service health
   checkAIHealth: async (): Promise<ApiResponse<{ groq_available: boolean }>> => {
     const response = await apiClient.get<ApiResponse<{ groq_available: boolean }>>('/api/ai/health');
     return response.data;
   },
 };
-

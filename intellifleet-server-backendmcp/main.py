@@ -18,11 +18,18 @@ from backend.api.chat_api import router as chat_router
 from backend.routes.upload.route_upload2 import router as route_upload_json
 from backend.routes.agent_routes import router as history
 from backend.routes.vehicles.partial_vehicle import router as partial_vehicle
-from backend.train_route.train_agent import router as train
 from backend.routes.disruption.disruption import disruption_router
+from backend.config.config import settings
+from backend.planning.routes import router as planning_router
+from backend.routes.upload.network_upload import router as network_upload_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    from backend.database.database import init_db
+    from backend.planning.database import migrate_planning_schema
+    init_db()
+    migrate_planning_schema()
 
     # DB setup
     conn = sqlite3.connect("users.db")
@@ -43,7 +50,11 @@ app = FastAPI(title="IntelliFleet", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "https://unprecipitate-liquidly-randal.ngrok-free.dev"],
+    allow_origins=[
+        settings.FRONTEND_URL or "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://unprecipitate-liquidly-randal.ngrok-free.dev",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,8 +77,9 @@ app.include_router(chat_router)
 app.include_router(route_upload_json)
 app.include_router(history)
 app.include_router(partial_vehicle)
-app.include_router(train)
 app.include_router(disruption_router)
+app.include_router(planning_router)
+app.include_router(network_upload_router)
 
 
 @app.get("/health")
@@ -76,6 +88,3 @@ async def health_check():
         "status": "healthy", 
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-
-
-

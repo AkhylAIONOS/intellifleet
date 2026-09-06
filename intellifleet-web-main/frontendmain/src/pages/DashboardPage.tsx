@@ -9,7 +9,6 @@ import { WarehouseDashboard } from '../components/WarehouseDashboard';
 import { warehousesApi } from '../api/warehouses';
 import { routesApi } from '../api/routes';
 import { vehiclesApi } from '../api/vehicles';
-import { RouteUploadTable } from '../components/RouteUploadTable';
 // Disabled: AnimatedVehicleMarker now handles animation via direct Leaflet manipulation
 // import { useVehicleAnimation } from '../hooks/useVehicleAnimation';
 import './Dashboard.css';
@@ -17,14 +16,16 @@ import './Dashboard.css';
 import { ActiveRoutesDashboard } from '../components/ActiveRoutesDashboard';
 import { chatApi } from '../api/chat';
 import { VehicleInfoDashboard } from '../components/VehicleInfoDashboard';
+import { PlanningPanel } from '../components/PlanningPanel';
+import { RouteDashboard } from '../components/RouteDashboard';
 
 export const DashboardPage = () => {
+  const [showRouteSelector, setShowRouteSelector] = useState(false);
   const { user, clearAuth } = useAuthStore();
   //const { hasCsvUploaded, setWarehouseInventory, warehouseInventory } = useAppStore();
   const resetStore = useAppStore((state) => state.resetStore);
 
-  const { setWarehouseInventory, setWarehouses, setChatHistory, chatHistory, setActiveRoutes, setVehicles } = useAppStore();
-  const [isRouteTableOpen, setIsRouteTableOpen] = useState(false);
+  const { setWarehouseInventory, setWarehouses, clearChatHistory, setActiveRoutes, setVehicles } = useAppStore();
 
   // Fetch inventory on mount if CSV was previously uploaded
   // useEffect(() => {
@@ -50,9 +51,9 @@ export const DashboardPage = () => {
       try {
         console.log('Fetching inventory from API...');
         const response = await warehouseApi.getInventory();
-        if (response.data && response.data.length > 0) {
-          setWarehouseInventory(response.data);
-          console.log('Inventory loaded:', response.data.length, 'items');
+        if (response.data.inventory.length > 0) {
+          setWarehouseInventory(response.data.inventory);
+          console.log('Inventory loaded:', response.data.inventory.length, 'items');
         }
       } catch (error) {
         console.error('Failed to fetch inventory on load:', error);
@@ -86,28 +87,11 @@ export const DashboardPage = () => {
     fetchWarehouses();
   }, [setWarehouses]);
 
-  // Fetch chat history from API on mount (for cross-device sync)
+  // A browser load starts a fresh conversation while preserving network data.
   useEffect(() => {
-    const fetchChatHistory = async () => {
-      try {
-        console.log('Fetching chat history from API...');
-        const response = await chatApi.getChatHistory();
-        if (response.success === true && response.data && response.data.length > 0) {
-          setChatHistory(response.data);
-          console.log('Chat history loaded:', response.data.length, 'messages');
-        }
-        // If history is empty, the welcome message in ChatPanel will show automatically
-      } catch (error) {
-        console.log('No chat history found or failed to fetch:', error);
-        // This is fine - welcome message will show
-      }
-    };
-
-    // Only fetch if chatHistory is empty (to avoid overwriting local changes)
-    if (chatHistory.length === 0) {
-      fetchChatHistory();
-    }
-  }, [setChatHistory, chatHistory.length]);
+    clearChatHistory();
+    void chatApi.clearChat().catch(error => console.warn('Unable to reset chat on load:', error));
+  }, [clearChatHistory]);
 
   // Fetch route session from API on mount (for cross-device sync)
   useEffect(() => {
@@ -130,6 +114,7 @@ export const DashboardPage = () => {
               created: new Date(route.created_at),
               isActive: route.is_active !== false,
               routeData: {
+                route_type: route.data?.route_type,
                 optimal_routes: route.data?.optimal_routes,
                 //route_cost: route.data?.route_cost,
                 route_cost: route.data?.route_cost ? Number(route.data.route_cost).toFixed(2) : null,
@@ -153,6 +138,7 @@ export const DashboardPage = () => {
               created: new Date(route.created_at),
               isActive: route.is_active !== false,
               routeData: {
+                route_type: route.data?.route_type,
                 optimal_routes: [{
                   ...route.data?.alternative_route,
                   isOptimal: false
@@ -245,16 +231,17 @@ export const DashboardPage = () => {
   //   window.location.href = '/login';
   // };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const currentUser = useAuthStore.getState().user;
     // Standard Production Logout:
     // 1. Clear Zustand store (memory)
+    await chatApi.clearChat().catch(() => undefined);
     resetStore();
 
     // 2. Clear Auth (tokens/user info)
     clearAuth();
 
     // 3. Clear any persisted storage (optional, but good for cleanup)
-    const currentUser = useAuthStore.getState().user;
     if (currentUser) {
       localStorage.removeItem(`intellifleet-storage-${currentUser.id || currentUser.email}`);
     }
@@ -270,27 +257,12 @@ export const DashboardPage = () => {
           <h1>UniFleet</h1>
         </div>
         <div className="user-info">
-          <div className="sample-downloads">
-            <a href="/sample_warehouse_data.csv" download="sample_warehouse_data.csv" className="download-pill" title="Download Sample Warehouse CSV">
-              ⬇ Warehouse CSV
-            </a>
-            <a href="/sample_vehicle_data.csv" download="sample_vehicle_data.csv" className="download-pill" title="Download Sample Vehicle CSV">
-              ⬇ Vehicle CSV
-            </a>
-            <a href="/routes.csv" download="routes.csv" className="download-pill" title="Download Sample Routes CSV">
-              ⬇ Routes CSV
-            </a>
-            <button
-              className="download-pill"
-              onClick={() => setIsRouteTableOpen(true)}
-              title="Add Routes via Table"
-            >
-              📋 Add Routes
-            </button>
-          </div>
+          <button className="add-routes-button" aria-expanded={showRouteSelector} onClick={() => setShowRouteSelector(value => !value)}>
+            + Add Route
+          </button>
           <div className="user-profile-pill">
             <span className="user-name">👋 {user?.first_name || 'User'}</span>
-            <span className="user-plan">Freemium</span>
+            <span className="user-plan">Premium</span>
           </div>
           <button onClick={handleLogout} className="logout-button">
             Logout
@@ -302,21 +274,40 @@ export const DashboardPage = () => {
           <ChatPanel />
         </div>
         <div className="dashboard-right">
-          <MapView />
-          <VehicleDashboard />
-          {/* <RouteDashboard /> */}
-          <ActiveRoutesDashboard />
-          <WarehouseDashboard />
-          <VehicleInfoDashboard />
+          <PlanningPanel />
+          <div className="map-workspace">
+            <MapView />
+            <MapMetrics />
+            <VehicleDashboard hideTrigger />
+            <ActiveRoutesDashboard hideTrigger />
+            <WarehouseDashboard hideTrigger />
+            <VehicleInfoDashboard hideTrigger />
+          </div>
         </div>
-        <RouteUploadTable
-          isOpen={isRouteTableOpen}
-          onClose={() => setIsRouteTableOpen(false)}
-        />
-
-
       </main>
+      {showRouteSelector && (
+        <div className="route-selector-backdrop" role="presentation" onMouseDown={() => setShowRouteSelector(false)}>
+          <div className="route-selector-dialog" role="dialog" aria-modal="true" aria-label="Route management" onMouseDown={event => event.stopPropagation()}>
+            <RouteDashboard onClose={() => setShowRouteSelector(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+const MapMetrics = () => {
+  const warehouses = useAppStore(state => state.warehouses);
+  const vehicles = useAppStore(state => state.vehicles);
+  const activeRoutes = useAppStore(state => state.activeRoutes);
+  const routeCount = Object.values(activeRoutes).filter(route => route.isActive !== false).length;
+  const selectedPlan = useAppStore(state => state.selectedPlan);
+  const assignedCount = selectedPlan ? (selectedPlan.vehicles || []).length : vehicles.filter(vehicle => vehicle.status === 'assigned' || Boolean(vehicle.assigned_route)).length;
+  const setActiveDashboard = useAppStore(state => state.setActiveDashboard);
+  return <div className="map-metrics" aria-label="Network metrics">
+    <button onClick={()=>setActiveDashboard('activeRoutes')}><span>Active Routes</span><strong>{routeCount}</strong></button>
+    <button onClick={()=>setActiveDashboard('warehouse')}><span>Warehouses</span><strong>{warehouses.length}</strong></button>
+    <button onClick={()=>setActiveDashboard('vehicleInfo')}><span>Vehicles</span><strong>{vehicles.length}</strong></button>
+    <button onClick={()=>setActiveDashboard('vehicleDashboard')}><span>Assigned Vehicles</span><strong>{assignedCount}</strong></button>
+  </div>;
+};

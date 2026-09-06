@@ -12,14 +12,13 @@ from typing import Dict, Any
 
 from backend.routes.vehicles.final_vehicle import assign_vehicles_multi_segment
 from fastapi.responses import JSONResponse
+from backend.config.config import settings
 
 
 # decode_responses=True gives us strings instead of bytes
-r = redis.Redis(
-    host="localhost",
-    port=6379,
-    db=1,
-    decode_responses=True
+r = redis.from_url(
+    settings.REDIS_URL or "redis://localhost:6379/1",
+    decode_responses=True,
 )
 
 def get_redis():

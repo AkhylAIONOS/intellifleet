@@ -12,11 +12,9 @@ async def send_email(to: str, subject: str, body: str, html: bool = False):
     Send email using Gmail SMTP + App Password (async)
     """
 
-    "imhc vrnt rnau snof"
-
     sender_email = settings.EMAIL_FROM
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
+    smtp_server = settings.SMTP_SERVER
+    smtp_port = settings.SMTP_PORT
     smtp_username = settings.SMTP_USERNAME
     smtp_password = settings.SMTP_PASSWORD 
 

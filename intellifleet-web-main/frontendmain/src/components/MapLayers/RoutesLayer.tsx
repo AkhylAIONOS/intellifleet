@@ -212,7 +212,7 @@ export const RoutesLayer = () => {
     //             new Date(b.created).getTime() - new Date(a.created).getTime()
     //         )[0];
 
-    //         if (!latestRoute) return;
+    //         if (!latestRoute || latestRoute.routeData?.planning || useAppStore.getState().selectedPlan) return;
 
     //         const bounds = L.latLngBounds([]);
     //         let hasValidBounds = false;
@@ -267,7 +267,7 @@ export const RoutesLayer = () => {
         if (lastCreatedRouteId === null) return;
 
         const latestRoute = activeRoutes[lastCreatedRouteId];
-        if (!latestRoute) return;
+        if (!latestRoute || latestRoute.routeData?.planning || useAppStore.getState().selectedPlan) return;
 
         const bounds = L.latLngBounds([]);
         let hasValidBounds = false;
@@ -357,8 +357,9 @@ export const RoutesLayer = () => {
                 pathOptions={{
                     color: getRouteColor(),
                     // weight: route.isActive === false ? 4 : 5,
-                    weight: (highlightedRouteIds.length > 0 && highlightedRouteIds.includes(route.id)) ? 7 : (route.isActive === false ? 4 : 5),
-                    opacity: route.isActive === false ? 0.6 : 0.8
+                    weight: highlightedRouteIds.includes(route.id) ? 3 : 2,
+                    opacity: route.isActive === false ? .55 : .28,
+                    dashArray: optimalRoute?.isOptimal === false ? '6 6' : undefined
                 }
                 }
             >
@@ -524,7 +525,7 @@ export const RoutesLayer = () => {
                 <Polyline
                     key={`${route.id}-segment1`}
                     positions={segment1Positions}
-                    pathOptions={{ color: roadColor, weight: 5, opacity: 0.8 }}
+                    pathOptions={{ color: roadColor, weight: 2, opacity: 0.28 }}
                 >
                     {unifiedPopup}
                 </Polyline>
@@ -543,7 +544,7 @@ export const RoutesLayer = () => {
                 <Polyline
                     key={`${route.id}-segment2`}
                     positions={airPositions}
-                    pathOptions={{ color: flightColor, weight: 4, opacity: 0.9, dashArray: '10, 10', lineCap: 'round' }}
+                    pathOptions={{ color: flightColor, weight: 2, opacity: 0.28, dashArray: '10, 10', lineCap: 'round' }}
                 >
                     {unifiedPopup}
                 </Polyline>
@@ -560,7 +561,7 @@ export const RoutesLayer = () => {
                 <Polyline
                     key={`${route.id}-segment3`}
                     positions={segment3Positions}
-                    pathOptions={{ color: roadColor, weight: 5, opacity: 0.8 }}
+                    pathOptions={{ color: roadColor, weight: 2, opacity: 0.28 }}
                 >
                     {unifiedPopup}
                 </Polyline>
@@ -570,9 +571,11 @@ export const RoutesLayer = () => {
         return <React.Fragment key={route.id}>{elements}</React.Fragment>;
     };
 
+
     return (
         <>
             {routes.map((route) => {
+                if (route.routeData?.planning) return null;
                 // Check if it's a multimodal route
                 if (route.routeData?.multimodal && route.routeData?.segments) {
                     return renderMultimodalRoute(route);

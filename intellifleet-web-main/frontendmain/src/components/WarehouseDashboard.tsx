@@ -79,7 +79,7 @@
 import { useAppStore } from '../store/appStore';
 import './WarehouseDashboard.css';
 
-export const WarehouseDashboard = () => {
+export const WarehouseDashboard = ({hideTrigger=false}:{hideTrigger?:boolean}) => {
     const { warehouses, activeDashboard, setActiveDashboard } = useAppStore();
     const isOpen = activeDashboard === 'warehouse';
 
@@ -89,6 +89,7 @@ export const WarehouseDashboard = () => {
 
     // Minimized View (Button)
     if (!isOpen) {
+        if(hideTrigger) return null;
         return (
             <div className="warehouse-dashboard-trigger-container">
                 <button className="warehouse-dashboard-trigger-btn" onClick={toggleDashboard}>

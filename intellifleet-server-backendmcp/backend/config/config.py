@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     SECRET_KEY: Optional[str] = None
     EXPIRATION_TIME: Optional[int] = 3600
     GROQ_API_KEY: Optional[str] = None
@@ -20,6 +21,12 @@ class Settings(BaseSettings):
     EMAIL_FROM: str | None = None
 
     OPENAI_API_KEY: Optional[str] = None
+    AI_PROVIDER: str = "openai"
+    AZURE_AI_ENDPOINT: Optional[str] = None
+    AZURE_AI_API_KEY: Optional[str] = None
+    AZURE_AI_DEPLOYMENT: Optional[str] = None
+    AZURE_AI_API_VERSION: str = "2024-10-21"
+    AZURE_RESOURCE_GROUP: Optional[str] = None
 
     ALGORITHM: Optional[str] = None
     ACCESS_TOKEN_EXPIRE_MINUTES: Optional[int] = None
@@ -29,7 +36,4 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: Optional[str] = None
 
-    class Config:
-        env_file = ".env"
-    
 settings = Settings()

@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { Marker, Popup } from 'react-leaflet';
 import { useAppStore } from '../../store/appStore';
 import { AnimatedVehicleMarker } from './AnimatedVehicleMarker';
 //import { useShallow } from 'zustand/react/shallow';
@@ -61,6 +62,7 @@ const getVehicleIcon = (type: string, isMoving: boolean) => {
 
 export const VehiclesLayer = () => {
     const vehicles = useAppStore(state => state.vehicles);
+    const selectedPlan = useAppStore(state => state.selectedPlan);
 
     return (
         <>
@@ -70,7 +72,16 @@ export const VehiclesLayer = () => {
                 if ((vehicle.status !== 'assigned' && vehicle.status !== 'completed') || !vehicle.assigned_route) return null;
 
                 // Skip planes - they are rendered by PlanesLayer
-                if (vehicle.type === 'plane') return null;
+                if (String(vehicle.type).toLowerCase() === 'plane') return null;
+
+                if (vehicle.assigned_route.route_data?.planning) return null;
+                if (selectedPlan) {
+                    const icon = getVehicleIcon(vehicle.type, false);
+                    if (!icon || !Number.isFinite(vehicle.current_position?.lat) || !Number.isFinite(vehicle.current_position?.lng)) return null;
+                    return <Marker key={vehicle.id} position={vehicle.current_position} icon={icon}>
+                        <Popup><b>{vehicle.label}</b><br />{vehicle.type}{vehicle.capacity != null && <><br />Capacity: {vehicle.capacity} kg</>}</Popup>
+                    </Marker>;
+                }
 
                 return (
                     <AnimatedVehicleMarker

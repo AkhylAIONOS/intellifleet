@@ -1,22 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouteAgent } from '../hooks/useRouteAgent';
 import { useAppStore } from '../store/appStore';
-import { uploadApi } from '../api/upload';
-import apiClient from '../api/client';
 import './ChatPanel.css';
-import { warehouseApi } from '../api/warehouse';
-import { warehousesApi } from '../api/warehouses';
+import { NetworkUpload } from './NetworkUpload';
+import { CurrentPlanVisuals } from './PlanVisuals';
+import { ChatResult } from './ChatResult';
+import { chatApi } from '../api/chat';
 // import { formatDuration } from '../utils/formatDuration';
 
 export const ChatPanel = () => {
   const [input, setInput] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { processMessage, isProcessing } = useRouteAgent();
+  const { processMessage, isProcessing, startNewSession } = useRouteAgent();
   //const { chatHistory, addChatMessage, setWarehouses, setVehicles, setWarehouseInventory, setHasCsvUploaded } = useAppStore();
-  const { chatHistory, addChatMessage, setWarehouses, setVehicles, setWarehouseInventory, setHasCsvUploaded, setActiveRoutes } = useAppStore();
+  const { chatHistory, addChatMessage, clearChatHistory, warehouses, vehicles, activeRoutes } = useAppStore();
+  const persistedRouteCount = Object.values(activeRoutes).filter(route => !route.routeData?.planning).length;
+  const networkReady = warehouses.length > 0 && vehicles.length > 0 && persistedRouteCount > 0;
+
+  const handleNewChat = async () => {
+    if (isProcessing) return;
+    await chatApi.clearChat();
+    clearChatHistory();
+    useAppStore.getState().clearPlanningVisuals();
+    startNewSession();
+    setInput('');
+  };
+
+  const handleCopy = async (content: string, index: number) => {
+    await navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    window.setTimeout(() => setCopiedIndex(current => current === index ? null : current), 1500);
+  };
 
 
   const scrollToBottom = () => {
@@ -29,7 +45,7 @@ export const ChatPanel = () => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isProcessing || isUploading) return;
+    if (!input.trim() || isProcessing) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -48,6 +64,7 @@ export const ChatPanel = () => {
     }
   };
 
+  /* Legacy single-file CSV ingestion intentionally has no dashboard control.
   // const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const file = e.target.files?.[0];
   //   if (!file) return;
@@ -144,7 +161,7 @@ export const ChatPanel = () => {
         try {
           const inventoryResponse = await warehouseApi.getInventory();
           if (inventoryResponse.data) {
-            setWarehouseInventory(inventoryResponse.data);
+            setWarehouseInventory(inventoryResponse.data.inventory);
             setHasCsvUploaded(true);
           }
         } catch (err) {
@@ -272,60 +289,27 @@ export const ChatPanel = () => {
       }
     }
   };
+  */
 
 
   return (
     <div className="chat-panel">
       <div className="chat-header">
-        <h3>Autonomous Agentic AI Planner</h3>
+        <div className="assistant-mark">✦</div>
+        <div><h3>UniFleet AI Assistant</h3><span>Powered by deterministic planning</span></div>
+        <button className="new-chat-btn" type="button" onClick={handleNewChat} disabled={isProcessing} title="Start a new chat" aria-label="Start a new chat">↻ <span>New Chat</span></button>
       </div>
+      <div className={`network-status ${networkReady ? 'ready' : 'empty'}`} role="status">
+        {networkReady
+          ? <><strong>Network Ready</strong><span>{warehouses.length} Warehouses • {vehicles.length} Vehicles • {persistedRouteCount} Routes</span></>
+          : <><strong>Network data has not been uploaded yet.</strong><span>Upload Warehouse, Vehicle and Routes CSVs to start planning.</span></>}
+      </div>
+      <CurrentPlanVisuals />
       <div className="chat-messages">
         {chatHistory.length === 0 && (
           <div className="welcome-message">
-            <p>👋 <strong>AI Assistant:</strong> I'm your Autonomous Agentic AI Planner</p>
-            <p>You can:</p>
-            <ul>
-              <li>Plan optimal routes between locations both road and air</li>
-              <li>Assign vehicles to routes</li>
-              <li>Monitor vehicle movements</li>
-              <li>query route information to get various details</li>
-              <li>Get alternative routes for disruptions</li>
-              <li>Change Map View (Satellite view, Street view)</li>
-              <li>Clear Map with existing Routes and Vehicles</li>
-              <li>Clear Chat</li>
-            </ul>
-            <p className="sample-csv-note">
-              Add your warehouse and inventory instead of the ones present in this sample CSV and then upload it to continue:
-            </p>
-            <a
-              href="/sample_warehouse_data.csv"
-              download="sample_warehouse_data.csv"
-              className="sample-csv-download"
-            >
-              📥 Download Sample Warehouse CSV
-            </a>
-
-            <p className="sample-csv-note">
-              Similarly add your vehicle and capacity details in the below sample csv and upload it to continue:
-            </p>
-            <a
-              href="/sample_vehicle_data.csv"
-              download="sample_vehicle_data.csv"
-              className="sample-csv-download"
-            >
-              📥 Download Sample Vehicle CSV
-            </a>
-            <p className="sample-csv-note">
-              If you have multiple route already planned you can add them all in this csv and upload it to create them all at once:
-            </p>
-            <a
-              href="/routes.csv"
-              download="routes.csv"
-              className="sample-csv-download"
-            >
-              📥 Download Sample Routes CSV
-            </a>
-            <p className="note"><strong>Remember:</strong> Upload your warehouse and vehicle CSV file first to enable Autonomous Agentic AI Planner</p>
+            <p><strong>How can I help with your network?</strong></p>
+            <p>Ask me to optimize a shipment, compare modes, evaluate risk, recover from a disruption, or explain a recommendation.</p>
           </div>
         )}
         {chatHistory.map((msg, idx) => (
@@ -335,14 +319,15 @@ export const ChatPanel = () => {
             </div>
             <div className="message-bubble">
               <div className="message-sender">{msg.role === 'user' ? 'You' : 'AI Assistant'}</div>
-              <div className="message-content">{msg.content}</div>
+              {msg.role === 'assistant' ? <ChatResult content={msg.content} /> : <div className="message-content">{msg.content}</div>}
+              {msg.role === 'assistant' && <button className="copy-response-btn" type="button" onClick={() => handleCopy(msg.content, idx)} aria-label="Copy complete assistant response">{copiedIndex === idx ? 'Copied' : 'Copy'}</button>}
               <div className="message-time">
                 {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
               </div>
             </div>
           </div>
         ))}
-        {(isProcessing || isUploading) && (
+        {isProcessing && (
           <div className="message-row assistant">
             <div className="message-avatar">🤖</div>
             <div className="message-bubble typing">
@@ -356,35 +341,24 @@ export const ChatPanel = () => {
         )}
         <div ref={messagesEndRef} />
       </div>
+      <NetworkUpload />
       <div className="chat-input-container">
         <div className="unified-input-wrapper">
-          <label htmlFor="file-upload" className="file-btn" title="Attach CSV">
-            📎
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-            disabled={isUploading}
-          />
-
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type a message or attach a CSV file..."
-            disabled={isProcessing || isUploading}
+            placeholder="Ask UniFleet anything…"
+            disabled={isProcessing}
             rows={1}
           />
 
           <button
             onClick={handleSend}
-            disabled={(!input.trim() && !isUploading) || isProcessing}
+            disabled={!input.trim() || isProcessing}
             className="send-btn"
           >
-            {isProcessing || isUploading ? (
+            {isProcessing ? (
               <span className="loading-spinner"></span>
             ) : (
               '📤'
@@ -395,4 +369,3 @@ export const ChatPanel = () => {
     </div>
   );
 };
-
