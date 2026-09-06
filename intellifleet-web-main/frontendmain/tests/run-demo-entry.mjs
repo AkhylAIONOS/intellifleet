@@ -36,7 +36,12 @@ try {
     assert.ok(ui.getByRole('heading',{name:'Welcome to UniFleet'}));
     assert.ok(ui.getByRole('button',{name:'Enter UniFleet'}));
     assert.equal(document.querySelectorAll('input,form,.auth-tabs,.auth-footer,.error-message').length,0);
+    assert.equal(document.querySelector('.auth-right-panel .form-subtitle'),null);
+    assert.equal(document.querySelector('.auth-form-wrapper').textContent.trim(),'Enter UniFleet');
     for(const text of ['Network Creation','Autonomous AI Route Agent','Visibility Twin','Advanced Analytics Dashboard'])assert.ok(ui.getByText(text));
+    for(const text of ['40%','Cost Reduction','2×','Improved Planning','35%','Delay Improvements'])assert.ok(ui.getByText(text));
+    assert.match(document.querySelector('.brand-title').textContent.replace(/\s+/g,' '),/AI-Powered Fleet\s*Intelligence/);
+    assert.equal(document.querySelector('.brand-subtitle').textContent.trim(),'The autonomous logistics platform that thinks ahead — optimizing routes, predicting disruptions, and manages your entire fleet.');
     cleanup();
   }
   window.history.replaceState({},'','/login');let ui=render(React.createElement(App));
@@ -63,7 +68,8 @@ try {
   cleanup();useAuthStore.getState().clearAuth();window.history.replaceState({},'','/');
   apiClient.defaults.adapter=async()=>{throw new Error('raw internal credentials or database error');};
   ui=render(React.createElement(App));await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Enter UniFleet'})));
-  assert.equal(ui.getByRole('alert').textContent,'Unable to enter UniFleet. Please try again.');
+  assert.equal(ui.queryByRole('alert'),null);
+  assert.equal(ui.getByRole('button',{name:'Enter UniFleet'}).disabled,false);
   assert.doesNotMatch(document.body.textContent,/raw internal/);assert.equal(useAuthStore.getState().isAuthenticated,false);
   cleanup();
   localStorage.setItem('authToken',tokenFor(-10));localStorage.setItem('auth-storage',persisted);

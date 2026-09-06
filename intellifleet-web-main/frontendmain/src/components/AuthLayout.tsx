@@ -131,11 +131,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ type, children }) => {
                         <h2 className="form-title">
                             {type === 'demo' ? 'Welcome to UniFleet' : type === 'signin' ? 'Welcome back' : 'Get started free'}
                         </h2>
-                        <p className="form-subtitle">
-                            {type === 'demo' ? 'AI-Powered Supply-Chain Planning' : type === 'signin'
+                        {type !== 'demo' && <p className="form-subtitle">
+                            {type === 'signin'
                                 ? 'Sign in to your fleet management dashboard'
                                 : 'Create your account and start managing smarter'}
-                        </p>
+                        </p>}
                     </div>
 
                     {/* Tab switcher */}
