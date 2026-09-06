@@ -48,13 +48,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="IntelliFleet", lifespan=lifespan)
 
+allowed_origins = [
+    "https://intellifleet-web.onrender.com",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://unprecipitate-liquidly-randal.ngrok-free.dev",
+]
+frontend_origin = (settings.FRONTEND_URL or "").strip().rstrip("/")
+if frontend_origin and frontend_origin not in allowed_origins:
+    allowed_origins.append(frontend_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL or "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://unprecipitate-liquidly-randal.ngrok-free.dev",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
