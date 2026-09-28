@@ -17,9 +17,12 @@ import { ActiveRoutesDashboard } from '../components/ActiveRoutesDashboard';
 import { chatApi } from '../api/chat';
 import { VehicleInfoDashboard } from '../components/VehicleInfoDashboard';
 import { PlanningPanel } from '../components/PlanningPanel';
+import { FedExPanel } from '../components/FedExPanel';
 import { RouteDashboard } from '../components/RouteDashboard';
 
 export const DashboardPage = () => {
+  const [showFedex, setShowFedex] = useState(false);
+  const [fedexLoaded, setFedexLoaded] = useState(false);
   const [showRouteSelector, setShowRouteSelector] = useState(false);
   const { user, clearAuth } = useAuthStore();
   //const { hasCsvUploaded, setWarehouseInventory, warehouseInventory } = useAppStore();
@@ -275,6 +278,8 @@ export const DashboardPage = () => {
         </div>
         <div className="dashboard-right">
           <PlanningPanel />
+          <button className="fedex-toggle" aria-expanded={showFedex} onClick={()=>{setFedexLoaded(true); setShowFedex(!showFedex);}}>FedEx Simulation {showFedex ? '−' : '+'}</button>
+          {fedexLoaded && <div hidden={!showFedex}><FedExPanel /></div>}
           <div className="map-workspace">
             <MapView />
             <MapMetrics />

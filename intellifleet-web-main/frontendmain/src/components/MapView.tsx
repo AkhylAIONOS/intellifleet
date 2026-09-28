@@ -14,6 +14,7 @@ import { WarehouseFocusLayer } from './MapLayers/WarehouseFocusLayer';
 import { MapLegend } from './MapLayers/MapLegend';
 import { PlanesLayer } from './MapLayers/PlanesLayer';
 import { decodePolyline } from '../utils/decodePolyline';
+import { FedExLayer } from './MapLayers/FedExLayer';
 
 
 // Fix for default marker icons in React-Leaflet
@@ -235,8 +236,8 @@ export const MapView = () => {
         <GuardedJourney />
         <WarehouseFocusLayer />
         <MapLegend />
+        <FedExLayer />
       </MapContainer>
     </div>
   );
 };
-

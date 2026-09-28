@@ -1,0 +1,74 @@
+// Real local HTTP/SSE + React/Leaflet DOM smoke. No external browser dependency.
+// Run only against scripts/run_fedex_local.py's isolated demo server.
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+import {createServer} from 'vite';
+const api='http://127.0.0.1:4208';
+assert.equal((await (await fetch(api+'/health')).json()).status,'healthy');
+assert.equal((await fetch('http://127.0.0.1:5178')).status,200);
+const dom=new JSDOM('<html><body></body></html>',{url:'http://127.0.0.1:5178/',pretendToBeVisual:true});
+for(const key of ['window','document','HTMLElement','Element','SVGElement','Node','navigator','localStorage'])Object.defineProperty(globalThis,key,{value:dom.window[key],configurable:true});
+Object.defineProperty(HTMLElement.prototype,'clientWidth',{get:()=>900});Object.defineProperty(HTMLElement.prototype,'clientHeight',{get:()=>600});
+const L=(await import('leaflet')).default;L.Browser.svg=true;
+const React=await import('react');const {render,act,fireEvent,cleanup}=await import('@testing-library/react');const {MapContainer}=await import('react-leaflet');
+const server=await createServer({define:{'import.meta.env.VITE_API_BASE_URL':JSON.stringify(api)},optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
+try {
+  const {default:client}=await server.ssrLoadModule('/src/api/client.ts');client.defaults.baseURL=api;
+  const auth=(await client.post('/auth/demo-access')).data;
+  assert.ok(auth.data.token);localStorage.setItem('authToken',auth.data.token);
+  const {useFedexStore}=await server.ssrLoadModule('/src/store/fedexStore.ts');
+  const {FedExPanel}=await server.ssrLoadModule('/src/components/FedExPanel.tsx');
+  const {FedExLayer}=await server.ssrLoadModule('/src/components/MapLayers/FedExLayer.tsx');
+  const {fedexApi}=await server.ssrLoadModule('/src/api/fedex.ts');
+  const summary=await fedexApi.summary();assert.ok(summary.lanes.find(l=>l.origin_station==='UDRPU'&&l.gateway==='DELGW'));
+  let map;let ui;
+  await act(async()=>{ui=render(React.createElement(React.Fragment,null,React.createElement(FedExPanel),React.createElement(MapContainer,{center:[24,74],zoom:5,ref:m=>{if(m)map=m;}},React.createElement(FedExLayer))));});
+  const until=async predicate=>{for(let i=0;i<120;i++){if(predicate())return;await act(async()=>{await new Promise(r=>setTimeout(r,100));});}throw new Error('Live smoke timed out');};
+  await until(()=>ui.getByLabelText('Origin Station').options.length>0);
+  fireEvent.change(ui.getByLabelText('Simulation Date'),{target:{value:'2026-09-29'}});
+  fireEvent.change(ui.getByLabelText('Shipment Ready Time'),{target:{value:'16:00'}});
+  fireEvent.change(ui.getByLabelText('Simulation Speed'),{target:{value:'3600'}});
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
+  await until(()=>ui.queryAllByText(/AIR Run 1 is eligible/).length>0);
+  assert.ok(ui.getAllByText(/AIR Run 1 is eligible/).length);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start Simulation'})));
+  await until(()=>!!useFedexStore.getState().telemetry);
+  assert.equal(useFedexStore.getState().telemetry.mode,'AIR');
+  await until(()=>useFedexStore.getState().telemetry?.status==='ARRIVED_AT_GTW');
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Reset'})));
+  await until(()=>!useFedexStore.getState().telemetry);
+  fireEvent.change(ui.getByLabelText('Shipment Ready Time'),{target:{value:'18:00'}});
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start Simulation'})));
+  await until(()=>!!useFedexStore.getState().telemetry);
+  assert.equal(useFedexStore.getState().telemetry.mode,'SURFACE');
+  await until(()=>useFedexStore.getState().telemetry?.status==='IN_TRANSIT');
+  const moving=()=>{let marker;map.eachLayer(l=>{if(l instanceof L.CircleMarker&&l.options.radius===11)marker=l;});return marker;};
+  assert.ok(moving());assert.ok(moving().getLatLng().lat>24.5854);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Inject Delay'})));
+  await until(()=>useFedexStore.getState().telemetry.alerts.length>0);
+  const state=useFedexStore.getState().telemetry;
+  assert.equal(Date.parse(state.current_eta)-Date.parse(state.scheduled_eta),30*60000);
+  assert.match(ui.getByRole('status').textContent,/DELAY DETECTED/);
+  assert.match(ui.getByRole('status').textContent,/Notify gateway/);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Pause'})));
+  await until(()=>useFedexStore.getState().telemetry.paused);
+  const paused=useFedexStore.getState().telemetry.progress;
+  await act(async()=>{await new Promise(r=>setTimeout(r,600));});
+  assert.equal(useFedexStore.getState().telemetry.progress,paused);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Resume'})));
+  await until(()=>!useFedexStore.getState().telemetry.paused);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Stop'})));
+  await until(()=>useFedexStore.getState().telemetry.stopped);
+  assert.ok(useFedexStore.getState().telemetry.stopped);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Reset'})));
+  await until(()=>!useFedexStore.getState().telemetry);
+  assert.equal(moving(),undefined);
+  const plan=(await client.post('/planning/plans',{source:'Origin',destination:'Destination',shipment:{weight_kg:100}})).data;
+  assert.equal(plan.feasibility.constraint,'network_not_loaded');
+  const warehouse=(await client.get('/planning/warehouse-capacity')).data;assert.deepEqual(warehouse.warehouses,[]);
+  cleanup();
+  console.log('PASS: live health, frontend, demo auth, workbook, Air/Surface eligibility, completed Air run, Surface SSE movement on Leaflet, injected delay +30min, alert/recommendation, pause/resume/stop/reset, existing empty-network planner and warehouse API');
+}catch(error){
+  // Axios errors contain Authorization headers; never dump the complete object.
+  console.error('Live smoke failed:',error.message);process.exitCode=1;
+}finally{cleanup();await server.close();dom.window.close();}
