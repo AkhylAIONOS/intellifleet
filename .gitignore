@@ -18,6 +18,10 @@ node_modules/
 # Logs
 *.log
 
+# Customer schedule workbook: local input only
+Sample Network plan - Air & Surface.xlsx
+fedex-runtime/
+
 # Local database/test data
 intellifleet-server-backendmcp/users.db
 

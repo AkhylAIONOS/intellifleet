@@ -22,6 +22,10 @@ from backend.routes.disruption.disruption import disruption_router
 from backend.config.config import settings
 from backend.planning.routes import router as planning_router
 from backend.routes.upload.network_upload import router as network_upload_router
+from backend.fedex.routes import router as fedex_router
+from backend.fedex.telemetry import runtime as fedex_runtime
+import asyncio
+from contextlib import suppress
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,7 +44,13 @@ async def lifespan(app: FastAPI):
     from backend.agents.supervisor import supervisor
     await supervisor.initialize()
 
-    yield
+    fedex_task = asyncio.create_task(fedex_runtime.run())
+    try:
+        yield
+    finally:
+        fedex_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await fedex_task
 
     # Shutdown cleanup
     app.state.db.close()
@@ -86,6 +96,7 @@ app.include_router(partial_vehicle)
 app.include_router(disruption_router)
 app.include_router(planning_router)
 app.include_router(network_upload_router)
+app.include_router(fedex_router)
 
 
 @app.get("/health")

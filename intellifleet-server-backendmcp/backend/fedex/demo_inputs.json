@@ -1,0 +1,11 @@
+{
+  "origin_station": "UDRPU",
+  "gateway": "DELGW",
+  "timezone": "Asia/Kolkata",
+  "scenario_a_ready_time": "16:00",
+  "scenario_b_ready_time": "18:00",
+  "speed": 600,
+  "seed": 42,
+  "random_events": false,
+  "manual_delay_minutes": 30
+}
