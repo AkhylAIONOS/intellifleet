@@ -1,3 +1,4 @@
+import { useOperationsStore } from '../store/operationsStore';
 import { useState, useRef } from 'react';
 import { chatApi } from '../api/chat';
 import { useAppStore } from '../store/appStore';
@@ -159,6 +160,11 @@ export const useRouteAgent = () => {
     const handleAction = async (action: ChatAction) => {
         //console.log('Executing Action:', action);
         switch (action.type) {
+            case 'show_movements': {
+                const state=useOperationsStore.getState();
+                state.patch({enabled:true,filter:action.data.filter || 'ALL',selected:action.data.selected || null,fit:state.fit+1});
+                break;
+            }
             case "plan_route":
             case 'display_route':
                 handleDisplayRouteAction(action.data);

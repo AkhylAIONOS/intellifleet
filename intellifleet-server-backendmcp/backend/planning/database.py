@@ -48,6 +48,7 @@ def migrate_planning_schema(db_path: str = "users.db") -> None:
             if name not in vehicle_columns:
                 conn.execute(f"ALTER TABLE vehicles ADD COLUMN {name} {definition}")
         conn.executescript("""
+        CREATE TABLE IF NOT EXISTS network_provenance(user_id INTEGER PRIMARY KEY, data_source TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS planning_scenarios (
             scenario_id TEXT PRIMARY KEY, user_id INTEGER NOT NULL, status TEXT NOT NULL,
             request_json TEXT NOT NULL, changes_json TEXT NOT NULL,

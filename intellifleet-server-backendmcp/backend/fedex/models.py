@@ -7,6 +7,10 @@ Mode = Literal['AIR', 'SURFACE', 'RAIL']
 
 
 class Schedule(BaseModel):
+    data_source: Literal["FEDEX_SOURCE", "SYNTHETIC_SCHEDULE", "SYNTHETIC_NETWORK"] = "FEDEX_SOURCE"
+    eta_day_offset: int | None = Field(default=None, ge=0)
+    origin_coordinates: tuple[float, float] | None = None
+    destination_coordinates: tuple[float, float] | None = None
     schedule_id: str
     source_sheet: str
     source_row: int

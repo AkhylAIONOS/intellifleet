@@ -191,7 +191,7 @@ export interface ChatMessage {
 }
 
 export interface ChatAction {
-  type: 'display_route' | 'plan_route' | 'assign_vehicles' | 'list_vehicles' |
+  type: 'show_movements' | 'display_route' | 'plan_route' | 'assign_vehicles' | 'list_vehicles' |
   'clear_chat' | 'clear_map' | 'satellite_view' | 'street_view' | 'unified_supply_chain_plan' | 'supply_chain_planning_operation' |
   'remove_route' | 'alternative_route' | 'reset_vehicle' | 'multimodal_route' | "assign_vehicle_multimodal" | "remove_multimodal_route" | "connect_hub" | "warehouse_status_update" | "reset_all_vehicles" | "fetch_routes" | "assign_plane" | "vehicle_status_update" | "route_status_update" | "air_intermediate_route" | "partial_assignment_start" | "animate_segment" | "manage_disruption_tool";
   data?: any;

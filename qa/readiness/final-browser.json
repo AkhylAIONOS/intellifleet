@@ -1,0 +1,1215 @@
+{
+  "results": [
+    {
+      "name": "sign in through supported demo auth",
+      "pass": true
+    },
+    {
+      "name": "V2 network UI import and 30/97/72 summary",
+      "pass": true
+    },
+    {
+      "name": "planner Delhi Mumbai via visible form",
+      "pass": true
+    },
+    {
+      "name": "100 network movements setup",
+      "pass": true
+    },
+    {
+      "name": "FedEx 16:00 and 18:00 cutoffs",
+      "pass": true
+    },
+    {
+      "name": "surface SSE simulation and 30-minute delay",
+      "pass": true
+    },
+    {
+      "name": "live AI filters relevant lane and includes recommendation",
+      "pass": true
+    },
+    {
+      "name": "Azure planner answer is grounded concise and IST",
+      "pass": true
+    },
+    {
+      "name": "pause resume speed stop and reset controls",
+      "pass": true
+    },
+    {
+      "name": "refresh restores selected live operation and SSE",
+      "pass": true
+    },
+    {
+      "name": "SSE interruption reconnects without losing selected shipment",
+      "pass": true
+    },
+    {
+      "name": "no eligible service and other exact workbook lanes",
+      "pass": true
+    },
+    {
+      "name": "synthetic schedule import stays separate, repeat and refresh",
+      "pass": true
+    },
+    {
+      "name": "planner city/objective/mode matrix including multihop capacity SLA and infeasibility",
+      "pass": true
+    },
+    {
+      "name": "unknown city and scenario comparison explain results",
+      "pass": true
+    },
+    {
+      "name": "10 50 100 browser movement stress and mode icons",
+      "pass": true
+    },
+    {
+      "name": "Surface Air Rail filters, hover selection, pan zoom and fit",
+      "pass": true
+    },
+    {
+      "name": "desktop layouts keep chat controls and map usable",
+      "pass": true
+    },
+    {
+      "name": "missing and invalid CSV errors preserve network",
+      "pass": true
+    },
+    {
+      "name": "backend unavailable and forbidden show safe errors",
+      "pass": true
+    },
+    {
+      "name": "401 expires session and returns to sign in",
+      "pass": true
+    }
+  ],
+  "issues": [
+    {
+      "expected": true,
+      "type": "http",
+      "url": "http://127.0.0.1:4219/fedex/simulations/ce31c139-134e-4c81-911b-02b33333b1dc/stream",
+      "status": 503
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "expected": true,
+      "type": "http",
+      "url": "http://127.0.0.1:4219/upload-network",
+      "status": 422
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+    },
+    {
+      "expected": true,
+      "type": "http",
+      "url": "http://127.0.0.1:4219/operations/schedules/import",
+      "status": 422
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+    },
+    {
+      "expected": true,
+      "type": "request",
+      "url": "http://127.0.0.1:4219/upload-network",
+      "message": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "expected": true,
+      "type": "http",
+      "url": "http://127.0.0.1:4219/upload-network",
+      "status": 403
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    },
+    {
+      "expected": true,
+      "type": "http",
+      "url": "http://127.0.0.1:4219/upload-network",
+      "status": 401
+    },
+    {
+      "expected": true,
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "evidence": {
+    "plannerAnswer": "Recommended plan: Ground.\n\nWhy: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.\n\nShipment: Delhi → Mumbai; weight 6000.0 kg; quantity 1.\n\nRoute:\n- Delhi → Mumbai (road, 1401.0 km, 26.15 hours)\n\nVehicles:\n- TRK-031 (Truck): capacity 7000 kg, assigned load 6,000 kg, utilization 85.71%\n\nOperational cost: ₹275,796.50.\n\nETA: 31.19 hours; expected arrival 30 Sep 2026, 23:26 IST.\n\nRisk: 14.05%; reliability 95.00%.\n\nSLA was not evaluated because no delivery deadline was provided.\n\nFeasible alternatives:\n- Express / Air: ₹382,623.50 more expensive, 25.67 hours faster; risk 12.0%, reliability 95.0%.\n\nUnavailable requested modes: multimodal. No feasible route-and-vehicle combination exists for those modes in the current network.",
+    "otherFedex": [
+      {
+        "pair": {
+          "origin_station": "AGRGA",
+          "gateway": "DELGW",
+          "simulation_supported": false
+        },
+        "candidates": 1
+      },
+      {
+        "pair": {
+          "origin_station": "AWY",
+          "gateway": "BNC",
+          "simulation_supported": false
+        },
+        "candidates": 1
+      },
+      {
+        "pair": {
+          "origin_station": "BDQA",
+          "gateway": "BOMA",
+          "simulation_supported": false
+        },
+        "candidates": 1
+      }
+    ],
+    "plans": [
+      {
+        "source": "Delhi",
+        "destination": "Mumbai",
+        "objective": "balanced",
+        "mode": "all",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan ef30be8c-3ce3-495d-b5c9-aa3f870d3dc7 (road): calculated cost ₹275,796.50, ETA 31.19 hours, risk 14.1%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "ef30be8c-3ce3-495d-b5c9-aa3f870d3dc7",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 63,
+              "from_location": "Delhi",
+              "to_location": "Mumbai",
+              "distance": 1401,
+              "duration": 26.15,
+              "cost": 39228,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 2802,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 39228,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 30.15,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 28.6139,
+                "lng": 77.209
+              },
+              "destination_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              }
+            }
+          ],
+          "distance_km": 1401,
+          "departure_wait_hours": 0,
+          "duration_hours": 31.19,
+          "eta": "2026-09-30T17:57:07.482841+00:00",
+          "operational_cost": 275796.5,
+          "cost_breakdown": {
+            "base_transport": 235368,
+            "distance_cost": 33624,
+            "fuel_cost": 0,
+            "toll_cost": 2802,
+            "fixed_dispatch_cost": 500,
+            "driver_time_cost": 3502.5,
+            "vehicle_cost": 0,
+            "handling_cost": 0,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 344745.62,
+          "expected_revenue": 344745.62,
+          "profit": 68949.12,
+          "margin_percentage": 20,
+          "risk_score": 0.1405,
+          "risk_breakdown": {
+            "route": 0.2301,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.1405
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 31,
+              "label": "TRK-031",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 85.71
+            }
+          ],
+          "vehicle_utilization": 0.8571,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "Delhi",
+              "quantity": 1,
+              "available_before": 11000
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.418876,
+            "normalized_time": 0.830847,
+            "normalized_risk": 0.1405,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.1429,
+            "weighted_contributions": {
+              "cost": 0.125663,
+              "eta": 0.207712,
+              "risk": 0.0281,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.007145
+            },
+            "balanced_score": 0.3736
+          },
+          "score": 0.3736
+        }
+      },
+      {
+        "source": "Delhi",
+        "destination": "Bengaluru",
+        "objective": "cheapest",
+        "mode": "road",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan 94e8a714-061a-4047-a2e2-5ad61ff4b091 (road): calculated cost ₹502,389.60, ETA 49.43 hours, risk 14.4%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "94e8a714-061a-4047-a2e2-5ad61ff4b091",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 63,
+              "from_location": "Delhi",
+              "to_location": "Mumbai",
+              "distance": 1401,
+              "duration": 26.15,
+              "cost": 39228,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 2802,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 39228,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 30.15,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 28.6139,
+                "lng": 77.209
+              },
+              "destination_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              }
+            },
+            {
+              "route_id": 65,
+              "from_location": "Mumbai",
+              "to_location": "Bengaluru",
+              "distance": 1031,
+              "duration": 19.78,
+              "cost": 28868,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 2062,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 28868,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 23.78,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              },
+              "destination_coords": {
+                "lat": 12.9716,
+                "lng": 77.5946
+              }
+            }
+          ],
+          "distance_km": 2432,
+          "departure_wait_hours": 0,
+          "duration_hours": 49.43,
+          "eta": "2026-10-01T12:11:31.565762+00:00",
+          "operational_cost": 502389.6,
+          "cost_breakdown": {
+            "base_transport": 408576,
+            "distance_cost": 82688,
+            "fuel_cost": 0,
+            "toll_cost": 4864,
+            "fixed_dispatch_cost": 500,
+            "driver_time_cost": 5511.6,
+            "vehicle_cost": 0,
+            "handling_cost": 250,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 627987,
+          "expected_revenue": 627987,
+          "profit": 125597.4,
+          "margin_percentage": 20,
+          "risk_score": 0.144,
+          "risk_breakdown": {
+            "route": 0.24,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.144
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 1,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 16000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 37.5
+            }
+          ],
+          "vehicle_utilization": 0.375,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "Delhi",
+              "quantity": 1,
+              "available_before": 11000
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.847373,
+            "normalized_time": 0.708065,
+            "normalized_risk": 0.144,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.625,
+            "weighted_contributions": {
+              "cost": 0.254212,
+              "eta": 0.177016,
+              "risk": 0.0288,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.03125
+            },
+            "balanced_score": 0.4963
+          },
+          "score": 0.8474
+        }
+      },
+      {
+        "source": "Mumbai",
+        "destination": "Bengaluru",
+        "objective": "fastest",
+        "mode": "road",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan fb33032a-a784-4826-a798-97802c6749df (road): calculated cost ₹213,197.60, ETA 22.78 hours, risk 12.8%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "fb33032a-a784-4826-a798-97802c6749df",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 65,
+              "from_location": "Mumbai",
+              "to_location": "Bengaluru",
+              "distance": 1031,
+              "duration": 19.78,
+              "cost": 28868,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 2062,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 28868,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 23.78,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              },
+              "destination_coords": {
+                "lat": 12.9716,
+                "lng": 77.5946
+              }
+            }
+          ],
+          "distance_km": 1031,
+          "departure_wait_hours": 0,
+          "duration_hours": 22.78,
+          "eta": "2026-09-30T09:32:31.648621+00:00",
+          "operational_cost": 213197.6,
+          "cost_breakdown": {
+            "base_transport": 173208,
+            "distance_cost": 35054,
+            "fuel_cost": 0,
+            "toll_cost": 2062,
+            "fixed_dispatch_cost": 500,
+            "driver_time_cost": 2373.6,
+            "vehicle_cost": 0,
+            "handling_cost": 0,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 266497,
+          "expected_revenue": 266497,
+          "profit": 53299.4,
+          "margin_percentage": 20,
+          "risk_score": 0.1276,
+          "risk_breakdown": {
+            "route": 0.1931,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.1276
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 2,
+              "label": "TRK-002",
+              "type": "Truck",
+              "capacity": 16000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 37.5
+            }
+          ],
+          "vehicle_utilization": 0.375,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 2,
+              "warehouse": "Mumbai",
+              "quantity": 1,
+              "available_before": 11200
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.389346,
+            "normalized_time": 0.353233,
+            "normalized_risk": 0.1276,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.625,
+            "weighted_contributions": {
+              "cost": 0.116804,
+              "eta": 0.088308,
+              "risk": 0.02552,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.03125
+            },
+            "balanced_score": 0.2669
+          },
+          "score": 0.3532
+        }
+      },
+      {
+        "source": "Kochi",
+        "destination": "Chennai",
+        "objective": "balanced",
+        "mode": "road",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan 1e2bbe42-2cc2-4686-9a4f-072447d379c1 (road): calculated cost ₹159,644.00, ETA 22.0 hours, risk 12.0%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "1e2bbe42-2cc2-4686-9a4f-072447d379c1",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 22,
+              "from_location": "Kochi",
+              "to_location": "Coimbatore",
+              "distance": 174,
+              "duration": 4.85,
+              "cost": 4872,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 348,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 4872,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 8.85,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 9.9312,
+                "lng": 76.2673
+              },
+              "destination_coords": {
+                "lat": 11.0168,
+                "lng": 76.9558
+              }
+            },
+            {
+              "route_id": 20,
+              "from_location": "Coimbatore",
+              "to_location": "Bengaluru",
+              "distance": 278,
+              "duration": 6.35,
+              "cost": 7784,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 556,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 7784,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 10.35,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 11.0168,
+                "lng": 76.9558
+              },
+              "destination_coords": {
+                "lat": 12.9716,
+                "lng": 77.5946
+              }
+            },
+            {
+              "route_id": 17,
+              "from_location": "Bengaluru",
+              "to_location": "Chennai",
+              "distance": 354,
+              "duration": 7.8,
+              "cost": 9912,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 708,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 9912,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 11.8,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 12.9716,
+                "lng": 77.5946
+              },
+              "destination_coords": {
+                "lat": 13.0827,
+                "lng": 80.2707
+              }
+            }
+          ],
+          "distance_km": 806,
+          "departure_wait_hours": 0,
+          "duration_hours": 22,
+          "eta": "2026-09-30T08:45:43.732753+00:00",
+          "operational_cost": 159644,
+          "cost_breakdown": {
+            "base_transport": 135408,
+            "distance_cost": 19344,
+            "fuel_cost": 0,
+            "toll_cost": 1612,
+            "fixed_dispatch_cost": 500,
+            "driver_time_cost": 2280,
+            "vehicle_cost": 0,
+            "handling_cost": 500,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 199555,
+          "expected_revenue": 199555,
+          "profit": 39911,
+          "margin_percentage": 20,
+          "risk_score": 0.1197,
+          "risk_breakdown": {
+            "route": 0.1706,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.1197
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 47,
+              "label": "TRK-047",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 85.71
+            }
+          ],
+          "vehicle_utilization": 0.8571,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 17,
+              "warehouse": "Kochi",
+              "quantity": 1,
+              "available_before": 14200
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1,
+            "normalized_time": 1,
+            "normalized_risk": 0.1197,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.1429,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.02394,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.007145
+            },
+            "balanced_score": 0.5861
+          },
+          "score": 0.5861
+        }
+      },
+      {
+        "source": "Kolkata",
+        "destination": "Guwahati",
+        "objective": "balanced",
+        "mode": "road",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan df8b290f-460d-438f-8af3-c1e47e863195 (road): calculated cost ₹193,378.00, ETA 28.25 hours, risk 12.6%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "df8b290f-460d-438f-8af3-c1e47e863195",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 59,
+              "from_location": "Kolkata",
+              "to_location": "Siliguri",
+              "distance": 564,
+              "duration": 11.85,
+              "cost": 15792,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 1128,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 15792,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 15.85,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 22.5726,
+                "lng": 88.3639
+              },
+              "destination_coords": {
+                "lat": 26.7271,
+                "lng": 88.3953
+              }
+            },
+            {
+              "route_id": 61,
+              "from_location": "Siliguri",
+              "to_location": "Guwahati",
+              "distance": 413,
+              "duration": 13.9,
+              "cost": 11564,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 826,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 11564,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 17.9,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 26.7271,
+                "lng": 88.3953
+              },
+              "destination_coords": {
+                "lat": 26.1445,
+                "lng": 91.7362
+              }
+            }
+          ],
+          "distance_km": 977,
+          "departure_wait_hours": 0,
+          "duration_hours": 28.25,
+          "eta": "2026-09-30T15:00:43.816260+00:00",
+          "operational_cost": 193378,
+          "cost_breakdown": {
+            "base_transport": 164136,
+            "distance_cost": 23448,
+            "fuel_cost": 0,
+            "toll_cost": 1954,
+            "fixed_dispatch_cost": 500,
+            "driver_time_cost": 3090,
+            "vehicle_cost": 0,
+            "handling_cost": 250,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 241722.5,
+          "expected_revenue": 241722.5,
+          "profit": 48344.5,
+          "margin_percentage": 20,
+          "risk_score": 0.1257,
+          "risk_breakdown": {
+            "route": 0.1877,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.1257
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 35,
+              "label": "TRK-035",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 85.71
+            }
+          ],
+          "vehicle_utilization": 0.8571,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 5,
+              "warehouse": "Kolkata",
+              "quantity": 1,
+              "available_before": 11800
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1,
+            "normalized_time": 1,
+            "normalized_risk": 0.1257,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.1429,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.02514,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.007145
+            },
+            "balanced_score": 0.5873
+          },
+          "score": 0.5873
+        }
+      },
+      {
+        "source": "Delhi",
+        "destination": "Mumbai",
+        "objective": "fastest",
+        "mode": "air",
+        "weight": 6000,
+        "feasible": true,
+        "reason": "Choose plan ab9c59e3-d2ec-449b-8493-3e04c2e77808 (air): calculated cost ₹658,420.00, ETA 5.52 hours, risk 12.0%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "ab9c59e3-d2ec-449b-8493-3e04c2e77808",
+          "mode": "air",
+          "route_legs": [
+            {
+              "route_id": 67,
+              "from_location": "Delhi",
+              "to_location": "Mumbai",
+              "distance": 1148,
+              "duration": 2.77,
+              "cost": 80360,
+              "route_type": "air",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 0,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 80360,
+              "base_transport_cost": 80360,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 5.77,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 28.6139,
+                "lng": 77.209
+              },
+              "destination_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              }
+            }
+          ],
+          "distance_km": 1148,
+          "departure_wait_hours": 0,
+          "duration_hours": 5.52,
+          "eta": "2026-09-29T16:16:55.898606+00:00",
+          "operational_cost": 658420,
+          "cost_breakdown": {
+            "base_transport": 482160,
+            "distance_cost": 80360,
+            "fuel_cost": 0,
+            "toll_cost": 0,
+            "fixed_dispatch_cost": 10000,
+            "driver_time_cost": 5540,
+            "vehicle_cost": 0,
+            "handling_cost": 0,
+            "air_cost": 80360,
+            "other_cost": 0
+          },
+          "selling_price": 823025,
+          "expected_revenue": 823025,
+          "profit": 164605,
+          "margin_percentage": 20,
+          "risk_score": 0.1197,
+          "risk_breakdown": {
+            "route": 0.2048,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.1,
+            "overall": 0.1197
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 91,
+              "label": "AIR-001",
+              "type": "Plane",
+              "capacity": 12000,
+              "assigned_load_kg": 6000,
+              "utilization_percentage": 50
+            }
+          ],
+          "vehicle_utilization": 0.5,
+          "product": "Express",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "Delhi",
+              "quantity": 1,
+              "available_before": 11000
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 1,
+            "normalized_time": 1,
+            "normalized_risk": 0.1197,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.5,
+            "weighted_contributions": {
+              "cost": 0.3,
+              "eta": 0.25,
+              "risk": 0.02394,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.025
+            },
+            "balanced_score": 0.6039
+          },
+          "score": 1
+        }
+      },
+      {
+        "source": "Kochi",
+        "destination": "Chennai",
+        "objective": "balanced",
+        "mode": "air",
+        "weight": 6000,
+        "feasible": false,
+        "reason": "No feasible path exists in the current network and constraints.",
+        "plan": null
+      },
+      {
+        "source": "Delhi",
+        "destination": "Mumbai",
+        "objective": "balanced",
+        "mode": "road",
+        "weight": 18000,
+        "feasible": true,
+        "reason": "Choose plan 2ea19a3f-045f-4f20-b084-240f5ad319a1 (road): calculated cost ₹798,169.00, ETA 34.19 hours, risk 14.1%; SLA was not evaluated because no delivery deadline was provided.",
+        "plan": {
+          "plan_id": "2ea19a3f-045f-4f20-b084-240f5ad319a1",
+          "mode": "road",
+          "route_legs": [
+            {
+              "route_id": 63,
+              "from_location": "Delhi",
+              "to_location": "Mumbai",
+              "distance": 1401,
+              "duration": 26.15,
+              "cost": 39228,
+              "route_type": "road",
+              "reliability": 0.95,
+              "weather_risk": 0.05,
+              "operational_risk": 0.04,
+              "toll_cost": 2802,
+              "handling_cost": 0,
+              "fuel_cost": 0,
+              "air_cost": 0,
+              "base_transport_cost": 39228,
+              "capacity_per_day_kg": 64000,
+              "current_utilization_pct": 35,
+              "service_class": "standard",
+              "express_eligible": 1,
+              "sla_hours": 30.15,
+              "carbon_kg": null,
+              "status": "active",
+              "data_source": "SYNTHETIC_NETWORK",
+              "source_coords": {
+                "lat": 28.6139,
+                "lng": 77.209
+              },
+              "destination_coords": {
+                "lat": 19.076,
+                "lng": 72.8777
+              }
+            }
+          ],
+          "distance_km": 1401,
+          "departure_wait_hours": 0,
+          "duration_hours": 34.19,
+          "eta": "2026-09-30T20:57:08.066672+00:00",
+          "operational_cost": 798169,
+          "cost_breakdown": {
+            "base_transport": 706104,
+            "distance_cost": 81258,
+            "fuel_cost": 0,
+            "toll_cost": 2802,
+            "fixed_dispatch_cost": 1000,
+            "driver_time_cost": 7005,
+            "vehicle_cost": 0,
+            "handling_cost": 0,
+            "air_cost": 0,
+            "other_cost": 0
+          },
+          "selling_price": 997711.25,
+          "expected_revenue": 997711.25,
+          "profit": 199542.25,
+          "margin_percentage": 20,
+          "risk_score": 0.1405,
+          "risk_breakdown": {
+            "route": 0.2301,
+            "vehicle": 0.07,
+            "weather": 0.05,
+            "warehouse": 0.08,
+            "mode": 0.18,
+            "overall": 0.1405
+          },
+          "reliability": 0.95,
+          "sla_met": null,
+          "deadline": null,
+          "sla_slack_hours": null,
+          "sla_delay_hours": null,
+          "vehicles": [
+            {
+              "id": 1,
+              "label": "TRK-001",
+              "type": "Truck",
+              "capacity": 16000,
+              "assigned_load_kg": 12521.73913,
+              "utilization_percentage": 78.26
+            },
+            {
+              "id": 31,
+              "label": "TRK-031",
+              "type": "Truck",
+              "capacity": 7000,
+              "assigned_load_kg": 5478.26087,
+              "utilization_percentage": 78.26
+            }
+          ],
+          "vehicle_utilization": 0.7826,
+          "product": "Ground",
+          "warnings": [],
+          "inventory_allocation": [
+            {
+              "warehouse_id": 1,
+              "warehouse": "Delhi",
+              "quantity": 1,
+              "available_before": 11000
+            }
+          ],
+          "score_components": {
+            "normalized_cost": 0.94232,
+            "normalized_time": 0.843365,
+            "normalized_risk": 0.1405,
+            "reliability_penalty": 0.05,
+            "sla_penalty": 0,
+            "utilization_penalty": 0.2174,
+            "weighted_contributions": {
+              "cost": 0.282696,
+              "eta": 0.210841,
+              "risk": 0.0281,
+              "reliability": 0.005,
+              "sla": 0,
+              "utilization": 0.01087
+            },
+            "balanced_score": 0.5375
+          },
+          "score": 0.5375
+        }
+      },
+      {
+        "source": "Delhi",
+        "destination": "Mumbai",
+        "objective": "balanced",
+        "mode": "road",
+        "weight": 999999,
+        "feasible": false,
+        "reason": "An alternative path exists, but no available compatible source-vehicle combination satisfies the shipment capacity and full-route range requirements.",
+        "plan": null
+      }
+    ],
+    "stress": [
+      {
+        "count": 10,
+        "renderMs": 48
+      },
+      {
+        "count": 50,
+        "renderMs": 50
+      },
+      {
+        "count": 100,
+        "renderMs": 64
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+import {chromium,expect} from '@playwright/test';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+const phase=process.env.QA_PHASE||'final';
+const out=path.resolve('../../qa/readiness');
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'Asia/Kolkata'});
+const page=await context.newPage();
+const issues=[],results=[],evidence={};let expectedFailure=false;
+page.on('pageerror',e=>issues.push({expected:expectedFailure,type:'js',message:e.message}));
+page.on('console',m=>{if(m.type()==='error')issues.push({expected:expectedFailure,type:'console',message:m.text()});});
+page.on('requestfailed',r=>{if(!r.failure()?.errorText.includes('ERR_ABORTED'))issues.push({expected:expectedFailure,type:'request',url:r.url().split('?')[0],message:r.failure()?.errorText});});
+page.on('response',r=>{if(r.status()>=400&&r.url().includes(':4219'))issues.push({expected:expectedFailure,type:'http',url:r.url().split('?')[0],status:r.status()});});
+async function check(name,fn){try{await fn();results.push({name,pass:true});console.log('PASS',name);}catch(e){results.push({name,pass:false,error:e.message.slice(0,1500)});console.log('FAIL',name,e.message.slice(0,400));await page.screenshot({path:path.join(out,`${phase}-failure-${results.length}.png`)});}}
+async function api(url,data,method='get'){return page.evaluate(async({url,data,method})=>{const {default:client}=await import('/src/api/client.ts');try{const r=await client.request({url,data,method});return {status:r.status,data:r.data};}catch(e){return {status:e.response?.status,data:e.response?.data};}},{url,data,method});}
+const tab=name=>page.getByRole('navigation',{name:'Operations workspace'}).getByRole('button',{name,exact:true}).click();
+try{
+await check('sign in through supported demo auth',async()=>{await page.goto('http://127.0.0.1:5189');await page.getByRole('button',{name:'Enter UniFleet',exact:true}).click();await expect(page.getByRole('navigation',{name:'Operations workspace'})).toBeVisible();const existing=await api('/operations/movements');for(const m of existing.data.movements.filter(m=>m.status!=='SCHEDULE_TEMPLATE'))await api(`/fedex/simulations/${m.simulation_id}/control`,{action:'reset'},'post');});
+await check('V2 network UI import and 30/97/72 summary',async()=>{await tab('NETWORK');const fields=page.locator('.network-upload-fields input[type=file]');for(const [i,n] of ['warehouse','vehicle','routes'].entries())await fields.nth(i).setInputFiles(`public/synthetic_v2/${n}.csv`);const response=page.waitForResponse(r=>r.url().endsWith('/upload-network')&&r.request().method()==='POST');await page.getByRole('button',{name:'Upload & Process'}).first().click();const r=await response;expect(r.status()).toBe(200);await page.waitForTimeout(1200);await tab('NETWORK');await expect(page.locator('.network-summary').first()).toContainText('97');expect(await page.locator('.network-summary').first().locator('dd').allTextContents()).toEqual(['30','97','72']);await page.screenshot({path:path.join(out,`${phase}-network.png`)});});
+await check('planner Delhi Mumbai via visible form',async()=>{await tab('PLAN');await page.getByPlaceholder('Delhi',{exact:true}).fill('Delhi');await page.getByPlaceholder('Mumbai',{exact:true}).fill('Mumbai');await page.getByRole('spinbutton',{name:'Weight kg',exact:true}).fill('6000');await page.getByRole('button',{name:'Calculate Plan',exact:true}).click();await expect(page.getByRole('dialog',{name:'Recommended Plan'})).toBeVisible();await page.screenshot({path:path.join(out,`${phase}-planner.png`)});await page.getByRole('button',{name:'Close recommended plan'}).click();});
+await check('100 network movements setup',async()=>{await tab('LIVE OPERATIONS');await page.getByRole('button',{name:'Simulate 100',exact:true}).click();await expect(page.getByText(/movements \/ templates · inspect or select/)).toBeVisible();});
+await check('FedEx 16:00 and 18:00 cutoffs',async()=>{await tab('SCHEDULES');await page.getByLabel('Schedule source',{exact:false}).selectOption('FEDEX');await page.getByLabel('Origin Station',{exact:false}).selectOption('UDRPU');await page.getByLabel('Gateway',{exact:false}).selectOption('DELGW');await page.getByLabel('Simulation Date',{exact:false}).fill('2026-09-29');await page.getByLabel('Shipment Ready Time',{exact:false}).fill('16:00');await page.getByRole('button',{name:'Evaluate Cutoffs',exact:true}).click();await expect(page.locator('.fedex-table')).toContainText('6E 6229');const first=await api('/operations/eligible-services?source=FEDEX&origin_station=UDRPU&gateway=DELGW&simulation_date=2026-09-29&shipment_ready_datetime=2026-09-29T16:00:00%2B05:30');expect(first.data.selected.mode).toBe('AIR');await page.getByLabel('Shipment Ready Time',{exact:false}).fill('18:00');await page.getByRole('button',{name:'Evaluate Cutoffs',exact:true}).click();const second=await api('/operations/eligible-services?source=FEDEX&origin_station=UDRPU&gateway=DELGW&simulation_date=2026-09-29&shipment_ready_datetime=2026-09-29T18:00:00%2B05:30');expect(second.data.selected.mode).toBe('SURFACE');expect(second.data.candidates.find(c=>c.service==='6E 6229').eligible).toBe(false);await page.screenshot({path:path.join(out,`${phase}-cutoffs.png`)});});
+await check('surface SSE simulation and 30-minute delay',async()=>{await page.getByLabel('Simulation Speed',{exact:false}).selectOption('3600');await page.getByRole('button',{name:'Start Simulation',exact:true}).click();const live=page.getByLabel('FedEx live state',{exact:true});await expect(live).toContainText('IN_TRANSIT',{timeout:20000});await page.getByRole('button',{name:'Inject Delay',exact:true}).click();await expect(live).toContainText('12:30');await expect(live).toContainText('Notify gateway');await expect(live).toContainText('30 minutes');await page.getByRole('button',{name:'Pause',exact:true}).click();await page.screenshot({path:path.join(out,`${phase}-delay.png`)});});
+await check('live AI filters relevant lane and includes recommendation',async()=>{const field=page.getByPlaceholder('Ask UniFleet anything…');await field.fill('What is happening with the current UDRPU to DELGW shipment? Show its current status, delay, revised ETA and recommended action.');const response=page.waitForResponse(r=>r.url().endsWith('/mcp-agent'));await field.press('Enter');const r=await response;const body=await r.json();await fs.writeFile(path.join(out,`${phase}-live-answer.txt`),body.response||JSON.stringify(body));expect(body.response).toContain('Notify gateway');expect(body.response).toContain('12:30');expect(body.response).not.toContain('NETWORK-DEMO-');expect(body.response.length).toBeLessThan(1800);await page.screenshot({path:path.join(out,`${phase}-live-ai.png`)});});
+
+await check('Azure planner answer is grounded concise and IST',async()=>{
+ const response=await api('/mcp-agent',{message:'Plan 6000 kg Delhi to Mumbai using the best overall option.'},'post');
+ expect(response.status).toBe(200);expect(response.data.response).toContain('Recommended plan:');expect(response.data.response).toContain('IST');expect(response.data.response).not.toContain('Normalized Cost');expect(response.data.response).not.toContain('Weighted Contributions');
+ evidence.plannerAnswer=response.data.response;await fs.writeFile(path.join(out,`${phase}-planner-answer.txt`),response.data.response);
+});
+await check('pause resume speed stop and reset controls',async()=>{
+ await page.getByRole('button',{name:'Resume',exact:true}).click();await page.getByLabel('Simulation Speed',{exact:false}).selectOption('60');await page.getByRole('button',{name:'Apply Speed',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('60×');
+ await page.getByLabel('Simulation Speed',{exact:false}).selectOption('3600');await page.getByRole('button',{name:'Apply Speed',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('ARRIVED_AT_GTW',{timeout:30000});await page.getByRole('button',{name:'Stop',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('STOPPED');await page.getByRole('button',{name:'Reset',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toHaveCount(0);
+});
+await check('refresh restores selected live operation and SSE',async()=>{
+ await page.getByRole('button',{name:'Start Simulation',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toBeVisible();await page.reload();await tab('SCHEDULES');await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('UDRPU');await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('Live');
+ await page.getByRole('button',{name:'Reset',exact:true}).click();
+});
+await check('SSE interruption reconnects without losing selected shipment',async()=>{
+ expectedFailure=true;let first=true;await page.route('**/fedex/simulations/*/stream',async route=>{if(first){first=false;await route.fulfill({status:503,body:'Temporary QA disconnect'});}else await route.continue();});
+ await page.getByRole('button',{name:'Start Simulation',exact:true}).click();await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('Reconnecting',{timeout:10000});await expect(page.getByLabel('FedEx live state',{exact:true})).toContainText('Live',{timeout:10000});await page.unroute('**/fedex/simulations/*/stream');expectedFailure=false;await page.getByRole('button',{name:'Reset',exact:true}).click();
+});
+await check('no eligible service and other exact workbook lanes',async()=>{
+ await page.getByLabel('Shipment Ready Time',{exact:false}).fill('23:59');await page.getByRole('button',{name:'Evaluate Cutoffs',exact:true}).click();await expect(page.getByRole('region',{name:'Schedules and simulations'})).toContainText(/No confirmed eligible/i);
+ const source=await api('/operations/schedules?source=FEDEX');const pairs=source.data.lanes.filter(l=>l.origin_station!=='UDRPU').slice(0,3);evidence.otherFedex=[];
+ for(const pair of pairs){const r=await api('/operations/eligible-services?'+new URLSearchParams({source:'FEDEX',...pair,simulation_date:'2026-09-29',shipment_ready_datetime:'2026-09-29T00:00:00+05:30'}));expect(r.status).toBe(200);expect(r.data.candidates.length).toBeGreaterThan(0);expect(r.data.candidates.every(c=>c.origin===pair.origin_station&&c.gateway===pair.gateway)).toBe(true);evidence.otherFedex.push({pair,candidates:r.data.candidates.length});}
+});
+await check('synthetic schedule import stays separate, repeat and refresh',async()=>{
+ await tab('NETWORK');const input=page.locator('input[type=file]').last();
+ for(let i=0;i<2;i++){const response=page.waitForResponse(r=>r.url().includes('/operations/schedules/import'));await input.setInputFiles('public/synthetic_v2/schedules.csv');const r=await response;expect(r.status()).toBe(200);expect((await r.json()).rows).toBe(36);await input.setInputFiles([]);}
+ const ss=await api('/operations/schedules');expect(ss.data.schedules).toHaveLength(36);expect(ss.data.schedules.every(s=>s.data_source==='SYNTHETIC_SCHEDULE')).toBe(true);
+ const fedex=await api('/operations/schedules?source=FEDEX');expect(fedex.data.schedules.every(s=>s.data_source==='FEDEX_SOURCE')).toBe(true);
+ await page.reload();await tab('NETWORK');expect(await page.locator('.network-summary dd').allTextContents()).toEqual(['30','97','72']);
+});
+await check('planner city/objective/mode matrix including multihop capacity SLA and infeasibility',async()=>{
+ evidence.plans=[];await tab('PLAN');
+ for(const [source,destination,objective,mode,weight] of [
+  ['Delhi','Mumbai','balanced','all',6000],['Delhi','Bengaluru','cheapest','road',6000],['Mumbai','Bengaluru','fastest','road',6000],['Kochi','Chennai','balanced','road',6000],['Kolkata','Guwahati','balanced','road',6000],['Delhi','Mumbai','fastest','air',6000],['Kochi','Chennai','balanced','air',6000],['Delhi','Mumbai','balanced','road',18000],['Delhi','Mumbai','balanced','road',999999]]){
+  await page.getByPlaceholder('Delhi',{exact:true}).fill(source);await page.getByPlaceholder('Mumbai',{exact:true}).fill(destination);await page.getByRole('spinbutton',{name:'Weight kg',exact:true}).fill(String(weight));await page.getByLabel('Objective',{exact:false}).selectOption(objective);await page.getByLabel('Transport mode',{exact:true}).selectOption(mode);
+  const response=page.waitForResponse(r=>r.url().endsWith('/planning/plans'));await page.getByRole('button',{name:'Calculate Plan',exact:true}).click();const r=await response;expect(r.status()).toBe(200);const data=await r.json();const plan=data.recommended_plan;
+  evidence.plans.push({source,destination,objective,mode,weight,feasible:!!plan,reason:data.reason,plan});
+  if(source==='Kochi'&&mode==='road')expect(plan.route_legs.length).toBeGreaterThan(1);
+  if(weight===999999||source==='Kochi'&&mode==='air'){expect(plan).toBeFalsy();await expect(page.locator('.planning-panel [role=alert]')).toBeVisible();}
+  else{expect(plan).toBeTruthy();expect(plan.risk_score).toBeGreaterThanOrEqual(0);expect(plan.reliability).toBeLessThanOrEqual(1);await page.getByRole('button',{name:'Close recommended plan'}).click();}
+ }
+ const deadline=await api('/planning/plans',{source:'Delhi',destination:'Mumbai',shipment:{weight_kg:6000},allowed_modes:['road','air'],deadline:'2026-10-05T12:00:00+05:30'},'post');expect(deadline.status).toBe(200);expect(deadline.data.recommended_plan.sla_met).toBe(true);
+});
+await check('unknown city and scenario comparison explain results',async()=>{
+ const bad=await api('/planning/plans',{source:'Atlantis',destination:'Mumbai',shipment:{weight_kg:6000}},'post');expect(bad.status).toBe(200);expect(bad.data.recommended_plan).toBeFalsy();
+ await page.getByPlaceholder('Delhi',{exact:true}).fill('Delhi');await page.getByPlaceholder('Mumbai',{exact:true}).fill('Mumbai');await page.getByRole('spinbutton',{name:'Weight kg',exact:true}).fill('6000');await page.getByRole('button',{name:'Calculate Plan',exact:true}).click();await expect(page.getByRole('dialog',{name:'Recommended Plan'})).toBeVisible();await page.getByRole('button',{name:'Close recommended plan'}).click();await page.getByText('What-if scenario controls',{exact:true}).click();await page.getByRole('button',{name:'Run What-if Scenario'}).click();await expect(page.getByText('Draft What-if Scenario',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Discard',exact:true}).click();
+});
+await check('10 50 100 browser movement stress and mode icons',async()=>{
+ await tab('LIVE OPERATIONS');evidence.stress=[];
+ for(const count of [10,50,100]){const start=Date.now();await page.getByRole('button',{name:`Simulate ${count}`,exact:true}).click();await expect(page.locator('.movement-icon')).toHaveCount(count,{timeout:15000});evidence.stress.push({count,renderMs:Date.now()-start});}
+ for(const label of ['truck','plane','train'])expect(await page.locator(`.movement-icon [aria-label=${label}]`).count()).toBeGreaterThan(0);
+ await page.screenshot({path:path.join(out,`${phase}-100-movements.png`)});
+});
+await check('Surface Air Rail filters, hover selection, pan zoom and fit',async()=>{
+ const filter=page.getByLabel('Filter',{exact:false});
+ for(const [mode,icon] of [['SURFACE','truck'],['AIR','plane'],['RAIL','train']]){await filter.selectOption(mode);await expect(page.locator(`.movement-icon [aria-label=${icon}]`).first()).toBeVisible();for(const other of ['truck','plane','train'].filter(x=>x!==icon))await expect(page.locator(`.movement-icon [aria-label=${other}]`)).toHaveCount(0);}
+ await filter.selectOption('ALL');const marker=page.locator('.movement-icon').first();await marker.hover({force:true});await expect(page.locator('.leaflet-tooltip').filter({hasText:'Delay'}).first()).toBeVisible();await marker.click({force:true});await expect(page.getByLabel('Selected movement',{exact:true})).toBeVisible();
+ const map=page.locator('.leaflet-container');const box=await map.boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.5+80,box.y+box.height*.5+20,{steps:5});await page.mouse.up();await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.getByRole('button',{name:'Zoom out',exact:true}).click();await page.getByRole('button',{name:'Fit network',exact:true}).click();
+});
+await check('desktop layouts keep chat controls and map usable',async()=>{
+ for(const [width,height] of [[1440,900],[1280,800],[1920,1080]]){await page.setViewportSize({width,height});await page.waitForTimeout(500);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect(page.getByPlaceholder('Ask UniFleet anything…')).toBeVisible();const box=await page.locator('.leaflet-container').boundingBox();expect(box.height).toBeGreaterThan(200);const metrics=await page.locator('.map-metrics').boundingBox();for(const control of ['.journey-controls','.plan-map-legend']){const b=await page.locator(control).boundingBox();if(b)expect(b.y+b.height).toBeLessThanOrEqual(metrics.y);}await page.screenshot({path:path.join(out,`${phase}-desktop-${width}.png`)});}
+});
+await check('missing and invalid CSV errors preserve network',async()=>{
+ await tab('NETWORK');await expect(page.getByRole('button',{name:'Upload & Process'})).toBeDisabled();const fields=page.locator('.network-upload-fields input[type=file]');for(const [i,n] of ['warehouse','vehicle','routes'].entries())await fields.nth(i).setInputFiles(`public/synthetic_v2/${n}.csv`);await fields.nth(2).setInputFiles({name:'routes.csv',mimeType:'text/csv',buffer:Buffer.from('wrong\nheader\n')});expectedFailure=true;await page.getByRole('button',{name:'Upload & Process'}).click();await expect(page.getByRole('alert')).toContainText('Routes CSV missing columns');expectedFailure=false;expect(await page.locator('.network-summary dd').allTextContents()).toEqual(['30','97','72']);
+ const schedules=page.locator('input[type=file]').last();expectedFailure=true;const scheduleResponse=page.waitForResponse(r=>r.url().includes('/operations/schedules/import'));await schedules.setInputFiles({name:'schedules.csv',mimeType:'text/csv',buffer:Buffer.from('bad\ndata\n')});const badSchedule=await scheduleResponse;expect(badSchedule.status()).toBe(422);const detail=(await badSchedule.json()).detail;await expect(page.getByRole('alert')).toContainText(detail);expectedFailure=false;
+});
+await check('backend unavailable and forbidden show safe errors',async()=>{
+ const fields=page.locator('.network-upload-fields input[type=file]');for(const [i,n] of ['warehouse','vehicle','routes'].entries())await fields.nth(i).setInputFiles(`public/synthetic_v2/${n}.csv`);
+ expectedFailure=true;await page.route('**/upload-network',route=>route.abort('connectionrefused'));await page.getByRole('button',{name:'Upload & Process'}).click();await expect(page.getByRole('alert')).toContainText('unable to reach the API');await page.unroute('**/upload-network');
+ await page.route('**/upload-network',route=>route.fulfill({status:403,contentType:'application/json',body:JSON.stringify({detail:'Forbidden'})}));await page.getByRole('button',{name:'Upload & Process'}).click();await expect(page.getByRole('alert')).toContainText('permission');await page.unroute('**/upload-network');expectedFailure=false;
+});
+await check('401 expires session and returns to sign in',async()=>{
+ expectedFailure=true;await page.route('**/upload-network',route=>route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({detail:'Expired'})}));await page.getByRole('button',{name:'Upload & Process'}).click();await expect(page.getByRole('button',{name:'Enter UniFleet',exact:true})).toBeVisible();expectedFailure=false;
+});
+}finally{await fs.writeFile(path.join(out,`${phase}-browser.json`),JSON.stringify({results,issues,evidence},null,2));await browser.close();}
+if(results.some(r=>!r.pass))process.exitCode=1;

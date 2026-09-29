@@ -17,11 +17,13 @@ import { ActiveRoutesDashboard } from '../components/ActiveRoutesDashboard';
 import { chatApi } from '../api/chat';
 import { VehicleInfoDashboard } from '../components/VehicleInfoDashboard';
 import { PlanningPanel } from '../components/PlanningPanel';
+import { LiveOperations } from '../components/LiveOperations';
+import { NetworkUpload } from '../components/NetworkUpload';
 import { FedExPanel } from '../components/FedExPanel';
 import { RouteDashboard } from '../components/RouteDashboard';
 
 export const DashboardPage = () => {
-  const [showFedex, setShowFedex] = useState(false);
+  const [workspace, setWorkspace] = useState('PLAN');
   const [fedexLoaded, setFedexLoaded] = useState(false);
   const [showRouteSelector, setShowRouteSelector] = useState(false);
   const { user, clearAuth } = useAuthStore();
@@ -52,11 +54,9 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchInventoryOnLoad = async () => {
       try {
-        console.log('Fetching inventory from API...');
         const response = await warehouseApi.getInventory();
         if (response.data.inventory.length > 0) {
           setWarehouseInventory(response.data.inventory);
-          console.log('Inventory loaded:', response.data.inventory.length, 'items');
         }
       } catch (error) {
         console.error('Failed to fetch inventory on load:', error);
@@ -71,7 +71,6 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
-        console.log('Fetching warehouses from API...');
         const response = await warehousesApi.getWarehouses();
         if (response.warehouses && response.warehouses.length > 0) {
           // Map warehouse_id to id for frontend compatibility
@@ -80,7 +79,6 @@ export const DashboardPage = () => {
             id: w.warehouse_id  // Map warehouse_id to id
           }));
           setWarehouses(mappedWarehouses);
-          console.log('Warehouses loaded:', mappedWarehouses.length);
         }
       } catch (error) {
         console.error('Failed to fetch warehouses:', error);
@@ -100,7 +98,6 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchRouteSession = async () => {
       try {
-        console.log('Fetching route session from API...');
         const response = await routesApi.getRouteSession();
 
         if (response.success && response.data) {
@@ -184,10 +181,8 @@ export const DashboardPage = () => {
           });
 
           setActiveRoutes(allRoutes);
-          console.log('Routes loaded:', Object.keys(allRoutes).length, 'routes');
         }
       } catch (error) {
-        console.log('No route session found or failed to fetch:', error);
       }
     };
 
@@ -198,14 +193,11 @@ export const DashboardPage = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        console.log('Fetching vehicles from API...');
         const response = await vehiclesApi.getVehicles();
         if (response.vehicles && response.vehicles.length > 0) {
           setVehicles(response.vehicles);
-          console.log('Vehicles loaded:', response.vehicles.length);
         }
       } catch (error) {
-        console.log('Failed to fetch vehicles:', error);
       }
     };
 
@@ -274,12 +266,15 @@ export const DashboardPage = () => {
       </header>
       <main className="dashboard-main">
         <div className="dashboard-left">
-          <ChatPanel />
+          <ChatPanel workspace={workspace} />
         </div>
         <div className="dashboard-right">
-          <PlanningPanel />
-          <button className="fedex-toggle" aria-expanded={showFedex} onClick={()=>{setFedexLoaded(true); setShowFedex(!showFedex);}}>FedEx Simulation {showFedex ? '−' : '+'}</button>
-          {fedexLoaded && <div hidden={!showFedex}><FedExPanel /></div>}
+          <nav className="fedex-controls workspace-tabs" aria-label="Operations workspace">{['PLAN','SCHEDULES','LIVE OPERATIONS','NETWORK','AI CHAT'].map(tab=><button key={tab} aria-pressed={workspace===tab} onClick={()=>{setWorkspace(tab);if(tab==='SCHEDULES')setFedexLoaded(true);if(tab==='AI CHAT')document.querySelector<HTMLTextAreaElement>('.dashboard-left textarea')?.focus();}}>{tab}</button>)}</nav>
+          <div hidden={workspace!=='PLAN'}><PlanningPanel /></div>
+          {fedexLoaded && <div hidden={workspace!=='SCHEDULES'}><FedExPanel /></div>}
+          <div hidden={workspace!=='LIVE OPERATIONS'}><LiveOperations /></div>
+          {workspace==='NETWORK'&&<NetworkUpload />}
+          <div className="workspace-context" role="note">{workspace==='SCHEDULES'?'Schedules: evaluate cutoffs and follow one shipment. Live Operations shows the wider fleet.':workspace==='LIVE OPERATIONS'?'Live Operations: simulated fleet movements. The selected planning route is a separate map layer.':workspace==='NETWORK'?'Network CSVs power planning. Schedule CSVs add timed services without replacing your fleet.':'Plan with the loaded network, or ask the AI assistant on the left.'}</div>
           <div className="map-workspace">
             <MapView />
             <MapMetrics />
@@ -305,7 +300,7 @@ const MapMetrics = () => {
   const warehouses = useAppStore(state => state.warehouses);
   const vehicles = useAppStore(state => state.vehicles);
   const activeRoutes = useAppStore(state => state.activeRoutes);
-  const routeCount = Object.values(activeRoutes).filter(route => route.isActive !== false).length;
+  const routeCount = Object.values(activeRoutes).filter(route => route.isActive !== false && !route.routeData?.planning).length;
   const selectedPlan = useAppStore(state => state.selectedPlan);
   const assignedCount = selectedPlan ? (selectedPlan.vehicles || []).length : vehicles.filter(vehicle => vehicle.status === 'assigned' || Boolean(vehicle.assigned_route)).length;
   const setActiveDashboard = useAppStore(state => state.setActiveDashboard);

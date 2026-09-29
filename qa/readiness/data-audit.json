@@ -1,0 +1,74 @@
+{
+  "counts": {
+    "warehouse": 30,
+    "vehicle": 97,
+    "routes": 72,
+    "schedules": 36
+  },
+  "road": {
+    "count": 66,
+    "DistanceKm": [
+      92.0,
+      1401.0
+    ],
+    "TypicalDurationMin": [
+      168.0,
+      1569.0
+    ],
+    "BaseTransportCostINR": [
+      2576.0,
+      39228.0
+    ],
+    "ReliabilityScore": [
+      0.95,
+      0.95
+    ],
+    "DisruptionRiskScore": [
+      0.04,
+      0.04
+    ],
+    "implied_speed_kmph": [
+      28.36,
+      53.58
+    ],
+    "cost_per_km": [
+      28.0,
+      28.0
+    ]
+  },
+  "air": {
+    "count": 6,
+    "DistanceKm": [
+      515.0,
+      1561.0
+    ],
+    "TypicalDurationMin": [
+      108.0,
+      204.0
+    ],
+    "BaseTransportCostINR": [
+      36050.0,
+      109270.0
+    ],
+    "ReliabilityScore": [
+      0.95,
+      0.95
+    ],
+    "DisruptionRiskScore": [
+      0.04,
+      0.04
+    ],
+    "implied_speed_kmph": [
+      286.11,
+      459.12
+    ],
+    "cost_per_km": [
+      70.0,
+      70.0
+    ]
+  },
+  "vehicle_capacity_kg": [
+    2000.0,
+    16000.0
+  ]
+}

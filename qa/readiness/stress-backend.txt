@@ -1,0 +1,4 @@
+2026-09-29 16:07:24,066 - INFO - Database initialized successfully
+{"entities": 10, "create_ms": 4.39, "snapshots_per_second": 163856, "batch_snapshot_ms": 0.33, "payload_bytes": 35259, "errors": 0, "dropped_updates": 0, "scope": "Python V2 loaded-network runtime; excludes browser rendering and network transport"}
+{"entities": 50, "create_ms": 4.97, "snapshots_per_second": 168992, "batch_snapshot_ms": 0.59, "payload_bytes": 98801, "errors": 0, "dropped_updates": 0, "scope": "Python V2 loaded-network runtime; excludes browser rendering and network transport"}
+{"entities": 100, "create_ms": 6.01, "snapshots_per_second": 169237, "batch_snapshot_ms": 0.91, "payload_bytes": 174401, "errors": 0, "dropped_updates": 0, "scope": "Python V2 loaded-network runtime; excludes browser rendering and network transport"}

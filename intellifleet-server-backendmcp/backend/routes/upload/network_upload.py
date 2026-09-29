@@ -23,7 +23,10 @@ def _bool(value) -> int:
 
 
 def _csv(data: bytes) -> pd.DataFrame:
-    frame = pd.read_csv(io.StringIO(data.decode("utf-8")))
+    try:
+        frame = pd.read_csv(io.StringIO(data.decode("utf-8-sig")))
+    except (UnicodeDecodeError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+        raise HTTPException(422, "Provide a non-empty, valid UTF-8 CSV file with a header row.") from exc
     frame.columns = [str(c).strip() for c in frame.columns]
     return frame
 
@@ -51,6 +54,11 @@ async def upload_network(
     _require(wf, {"Name","Address","Country","City","NodeType","Inventory","ReorderLevel"}, "Warehouse")
     _require(vf, {"WarehouseName","VehicleType","VehicleCapacity","DepartureTime"}, "Vehicle")
     _require(rf, {"Source","Destination","IntermediateLocation","RouteType"}, "Routes")
+    from backend.operations.data import validate_network
+    try:
+        validate_network(wf.to_dict('records'), vf.to_dict('records'), rf.to_dict('records'), strict=all(str(x).upper()=='SYNTHETIC' for x in rf.get('data_source',[])) if 'data_source' in rf else False)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     names = {str(x).strip() for x in wf["Name"]}
     missing_vehicle = sorted({str(x).strip() for x in vf["WarehouseName"]} - names)
     intermediate_names=set()
@@ -78,6 +86,8 @@ async def upload_network(
         raise HTTPException(422,"One or more warehouse coordinates could not be resolved")
 
     warnings=[]; route_rows=[]
+    if 'data_source' not in rf:
+        warnings.append('Legacy source provenance unspecified; road speeds over 65 km/h require review')
     for index,row in rf.iterrows():
         source,destination=str(row["Source"]).strip(),str(row["Destination"]).strip(); mode=str(row["RouteType"]).strip().lower()
         if mode not in {"road","air"}: raise HTTPException(422,f"Unsupported RouteType at row {index+2}: {mode}")
@@ -100,6 +110,9 @@ async def upload_network(
     try:
         with sqlite3.connect("users.db") as conn:
             conn.execute("PRAGMA foreign_keys=ON"); conn.execute("BEGIN IMMEDIATE")
+            conn.execute("CREATE TABLE IF NOT EXISTS network_provenance(user_id INTEGER PRIMARY KEY, data_source TEXT NOT NULL)")
+            network_data_source = 'SYNTHETIC_NETWORK' if all('data_source' in f and f['data_source'].astype(str).str.upper().eq('SYNTHETIC').all() for f in (wf,vf,rf)) else 'USER_NETWORK'
+            conn.execute("INSERT OR REPLACE INTO network_provenance VALUES(?,?)",(user_id,network_data_source))
             conn.execute("DELETE FROM route_conditions WHERE user_id=?",(user_id,))
             conn.execute("DELETE FROM nodes WHERE user_id=?",(user_id,)); conn.execute("DELETE FROM nodes_air WHERE user_id=?",(user_id,))
             conn.execute("DELETE FROM persistent_routes WHERE user_id=?",(user_id,)); conn.execute("DELETE FROM multimodal_routes WHERE user_id=?",(user_id,))
@@ -143,7 +156,7 @@ async def upload_network(
                 data={"route_id":record_id,"external_route_id":external_id,"source":source,"destination":destination,
                       "intermediate_locations":intermediate,"locations":locations,"route_type":mode,"distance":distance,
                       "duration":duration,"route_cost":cost,"optimal_routes":[{"path":path,"distance":distance,"duration":duration,"isOptimal":True}],
-                      "service_class":_value(row,"ServiceClass"),"sla_hours":_value(row,"SLAHours")}
+                      "data_source":network_data_source,"service_class":_value(row,"ServiceClass"),"sla_hours":_value(row,"SLAHours")}
                 active=_bool(_value(row,"Status","active"))
                 persistent.append((record_id,user_id,json.dumps(data),json.dumps(locations),source,destination,json.dumps(intermediate),"balanced",active,mode))
             conn.executemany("INSERT INTO persistent_routes(route_id,user_id,route_data,waypoints,source,destination,intermediate_locations,objective,is_active,route_type) VALUES(?,?,?,?,?,?,?,?,?,?)",persistent)

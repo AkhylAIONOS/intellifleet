@@ -1,5 +1,7 @@
+import {operationalTime} from '../../utils/operationalTime';
 import { useEffect, useRef } from 'react';
-import { CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { CircleMarker, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { movementIcon } from './movementIcon';
 import { useFedexStore } from '../../store/fedexStore';
 
 export function FedExLayer() {
@@ -23,8 +25,8 @@ export function FedExLayer() {
     <CircleMarker center={state.route[state.route.length-1]} radius={8} pathOptions={{color:'#4d148c',fillOpacity:1}}>
       <Tooltip permanent direction="top">{state.gateway} · DEMO gateway</Tooltip>
     </CircleMarker>
-    <CircleMarker center={[state.latitude,state.longitude]} radius={11} pathOptions={{color:'#fff',weight:3,fillColor:'#ff6600',fillOpacity:1}}>
-      <Tooltip permanent direction="right">{state.mode === 'AIR' ? '✈' : state.mode === 'RAIL' ? 'Rail' : 'Vehicle'} · {state.shipment_id}<br/>{(state.progress*100).toFixed(1)}% · {state.status}<br/>SIMULATED TELEMETRY</Tooltip>
-    </CircleMarker>
+    <Marker position={[state.latitude,state.longitude]} icon={movementIcon(state.mode,state.heading || 0,true)}>
+      <Tooltip direction="right">{state.shipment_id} · {state.mode}<br/>{state.origin_station} → {state.gateway}<br/>{state.status} · {(state.progress*100).toFixed(1)}%<br/>ETD {operationalTime(state.scheduled_etd)}<br/>ETA {operationalTime(state.current_eta)}<br/>Delay {state.delay_minutes || 0} min<br/>{state.data_source || 'FEDEX_SOURCE'} / SIMULATED TELEMETRY</Tooltip>
+    </Marker>
   </>;
 }

@@ -23,6 +23,7 @@ router = APIRouter(tags=["Agent Service"])
 
 class ChatRequest(BaseModel):
     message: str
+    selected_simulation_id: str | None = None
 
 @router.post("/mcp-agent")
 async def agent_chat(
@@ -37,6 +38,11 @@ async def agent_chat(
     
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
+
+    from backend.operations.chat import answer
+    operations_result = answer(user_id, req.message, req.selected_simulation_id)
+    if operations_result is not None:
+        return operations_result
 
     if supervisor.llm is None:
         raise HTTPException(

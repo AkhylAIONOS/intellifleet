@@ -1,0 +1,77 @@
+
+> frontendmain@0.0.0 test
+> for test in tests/*.mjs; do node "$test" || exit; done
+
+PASS: default scheduler preserves Window receiver for request/cancel, midpoint, reduced motion and cancellation
+Fetching inventory from API...
+Fetching warehouses from API...
+Fetching route session from API...
+Fetching vehicles from API...
+Fetching inventory from API...
+Fetching warehouses from API...
+Fetching route session from API...
+Fetching vehicles from API...
+Warehouses loaded: 30
+Routes loaded: 62 routes
+Vehicles loaded: 97
+Warehouses loaded: 30
+Routes loaded: 62 routes
+Vehicles loaded: 97
+PASS: full StrictMode dashboard, 30/97/62 network, exact 18000kg assignments, 0/1/2+, missing metadata/geometry, Road/Air/multi replacement, receiver-aware RAF, replay, error containment/recovery, reduced motion, Copy/New Chat and active unmount
+3:22:17 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+Fetching inventory from API...
+Fetching warehouses from API...
+Fetching route session from API...
+Fetching vehicles from API...
+Routes loaded: 0 routes
+Fetching inventory from API...
+Fetching warehouses from API...
+Fetching route session from API...
+Fetching vehicles from API...
+Routes loaded: 0 routes
+Fetching inventory from API...
+Fetching warehouses from API...
+Fetching route session from API...
+Fetching vehicles from API...
+Routes loaded: 0 routes
+PASS: three demo landing routes, no auth inputs, loading/double-click, JWT storage, dashboard navigation, refresh, real logout, re-entry, safe errors and expiry
+3:22:18 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+PASS: backend snapshot moves Leaflet marker; one fit per run; manual pan preserved; synthetic label; reset removes layer
+PASS: FedEx controls, cutoff result, telemetry validation, stale-event isolation, delay alert and reset
+{"new_chat":true,"refresh_chat":true,"copy":true,"network_ready":true,"network_empty":true,"signup":true,"logout":true}
+PASS: actual Leaflet DOM with 30 warehouses/97 vehicles/62 base routes: fit/padding, route overlay, animation, camera follow/manual release, aircraft replacement, popup assignments, replay, warehouse focus/no-coordinates, reduced motion, infeasible retention and unmount cleanup
+PASS: 100 Leaflet entities; truck/plane/train icons; hover fields; filters; batched movement; pan preserved; arbitrary 3-node path; selected run deduplication; show-all off
+PASS: upload errors explain connection, auth, validation, and safe server failure
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+PASS: structured operation tables, unknown costs, malformed rows and New Chat clearing
+{"plan_result_state":true,"opened":true,"closed":true,"plan_preserved":true,"reopened":true}
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+PASS: selected assignments, road/air replacement, scenario isolation/apply, recovery/retention, warehouse scope, exact snapshot/deltas, geometry, 10s playback, reduced motion, cancellation, New Chat preservation
+PASS: Calculate Plan → shared state, snapshot, ESC preserves selection, scenario isolation/apply, route modal/filter/search/edit/add with API stubs, New Chat clears context/visuals and preserves network
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+[zustand persist middleware] Unable to update item 'intellifleet-storage', the given storage is currently unavailable.
+{"road_map_state":true,"air_map_state":true,"road_to_air_replacement":true,"disruption_map_replacement":true,"active_route_count":1}
+{"route_management_state":true,"all":2,"road":1,"air":1,"search_with_filter":true,"air_selection":true,"overlay_excluded":true}

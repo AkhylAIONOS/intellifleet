@@ -1,0 +1,24 @@
+Recommended plan: Ground.
+
+Why: It provides the strongest calculated balance of cost, time, reliability, risk and utilization.
+
+Shipment: Delhi → Mumbai; weight 6000.0 kg; quantity 1.
+
+Route:
+- Delhi → Mumbai (road, 1401.0 km, 26.15 hours)
+
+Vehicles:
+- TRK-031 (Truck): capacity 7000 kg, assigned load 6,000 kg, utilization 85.71%
+
+Operational cost: ₹275,796.50.
+
+ETA: 31.19 hours; expected arrival 30 Sep 2026, 23:26 IST.
+
+Risk: 14.05%; reliability 95.00%.
+
+SLA was not evaluated because no delivery deadline was provided.
+
+Feasible alternatives:
+- Express / Air: ₹382,623.50 more expensive, 25.67 hours faster; risk 12.0%, reliability 95.0%.
+
+Unavailable requested modes: multimodal. No feasible route-and-vehicle combination exists for those modes in the current network.

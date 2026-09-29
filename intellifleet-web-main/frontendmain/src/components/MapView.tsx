@@ -1,3 +1,4 @@
+import { NetworkMovementsLayer } from './MapLayers/NetworkMovementsLayer';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';
@@ -236,7 +237,7 @@ export const MapView = () => {
         <GuardedJourney />
         <WarehouseFocusLayer />
         <MapLegend />
-        <FedExLayer />
+        <FedExLayer /><NetworkMovementsLayer />
       </MapContainer>
     </div>
   );

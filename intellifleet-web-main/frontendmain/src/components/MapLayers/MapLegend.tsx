@@ -1,8 +1,11 @@
+import {useOperationsStore} from '../../store/operationsStore';
+import {useFedexStore} from '../../store/fedexStore';
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppStore } from '../../store/appStore';
 export function MapLegend() {
+  const live=useOperationsStore(s=>s.enabled), selectedLive=useFedexStore(s=>!!s.telemetry);
   const map=useMap(), plan=useAppStore(s=>s.selectedPlan), routes=useAppStore(s=>s.activeRoutes), warehouses=useAppStore(s=>s.warehouses);
   useEffect(()=>{
     const rows:string[]=[];
@@ -12,11 +15,13 @@ export function MapLegend() {
     if(network.some(route=>route.routeData?.optimal_routes?.[0]?.isOptimal===false))rows.push('<span><i class="alternative"></i>Alternative</span>');
     if(plan?.route_legs.some(leg=>leg.route_type==='road'))rows.push('<span>🚚 Ground</span>');
     if(plan?.route_legs.some(leg=>leg.route_type==='air'))rows.push('<span>✈ Air</span>');
+    if(live)rows.push('<span>🚚 ✈ ▣ Simulated fleet (mode filter)</span>');
+    if(selectedLive)rows.push('<span>┄ Selected live operation</span>');
     if(warehouses.length)rows.push('<span>▣ Warehouse</span>');
     if(!rows.length)return;
     const control=new L.Control({position:'bottomright'});
     control.onAdd=()=>{const el=L.DomUtil.create('div','plan-map-legend');el.innerHTML=rows.join('');return el;};
     control.addTo(map);return()=>{control.remove();};
-  },[map,plan,routes,warehouses]);
+  },[map,plan,routes,warehouses,live,selectedLive]);
   return null;
 }

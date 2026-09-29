@@ -1,0 +1,51 @@
+## feature/fedex-simulation
+ M intellifleet-server-backendmcp/backend/agents/supervisor.py
+ M intellifleet-server-backendmcp/backend/agents/token_usage.txt
+ M intellifleet-server-backendmcp/backend/api/chat_api.py
+ M intellifleet-server-backendmcp/backend/fedex/alerts.py
+ M intellifleet-server-backendmcp/backend/fedex/eligibility.py
+ M intellifleet-server-backendmcp/backend/fedex/models.py
+ M intellifleet-server-backendmcp/backend/fedex/simulator.py
+ M intellifleet-server-backendmcp/backend/planning/database.py
+ M intellifleet-server-backendmcp/backend/planning/service.py
+ M intellifleet-server-backendmcp/backend/routes/upload/network_upload.py
+ M intellifleet-server-backendmcp/main.py
+ M intellifleet-server-backendmcp/tests/test_chat_configuration.py
+ M intellifleet-server-backendmcp/tests/test_cors.py
+ M intellifleet-web-main/frontendmain/package.json
+ M intellifleet-web-main/frontendmain/src/api/chat.ts
+ M intellifleet-web-main/frontendmain/src/api/fedex.ts
+ M intellifleet-web-main/frontendmain/src/components/ChatPanel.tsx
+ M intellifleet-web-main/frontendmain/src/components/FedExPanel.tsx
+ M intellifleet-web-main/frontendmain/src/components/MapLayers/FedExLayer.tsx
+ M intellifleet-web-main/frontendmain/src/components/MapLayers/MapLegend.tsx
+ M intellifleet-web-main/frontendmain/src/components/MapView.tsx
+ M intellifleet-web-main/frontendmain/src/components/NetworkUpload.tsx
+ M intellifleet-web-main/frontendmain/src/components/PlanVisuals.tsx
+ M intellifleet-web-main/frontendmain/src/components/PlanningPanel.tsx
+ M intellifleet-web-main/frontendmain/src/hooks/useRouteAgent.ts
+ M intellifleet-web-main/frontendmain/src/pages/Dashboard.css
+ M intellifleet-web-main/frontendmain/src/pages/DashboardPage.tsx
+ M intellifleet-web-main/frontendmain/src/types/api.ts
+ M intellifleet-web-main/frontendmain/tests/run-fedex-map.mjs
+?? SYNTHETIC_DATA_ASSUMPTIONS.md
+?? UNIFLEET_DEMO_RUNBOOK.md
+?? UNIFLEET_INTEGRATION_RESULT.md
+?? UNIFLEET_PRESENTATION_GUIDE.md
+?? intellifleet-server-backendmcp/backend/operations/
+?? intellifleet-server-backendmcp/scripts/generate_synthetic_v2.py
+?? intellifleet-server-backendmcp/tests/benchmark_operations.py
+?? intellifleet-server-backendmcp/tests/test_network_upload_api.py
+?? intellifleet-server-backendmcp/tests/test_operations.py
+?? intellifleet-server-backendmcp/tests/test_readiness.py
+?? intellifleet-web-main/frontendmain/public/synthetic_v2/
+?? intellifleet-web-main/frontendmain/src/components/LiveOperations.tsx
+?? intellifleet-web-main/frontendmain/src/components/MapLayers/NetworkMovementsLayer.tsx
+?? intellifleet-web-main/frontendmain/src/components/MapLayers/movementIcon.ts
+?? intellifleet-web-main/frontendmain/src/store/operationsStore.ts
+?? intellifleet-web-main/frontendmain/src/utils/operationalTime.ts
+?? intellifleet-web-main/frontendmain/tests/e2e/
+?? intellifleet-web-main/frontendmain/tests/run-network-movements.mjs
+?? intellifleet-web-main/frontendmain/tests/run-network-upload.mjs
+?? intellifleet-web-main/frontendmain/tests/run-readiness.mjs
+?? qa/

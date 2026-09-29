@@ -1,0 +1,1 @@
+PASS: IST rollover, schedule-only clocks preserved, planner errors sanitized, infeasibility visible

@@ -14,8 +14,10 @@ try {
   render(React.createElement(MapContainer,{center:[24,74],zoom:5,ref:m=>{if(m)map=m;}},React.createElement(FedExLayer)));
   const state={simulation_id:'one',sequence:1,shipment_id:'S1',origin_station:'UDRPU',gateway:'DELGW',route:[[24,74],[28,77]],latitude:24,longitude:74,mode:'SURFACE',status:'IN_TRANSIT',progress:0};
   await act(async()=>useFedexStore.getState().begin(state));assert.equal(fits,1);
-  const moving=()=>{let marker;map.eachLayer(l=>{if(l instanceof L.CircleMarker&&l.options.radius===11)marker=l;});return marker;};
+  const moving=()=>{let marker;map.eachLayer(l=>{if(l instanceof L.Marker&&l.options.icon?.options.className==='movement-icon')marker=l;});return marker;};
   assert.equal(moving().getLatLng().lat,24);
+  assert.match(moving().options.icon.options.html,/aria-label="truck"/);
+  moving().openTooltip();
   map.panTo([26,75]);const center=map.getCenter();
   await act(async()=>useFedexStore.getState().update({...state,sequence:2,latitude:26,longitude:75.5,progress:.5}));
   assert.equal(moving().getLatLng().lat,26);assert.equal(fits,1);assert.ok(map.getCenter().equals(center));

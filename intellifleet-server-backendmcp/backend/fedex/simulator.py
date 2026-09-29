@@ -22,15 +22,20 @@ class Simulation:
         selected = next((c for c in result['candidates'] if c['schedule_id'] == request.schedule_id and c['eligible']), None) if request.schedule_id else result['selected']
         if not selected:
             raise ValueError('No eligible selected service; inspect cutoff candidates')
-        if request.origin_station not in DEMO_LOCATIONS or request.gateway not in DEMO_LOCATIONS:
+        schedule = next(s for s in schedules if s.schedule_id == selected['schedule_id'])
+        origin = schedule.origin_coordinates or DEMO_LOCATIONS.get(request.origin_station)
+        destination = schedule.destination_coordinates or DEMO_LOCATIONS.get(request.gateway)
+        if not origin or not destination:
             raise ValueError('No labelled demo location mapping for this lane; schedule evaluation remains available')
         self.id = str(uuid4())
         self.request = request
         self.schedules = schedules
         self.selected = selected
         self.notice = result['schedule_notice']
-        self.origin = DEMO_LOCATIONS[request.origin_station]
-        self.destination = DEMO_LOCATIONS[request.gateway]
+        self.origin = origin
+        self.destination = destination
+        self.route = [self.origin, self.destination]
+        self.data_source = schedule.data_source
         self.now = local_datetime(request.shipment_ready_datetime)
         self.last_wall = wall_time
         self.speed = request.speed
@@ -74,10 +79,21 @@ class Simulation:
         return self.snapshot()
 
     def snapshot(self):
-        lat = self.origin[0] + (self.destination[0] - self.origin[0]) * self.progress
-        lng = self.origin[1] + (self.destination[1] - self.origin[1]) * self.progress
+        lengths = [distance_km(a,b) for a,b in zip(self.route,self.route[1:])]
+        remaining = sum(lengths)*self.progress
+        a,b = self.route[-2:]
+        fraction = 1.0
+        for index,length in enumerate(lengths):
+            if remaining <= length:
+                a,b = self.route[index:index+2]
+                fraction = remaining/max(length,.001)
+                break
+            remaining -= length
+        lat = a[0]+(b[0]-a[0])*fraction
+        lng = a[1]+(b[1]-a[1])*fraction
+        heading = (math.degrees(math.atan2(b[1]-a[1],b[0]-a[0]))+360)%360
         moving = self.status == 'IN_TRANSIT' and not self.paused and not self.stopped
-        return dict(simulation_id=self.id, shipment_id=self.request.shipment_id,
+        return dict(data_source=self.data_source, schedule_id=self.selected["schedule_id"], heading=heading, delay_minutes=round((self.current_eta-self.selected["eta"]).total_seconds()/60,2), simulation_id=self.id, shipment_id=self.request.shipment_id,
                     origin_station=self.request.origin_station, gateway=self.request.gateway,
                     mode=self.selected['mode'], run=self.selected['run'], service=self.selected['service'],
                     simulation_timestamp=self.now.isoformat(), latitude=lat, longitude=lng,
@@ -89,7 +105,7 @@ class Simulation:
                     retrieval=self.selected['retrieval'].isoformat() if self.selected['retrieval'] else None,
                     onward_readiness='Unverified: source retrieval milestone shown separately; no onward uplift schedule supplied',
                     synthetic_data=True, location_source='DEMO_SIMULATION', simulation_speed=self.speed,
-                    route=[self.origin, self.destination], location_notice='Approximate city centres and synthetic straight-line interpolation; not FedEx GPS or road geometry.',
+                    route=self.route, location_notice='Approximate city centres and synthetic straight-line interpolation; not actual GPS or road geometry.',
                     schedule_notice=self.notice, seed=self.request.seed, random_events=self.request.random_events,
                     sequence=self.sequence, events=self.events, alerts=self.alerts, state_history=self.state_history)
 

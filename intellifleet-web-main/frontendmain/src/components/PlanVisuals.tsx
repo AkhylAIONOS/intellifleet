@@ -40,11 +40,11 @@ export function PlanDelta({comparison}: {comparison:PlanComparison}) {
           {delta > 0 ? '+' : delta < 0 ? '−' : ''}{change}<small>{delta < 0 ? 'Decrease' : delta > 0 ? 'Increase' : 'Unchanged'}</small></td></tr>;
       })}</tbody></table></section>;
 }
-export function CurrentPlanVisuals() {
+export function CurrentPlanVisuals({liveWorkspace=false}: {liveWorkspace?: boolean}) {
   const plan = useAppStore(s=>s.selectedPlan), comparison=useAppStore(s=>s.planComparison), notice=useAppStore(s=>s.planNotice);
   const operation = useAppStore(s=>s.operationResult);
   if (!plan && !comparison && !notice && !operation) return null;
-  return <details className="chat-plan-summary" open><summary>Current shipment</summary><div className="current-plan-visuals">{notice && <p className="plan-notice" role="status">{notice}</p>}
+  return <details className="chat-plan-summary" open={!liveWorkspace}><summary>Last planning result · independent of live operations</summary><div className="current-plan-visuals">{notice && <p className="plan-notice" role="status">{notice}</p>}
     <OperationDetails result={operation}/>
     {plan && <PlanSnapshot plan={plan}/>} {comparison && <PlanDelta comparison={comparison}/>}</div></details>;
 }

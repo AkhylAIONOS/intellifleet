@@ -1,3 +1,5 @@
+import {useOperationsStore} from '../store/operationsStore';
+import {useFedexStore} from '../store/fedexStore';
 import apiClient from './client';
 import type { ApiResponse, ChatResponse, ChatHistoryResponse } from '../types/api';
 
@@ -6,6 +8,7 @@ export const chatApi = {
   sendMessage: async (message: string, sessionId?: string): Promise<ChatResponse> => {
     const response = await apiClient.post<ChatResponse>('/mcp-agent', {
       message,
+      selected_simulation_id: useOperationsStore.getState().selected || useFedexStore.getState().telemetry?.simulation_id,
       session_id: sessionId
     });
     return response.data;

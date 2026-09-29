@@ -111,8 +111,8 @@ def test_complete_planning_response_never_exposes_none_sla():
         "deadline":None, "sla_met":None, "score":.3, "score_components":{"normalized_cost":1}}
     result={"planning_request":{"source":"Delhi","destination":"Mumbai","shipment":{"weight_kg":6000,"quantity":1},"objective":"balanced"},
             "recommended_plan":plan,"reason":"deterministic winner","candidate_plans":[plan],"comparison":[]}
-    answer=_format_planning_result(result)
-    for required in ("I'd recommend the Ground plan", "Route:","Vehicles:","Cost breakdown", "Risk:","Risk profile", "Balanced score:","SLA was not evaluated"):
+    answer=_format_planning_result(result, "Show details and score breakdown")
+    for required in ("Recommended plan: Ground", "Route:","Vehicles:","Cost breakdown", "Risk:","Risk profile", "Balanced score:","SLA was not evaluated"):
         assert required in answer
     assert "Selling price" not in answer and "{\"" not in answer and "plan p1" not in answer
     priced=_format_planning_result(result,"Price it at a 20% margin and show profit")
@@ -132,7 +132,7 @@ def test_mode_response_is_conversational_grounded_and_has_no_raw_structures():
             "recommended_plan":ground,"express_vs_ground":{"additional_cost":200,"time_saved_hours":6,"risk_difference":-.1,
             "sla_comparison":{"ground":None,"express":None}}}
     answer=_format_planning_result(result,"Compare Ground and Express")
-    assert "I'd recommend Ground" in answer and "₹200.00" in answer and "saves 6 hours" in answer
+    assert "Recommended plan: Ground" in answer and "₹200.00" in answer and "saves 6 hours" in answer
     assert "SLA" not in answer and "{" not in answer and "Ground" in answer and "Express" in answer
 
 
@@ -256,7 +256,7 @@ def test_advanced_natural_language_operations_use_canonical_adapters():
     assert global_plan["operation"]=="global_plan" and global_plan["parameters"]["destination"]=="Frankfurt"
     deadline=_deadline_from_message("Deliver by 5 Sep 2026, 8:00 PM IST")
     from backend.agents.supervisor import _readable_time
-    assert deadline.endswith("+05:30") and _readable_time(deadline)=="05 Sep 2026, 14:30 UTC"
+    assert deadline.endswith("+05:30") and _readable_time(deadline)=="05 Sep 2026, 20:00 IST"
 
 
 def test_scenario_and_stress_followups_merge_active_context():

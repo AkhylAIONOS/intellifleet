@@ -8,7 +8,7 @@ def recovery(simulation):
     result = evaluate(simulation.schedules, request)
     alternatives = [c for c in result['candidates'] if c['eligible'] and c['schedule_id'] != simulation.selected['schedule_id']]
     in_transit = simulation.progress > 0
-    return {
+    response = {
         'problem': 'Synthetic disruption affects the selected movement',
         'impact': f"Arrival shifts by {(simulation.current_eta-simulation.selected['eta']).total_seconds()/60:g} minutes from schedule",
         'revised_eta': simulation.current_eta.isoformat(),
@@ -19,6 +19,19 @@ def recovery(simulation):
         'planning_status': 'Not invoked: FedEx schedule alone lacks compatible capacity/cost/network inputs',
         'automatically_executed': False,
     }
+
+    context=getattr(simulation,'planning_context',None)
+    if context:
+        from backend.planning.service import PlanningService
+        request=context['request'].model_copy(update={'objective':'fastest'})
+        result=PlanningService(':memory:').plan(context['owner'],request,context['network'])
+        plan=result.get('recommended_plan')
+        response['planning_status']='Hypothetical origin recovery evaluated against loaded network; no fleet reserved'
+        response['hypothetical_network_recovery']={'data_source':simulation.data_source,'origin_transfer_unverified':in_transit,
+            'plan_id':plan['plan_id'] if plan else None,'duration_hours':plan['duration_hours'] if plan else None,
+            'operational_cost':plan['operational_cost'] if plan else None,'vehicles':plan['vehicles'] if plan else []}
+        response['reason']='Loaded network capacity, cost, risk and travel time were calculated by the existing planner. In-transit transfer and return-to-origin remain unverified.'
+    return response
 
 
 def evaluate_compatible_plan(planning_request, verified_network, user_id):

@@ -77,6 +77,11 @@ class PlanningService:
                           max_range_km, loading_time_min, unloading_time_min, co2_kg_per_km, express_eligible, refrigerated
                    FROM vehicles WHERE user_id=?""", (user_id,)
             )]
+        with self._connect() as conn:
+            provenance = conn.execute("SELECT data_source FROM network_provenance WHERE user_id=?",(user_id,)).fetchone()
+        for objects in (routes, warehouses, vehicles):
+            for obj in objects:
+                obj['data_source'] = provenance[0] if provenance else 'USER_NETWORK'
         coordinates={_norm(w["name"]):{"lat":w.get("latitude"),"lng":w.get("longitude")} for w in warehouses}
         for route in routes:
             route["source_coords"]=coordinates.get(_norm(route["from_location"]))

@@ -20,6 +20,8 @@ def candidate(schedule: Schedule, request: EligibilityInput):
     if etd and cutoff and etd < cutoff:
         etd += timedelta(days=1)
     eta = etd.replace(hour=schedule.eta_minutes // 60, minute=schedule.eta_minutes % 60) if etd and schedule.eta_minutes is not None else None
+    if eta and schedule.eta_day_offset is not None:
+        eta = start + timedelta(days=schedule.eta_day_offset, minutes=schedule.eta_minutes)
     if eta and eta < etd:
         eta += timedelta(days=1)
     retrieval = eta.replace(hour=schedule.retrieval_minutes // 60, minute=schedule.retrieval_minutes % 60) if eta and schedule.retrieval_minutes is not None else None
@@ -42,14 +44,14 @@ def candidate(schedule: Schedule, request: EligibilityInput):
         eligible = True
         reason = f'{label} is eligible: shipment ready by handover cutoff and departure.'
     return dict(schedule_id=schedule.schedule_id, origin=schedule.origin_station, gateway=schedule.gateway,
-                mode=schedule.mode, run=schedule.run, service=schedule.service, cutoff=cutoff, etd=etd, eta=eta,
+                data_source=schedule.data_source, mode=schedule.mode, run=schedule.run, service=schedule.service, cutoff=cutoff, etd=etd, eta=eta,
                 retrieval=retrieval, transit_minutes=schedule.transit_minutes, eligible=eligible, reason=reason,
                 warnings=schedule.warnings, source_sheet=schedule.source_sheet, source_row=schedule.source_row)
 
 
 def evaluate(schedules, request: EligibilityInput):
     candidates = [candidate(s, request) for s in schedules
-                  if s.origin_station == request.origin_station and s.gateway == request.gateway]
+                  if s.origin_station.casefold() == request.origin_station.casefold() and s.gateway.casefold() == request.gateway.casefold()]
     feasible = sorted((c for c in candidates if c['eligible']), key=lambda c: (c['eta'], c['etd'], c['schedule_id']))
     return {'candidates': candidates, 'selected': feasible[0] if feasible else None,
             'selection_reason': 'Earliest scheduled arrival among eligible provided services; no mode priority.' if feasible else 'No confirmed eligible service in the selected schedule template.',

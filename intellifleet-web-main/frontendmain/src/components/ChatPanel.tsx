@@ -2,13 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouteAgent } from '../hooks/useRouteAgent';
 import { useAppStore } from '../store/appStore';
 import './ChatPanel.css';
-import { NetworkUpload } from './NetworkUpload';
 import { CurrentPlanVisuals } from './PlanVisuals';
 import { ChatResult } from './ChatResult';
 import { chatApi } from '../api/chat';
 // import { formatDuration } from '../utils/formatDuration';
 
-export const ChatPanel = () => {
+export const ChatPanel = ({workspace='PLAN'}: {workspace?: string}) => {
   const [input, setInput] = useState('');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -304,7 +303,7 @@ export const ChatPanel = () => {
           ? <><strong>Network Ready</strong><span>{warehouses.length} Warehouses • {vehicles.length} Vehicles • {persistedRouteCount} Routes</span></>
           : <><strong>Network data has not been uploaded yet.</strong><span>Upload Warehouse, Vehicle and Routes CSVs to start planning.</span></>}
       </div>
-      <CurrentPlanVisuals />
+      <CurrentPlanVisuals liveWorkspace={workspace==='SCHEDULES'||workspace==='LIVE OPERATIONS'} />
       <div className="chat-messages">
         {chatHistory.length === 0 && (
           <div className="welcome-message">
@@ -341,7 +340,6 @@ export const ChatPanel = () => {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <NetworkUpload />
       <div className="chat-input-container">
         <div className="unified-input-wrapper">
           <textarea

@@ -29,6 +29,8 @@ def preflight(client, origin):
     "https://intellifleet-web.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5178",
+    "http://127.0.0.1:5178",
 ])
 def test_signin_preflight_allows_required_origins(monkeypatch, origin):
     # A configured production origin must not remove either local origin.

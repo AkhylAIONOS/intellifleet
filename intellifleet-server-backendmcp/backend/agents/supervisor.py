@@ -160,11 +160,12 @@ def _money(value: Any) -> str:
 def _readable_time(value: Any) -> str:
     if not value: return "not available"
     try:
-        from datetime import datetime, timezone
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
         parsed=datetime.fromisoformat(str(value).replace("Z","+00:00"))
         if parsed.tzinfo is None:
             return parsed.strftime("%d %b %Y, %H:%M (timezone not supplied)")
-        return parsed.astimezone(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
+        return parsed.astimezone(ZoneInfo("Asia/Kolkata")).strftime("%d %b %Y, %H:%M IST")
     except (TypeError,ValueError): return str(value)
 
 
@@ -256,6 +257,7 @@ def _sla_text(plan: dict) -> str:
 
 
 def _format_planning_result(result: dict, user_message: str = "") -> str:
+    details = any(term in user_message.casefold() for term in ("breakdown", "explain calculation", "show details", "scoring", "deterministic score", "normalized", "weighted contribution"))
     """Complete deterministic customer response; every number is copied from planner output."""
     if result.get("scope")=="international" and result.get("requested_multimodal_feasible") is False:
         direct=result.get("recommended_plan") or {}
@@ -391,7 +393,7 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
         sla=mode_delta.get("sla_comparison") or {}
         sla_text="" if sla.get("ground") is None and sla.get("express") is None else f"\nSLA comparison\n- Ground: {'met' if sla.get('ground') else 'missed'}\n- Express: {'met' if sla.get('express') else 'missed'}"
         return (
-            f"For this shipment, I'd recommend {recommendation}.\n\n{reason}\n\nHere's the comparison.\n\n"
+            f"Recommended plan: {recommendation}.\n\n{reason}\n\nHere's the comparison.\n\n"
             f"{ground_label} costs {_money(ground['operational_cost'])}, takes {ground['duration_hours']} hours, and has risk {ground['risk_score']:.2%}.\n"
             f"Route:\n{_route_text(ground)}\nVehicles:\n{_vehicle_text(ground, result.get('planning_request', {}).get('shipment', {}))}\n"
             f"{_breakdown_text('Ground cost breakdown',ground.get('cost_breakdown',{}))}\n\n"
@@ -435,14 +437,14 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
         cost_line+=(f" Selling price/revenue: {_money(plan.get('selling_price',0))}. "
                     f"Profit: {_money(plan.get('profit',0))}. Margin: {plan.get('margin_percentage')}%.")
     parts = [
-        f"For this shipment, I'd recommend the {product} plan.",
+        f"Recommended plan: {product}.",
         f"Why: {objective_reason}",
         f"Shipment: {request.get('source')} → {request.get('destination')}; weight {shipment.get('weight_kg')} kg; quantity {shipment.get('quantity')}.",
         f"Route:\n{_route_text(plan)}",
         f"Vehicles:\n{_vehicle_text(plan, shipment)}",
-        cost_line+"\n"+_breakdown_text("Cost breakdown",plan.get("cost_breakdown",{})),
+        cost_line + ("\n" + _breakdown_text("Cost breakdown", plan.get("cost_breakdown", {})) if details else ""),
         f"ETA: {plan.get('duration_hours')} hours; expected arrival {_readable_time(plan.get('eta'))}.",
-        f"Risk: {plan.get('risk_score'):.2%}; reliability {plan.get('reliability'):.2%}.\n"+_breakdown_text("Risk profile",plan.get("risk_breakdown",{}),percent=True)+f"\n- Overall: {plan.get('risk_score'):.2%}",
+        f"Risk: {plan.get('risk_score'):.2%}; reliability {plan.get('reliability'):.2%}." + ("\n" + _breakdown_text("Risk profile", plan.get("risk_breakdown", {}), percent=True) if details else ""),
         _sla_text(plan),
     ]
     before=result.get("_active_plan_before")
@@ -468,14 +470,20 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
         if before.get("deadline") is not None or plan.get("deadline") is not None:
             delta_lines.append(f"- SLA: {before.get('sla_met')} → {plan.get('sla_met')}")
         parts.insert(2,"\n".join(delta_lines))
-    if request.get("objective") == "balanced":
+    if details and request.get("objective") == "balanced":
         parts.append(f"Balanced score: {plan.get('score')}.\n"+_breakdown_text("Balanced scoring",plan.get("score_components",{}),money=False))
     comparisons = result.get("comparison") or []
     candidates = {x.get("plan_id"): x for x in result.get("candidate_plans") or []}
     if comparisons:
         rows = []
-        for delta in comparisons:
+        visible_comparisons = comparisons if details else sorted(comparisons, key=lambda d: _actual_mode(candidates.get(d.get("plan_id"), {})) == _actual_mode(plan))[:1]
+        for delta in visible_comparisons:
             other = candidates.get(delta.get("plan_id"), {})
+            if not details:
+                cost_delta = float(delta.get("cost_difference", 0))
+                time_delta = float(delta.get("time_difference_hours", 0))
+                rows.append(f"- {_mode_label(other)}: {_money(abs(cost_delta))} {'more expensive' if cost_delta >= 0 else 'cheaper'}, {abs(time_delta):g} hours {'slower' if time_delta >= 0 else 'faster'}; risk {other.get('risk_score', 0):.1%}, reliability {other.get('reliability', 0):.1%}.")
+                continue
             sla_delta=delta.get("sla_difference")
             sla_phrase="" if not isinstance(sla_delta,dict) or all(value is None for value in sla_delta.values()) else f", SLA recommended {'met' if sla_delta.get('recommended') else 'missed'} / alternative {'met' if sla_delta.get('alternative') else 'missed'}"
             rows.append(

@@ -14,6 +14,7 @@ export interface FedexInput {
   speed?: number; schedule_id?: string;
 }
 export interface FedexTelemetry {
+  heading?: number; delay_minutes?: number; data_source?: string;
   simulation_id: string; shipment_id: string; origin_station: string; gateway: string; mode: string;
   run: string; service: string; simulation_timestamp: string; latitude: number; longitude: number;
   progress: number; status: string; paused: boolean; stopped: boolean; simulation_speed: number;
@@ -28,9 +29,10 @@ export interface ScheduleSummary {
 }
 
 export const fedexApi = {
-  summary: async (): Promise<ScheduleSummary> => (await apiClient.get('/fedex/schedules')).data,
-  eligible: async (input: FedexInput): Promise<Eligibility> => (await apiClient.get('/fedex/eligible-services', { params: input })).data,
-  create: async (input: FedexInput): Promise<FedexTelemetry> => (await apiClient.post('/fedex/simulations', input)).data,
+  state: async (id: string): Promise<FedexTelemetry> => (await apiClient.get(`/fedex/simulations/${encodeURIComponent(id)}`)).data,
+  summary: async (source='FEDEX'): Promise<ScheduleSummary> => (await apiClient.get('/operations/schedules',{params:{source}})).data,
+  eligible: async (input: FedexInput, source='FEDEX'): Promise<Eligibility> => (await apiClient.get('/operations/eligible-services', { params: {...input,source} })).data,
+  create: async (input: FedexInput, source='FEDEX'): Promise<FedexTelemetry> => (await apiClient.post('/operations/simulations', input,{params:{source}})).data,
   event: async (id: string, minutes: number): Promise<FedexTelemetry> =>
     (await apiClient.post(`/fedex/simulations/${id}/events`, {event_type:'DELAY', expected_delay_minutes: minutes})).data,
   control: async (id: string, action: string, speed?: number) =>

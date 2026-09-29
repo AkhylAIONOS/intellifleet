@@ -1,0 +1,8 @@
+Current shipment: DEMO-SHIPMENT · UDRPU → DELGW
+Mode/service: SURFACE / Bolero pickup
+Status: DELAYED; progress 2.9%; delay 30 min
+Scheduled ETA: 30 Sep 2026, 12:00 IST
+Revised ETA: 30 Sep 2026, 12:30 IST
+Source: FEDEX_SOURCE / DEMO_SIMULATION (synthetic telemetry)
+Recommended action: Notify gateway of revised ETA and confirm onward handover; continue monitoring. No automatic reroute.
+Recovery: No verified recovery vehicle, capacity, transfer geometry or onward schedule is supplied. Generic planning would invent feasibility. No future operating calendar is assumed.

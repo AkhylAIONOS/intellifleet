@@ -15,20 +15,28 @@ export const PlanningPanel = () => {
   const [scenario, setScenario] = useState<any>();
   const [fuelIncrease,setFuelIncrease]=useState(20); const [blockedRoute,setBlockedRoute]=useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const describeError = (error: unknown) => {
+    const response = (error as {response?: {status?: number; data?: {detail?: unknown}}}).response;
+    if (response?.status === 401) return 'Please sign in again to plan a shipment.';
+    if (response?.status === 403) return 'You do not have permission to perform this action.';
+    if (response?.status && response.status >= 500) return 'The planner could not complete this request. Please try again.';
+    return typeof response?.data?.detail === 'string' ? response.data.detail : 'Unable to complete this request. Check the inputs and backend connection.';
+  };
   const update = (key: string, value: unknown) => setInput({ ...input, [key]: value });
 
   const showOnMap=(recommended:any)=>applyPlanningMapPlan({planning_request:input,recommended_plan:recommended});
   const plan = async () => {
-    setBusy(true);
-    try { const value=await planningApi.createPlan(input); setResult(value); setActivePlanId(value.recommended_plan_id); showOnMap(value.recommended_plan); dispatchResultVisibility('show'); } finally { setBusy(false); }
+    setBusy(true); setError('');
+    try { const value=await planningApi.createPlan(input); setResult(value); setActivePlanId(value.recommended_plan_id); if(value.recommended_plan){showOnMap(value.recommended_plan); dispatchResultVisibility('show');}else{setError(value.reason || value.message || 'No feasible plan for these inputs. Try another mode, load or route.');} } catch(error){setError(describeError(error));} finally { setBusy(false); }
   };
   const simulate = async () => {
-    setBusy(true);
+    setBusy(true); setError('');
     const changes:any={fuel_cost_multiplier:1+fuelIncrease/100};
     if(blockedRoute.includes('→')) changes.blocked_routes=[blockedRoute.split('→').map(x=>x.trim())];
-    try { const value=await planningApi.createScenario(input, changes); setScenario(value); applyPlanningMapPlan(value); } finally { setBusy(false); }
+    try { const value=await planningApi.createScenario(input, changes); setScenario(value); applyPlanningMapPlan(value); } catch(error){setError(describeError(error));} finally { setBusy(false); }
   };
-  const act = async (action: 'apply' | 'discard') => { const value=await planningApi.scenarioAction(scenario.scenario_id, action); setScenario({ ...scenario, ...value }); applyPlanningMapPlan(value); };
+  const act = async (action: 'apply' | 'discard') => { setBusy(true);setError('');try{const value=await planningApi.scenarioAction(scenario.scenario_id, action); setScenario({ ...scenario, ...value }); applyPlanningMapPlan(value);}catch(error){setError(describeError(error));}finally{setBusy(false);} };
   const recommended = result?.candidate_plans?.find((x:any)=>x.plan_id===activePlanId) || result?.recommended_plan;
   const scenarioPlan = scenario?.scenario?.recommended_plan;
   useEffect(()=>{
@@ -49,10 +57,12 @@ export const PlanningPanel = () => {
         <option value="balanced">Balanced</option><option value="cheapest">Cheapest</option>
         <option value="fastest">Fastest</option><option value="lowest-risk">Lowest risk</option>
       </select></label>
+      <label>Transport<select aria-label="Transport mode" value={input.allowed_modes?.length===1?input.allowed_modes[0]:'all'} onChange={e=>update('allowed_modes',e.target.value==='all'?['road','air','multimodal']:[e.target.value])}><option value="all">Best available</option><option value="road">Ground</option><option value="air">Air</option><option value="multimodal">Multimodal</option></select></label>
       <label>Max Risk<input aria-label="Maximum risk" type="number" min="0" max="1" step=".05" placeholder="0–1" onChange={e=>update('max_risk',e.target.value?Number(e.target.value):undefined)}/></label>
       <label>Deadline<input aria-label="Delivery deadline" type="datetime-local" onChange={e=>update('deadline',e.target.value?new Date(e.target.value).toISOString():undefined)}/></label>
       <button className="calculate-plan" disabled={busy || !input.source || !input.destination} onClick={plan}>{busy?'Calculating…':'Calculate Plan'}</button>
     </div>
+    {error && <p role="alert" className="fedex-error">{error}</p>}
     <details className="scenario-controls"><summary>What-if scenario controls</summary><div>
       <label>Fuel increase (%)<input aria-label="Fuel increase percent" type="number" value={fuelIncrease} onChange={e=>setFuelIncrease(Number(e.target.value))}/></label>
       <label>Blocked route<input aria-label="Blocked route" placeholder="Delhi → Mumbai" value={blockedRoute} onChange={e=>setBlockedRoute(e.target.value)}/></label>

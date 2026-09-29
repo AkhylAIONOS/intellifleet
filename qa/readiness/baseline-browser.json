@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "sign in through supported demo auth",
+      "pass": true
+    },
+    {
+      "name": "V2 network UI import and 30/97/72 summary",
+      "pass": false,
+      "error": "response.json: Protocol error (Network.getResponseBody): No resource with given identifier found\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "name": "planner Delhi Mumbai via visible form",
+      "pass": true
+    },
+    {
+      "name": "100 network movements setup",
+      "pass": true
+    },
+    {
+      "name": "FedEx 16:00 and 18:00 cutoffs",
+      "pass": false,
+      "error": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Schedule source', { exact: true })\u001b[22m\n"
+    },
+    {
+      "name": "surface SSE simulation and 30-minute delay",
+      "pass": false,
+      "error": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Simulation Speed', { exact: true })\u001b[22m\n"
+    },
+    {
+      "name": "live AI filters relevant lane and includes recommendation",
+      "pass": false,
+      "error": "expect(received).toContain(expected) // indexOf\n\nExpected substring: \"Notify gateway\"\nReceived string:    \"NETWORK-DEMO-001: SYN-UDR-STN → SYN-DEL-GTW, AIR, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T21:52:00+05:30; delay 0.0 min; SYNTHETIC_SCHEDULE / DEMO_SIMULATION.\nNETWORK-DEMO-002: SYN-UDR-STN → SYN-DEL-GTW, RAIL, IN_TRANSIT, 92.0%; ETA 2026-09-30T12:25:00+05:30; delay 0.0 min; SYNTHETIC_SCHEDULE / DEMO_SIMULATION.\nNETWORK-DEMO-003: DELHI → JAIPUR, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T06:32:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-004: MUMBAI → SURAT, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T06:29:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-005: BENGALURU → COIMBATORE, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T06:22:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-006: CHENNAI → BENGALURU, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T07:49:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-007: KOLKATA → PATNA, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T12:01:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-008: HYDERABAD → BENGALURU, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T12:45:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEMO-009: PUNE → MUMBAI, SURFACE, ARRIVED_AT_GTW, 100.0%; ETA 2026-09-29T04:11:00+05:30; delay 0.0 min; SYNTHETIC_NETWORK / DEMO_SIMULATION.\nNETWORK-DEM"
+    }
+  ],
+  "issues": []
+}

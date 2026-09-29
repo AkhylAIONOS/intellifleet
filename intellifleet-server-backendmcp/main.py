@@ -62,6 +62,8 @@ allowed_origins = [
     "https://intellifleet-web.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5178",
+    "http://127.0.0.1:5178",
     "https://unprecipitate-liquidly-randal.ngrok-free.dev",
 ]
 frontend_origin = (settings.FRONTEND_URL or "").strip().rstrip("/")
@@ -105,3 +107,6 @@ async def health_check():
         "status": "healthy", 
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+from backend.operations.routes import router as operations_router
+app.include_router(operations_router)
