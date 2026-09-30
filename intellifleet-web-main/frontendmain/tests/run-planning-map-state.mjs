@@ -1,6 +1,6 @@
 import { createServer } from 'vite';
 
-const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+const server = await createServer({ server: { middlewareMode: true, hmr: false, ws:false }, appType: 'custom' });
 try {
   const { useAppStore } = await server.ssrLoadModule('/src/store/appStore.ts');
   const store = useAppStore.getState();
@@ -19,14 +19,14 @@ try {
     state.vehicles.find(v=>v.id===11006)?.assigned_route?.route_id===roadRoute.id && state.lastCreatedRouteId===roadRoute.id;
   store.applyPlanningMapPlan(result('air-plan','air',{id:11026,label:'AIR-002',capacity:10000},'IF Delhi NCR Mega Hub','IF Mumbai West Hub',{lat:28.5562,lng:77.1},{lat:19.0896,lng:72.8656}));
   state=useAppStore.getState();
-  const airRoute=Object.values(state.activeRoutes)[0];
-  const airPass=Object.keys(state.activeRoutes).length===1 && airRoute.routeData.legs[0].route_type==='air' &&
+  const airRoute=Object.values(state.activeRoutes).find(r=>r.routeData.plan_id==='air-plan');
+  const airPass=Object.keys(state.activeRoutes).length===2 && airRoute.routeData.legs[0].route_type==='air' &&
     state.vehicles.find(v=>v.id===11026)?.assigned_route?.route_id===airRoute.id && state.activePlanes.some(p=>p.routeId===airRoute.id);
   const staleCleared=state.vehicles.find(v=>v.id===11006)?.status==='available' && !state.vehicles.find(v=>v.id===11006)?.assigned_route;
   store.applyPlanningMapPlan(result('replanned-road','road',{id:11006,label:'TRK-002',capacity:7000},'IF Delhi NCR Mega Hub','IF Mumbai West Hub',{lat:28.5355,lng:77.271},{lat:19.1136,lng:72.8697}));
   state=useAppStore.getState();
-  const replanRoute=Object.values(state.activeRoutes)[0];
-  const disruptionReplacement=Object.keys(state.activeRoutes).length===1 && replanRoute.routeData.plan_id==='replanned-road' &&
+  const replanRoute=Object.values(state.activeRoutes).find(r=>r.routeData.plan_id==='replanned-road');
+  const disruptionReplacement=Object.keys(state.activeRoutes).length===3 && replanRoute.routeData.plan_id==='replanned-road' &&
     state.vehicles.find(v=>v.id===11006)?.assigned_route?.route_id===replanRoute.id && state.vehicles.find(v=>v.id===11026)?.status==='available';
   console.log(JSON.stringify({road_map_state:roadPass,air_map_state:airPass,road_to_air_replacement:staleCleared,
     disruption_map_replacement:disruptionReplacement,active_route_count:Object.keys(state.activeRoutes).length}));

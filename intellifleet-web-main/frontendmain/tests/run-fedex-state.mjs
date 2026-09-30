@@ -17,7 +17,8 @@ try {
   useFedexStore.getState().reset();useFedexStore.getState().update(state);assert.equal(useFedexStore.getState().telemetry,null);
   fedexApi.summary=async()=>({lanes:[{origin_station:'UDRPU',gateway:'DELGW',simulation_supported:true}],schedule_notice:'Template only'});
   const candidate={schedule_id:'surface-16',mode:'SURFACE',run:'1',service:'pickup',eligible:true,cutoff:state.cutoff,etd:state.scheduled_etd,eta:state.scheduled_eta,warnings:[],reason:'Ready before cutoff'};
-  fedexApi.eligible=async()=>({candidates:[candidate],selected:candidate,selection_reason:'Earliest eligible arrival'});
+  const sources=[];
+  fedexApi.eligible=async(_input,source)=>{sources.push(source);return({candidates:[candidate],selected:candidate,selection_reason:'Earliest eligible arrival'});};
   let created;
   fedexApi.create=async input=>{created=input;return state;};
   globalThis.fetch=async()=>new Response('',{status:404});
@@ -27,8 +28,20 @@ try {
   assert.ok(ui.getByText('SIMULATED TELEMETRY'));
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
   assert.ok(ui.getByText('Ready before cutoff'));
+  assert.equal(sources.at(-1),'SYNTHETIC');
+  for(const ready of ['16:30','21:30','00:00','23:00']){
+    await act(async()=>fireEvent.change(ui.getByLabelText('Shipment Ready Time'),{target:{value:ready}}));
+    assert.equal(ui.queryByText('Ready before cutoff'),null);
+    await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
+  }
+  for(const source of ['FEDEX','SYNTHETIC','FEDEX']){
+    await act(async()=>fireEvent.change(ui.getByLabelText('Schedule source'),{target:{value:source}}));
+    assert.equal(ui.queryByText('Ready before cutoff'),null);
+    await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
+    assert.equal(sources.at(-1),source);
+  }
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start Simulation'})));
-  assert.equal(created.schedule_id,'surface-16');assert.equal(created.speed,600);
+  assert.equal(created.schedule_id,'surface-16');assert.equal(created.speed,120);
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Inject Delay'})));
   assert.ok(ui.getByText(/DELAY DETECTED/));assert.equal(useFedexStore.getState().telemetry.current_eta,'2026-09-30T12:30:00+05:30');
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Reset'})));

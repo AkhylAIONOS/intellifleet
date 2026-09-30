@@ -27,7 +27,8 @@ for(const [method,calls] of [['fitBounds',fitCalls],['panTo',panCalls],['setView
 const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
 try {
   const {useAppStore}=await server.ssrLoadModule('/src/store/appStore.ts');
-  const {SelectedJourneyLayer}=await server.ssrLoadModule('/src/components/MapLayers/SelectedJourneyLayer.tsx');
+  // Keep legacy Air/Rail/mixed geometry regression; real Surface replay is covered by plan-journey E2E.
+  const {LegacySelectedJourneyLayer:SelectedJourneyLayer}=await server.ssrLoadModule('/src/components/MapLayers/SelectedJourneyLayer.tsx');
   const {WarehouseFocusLayer}=await server.ssrLoadModule('/src/components/MapLayers/WarehouseFocusLayer.tsx');
   const {MapLegend}=await server.ssrLoadModule('/src/components/MapLayers/MapLegend.tsx');
   const {RoutesLayer}=await server.ssrLoadModule('/src/components/MapLayers/RoutesLayer.tsx');

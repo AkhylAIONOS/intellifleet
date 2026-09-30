@@ -16,6 +16,8 @@ import { MapLegend } from './MapLayers/MapLegend';
 import { PlanesLayer } from './MapLayers/PlanesLayer';
 import { decodePolyline } from '../utils/decodePolyline';
 import { FedExLayer } from './MapLayers/FedExLayer';
+import {useOperationsStore} from '../store/operationsStore';
+import {useFedexStore} from '../store/fedexStore';
 
 
 // Fix for default marker icons in React-Leaflet
@@ -177,6 +179,10 @@ export const MapView = () => {
   const center: [number, number] = [20.5937, 78.9629];
   const zoom = 5;
   const mapViewMode = useAppStore(state => state.mapViewMode);
+  const selectedPlan=useAppStore(s=>s.selectedPlan);
+  const selectedMovement=useOperationsStore(s=>s.selected);
+  const live=useFedexStore(s=>s.telemetry);
+  const focused=!!selectedPlan||!!selectedMovement||!!live;
 
   //india boundary kashmir logic
 
@@ -229,10 +235,7 @@ export const MapView = () => {
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
         )}
-        <WarehousesLayer />
-        <RoutesLayer />
-        <VehiclesLayer />
-        <PlanesLayer />
+        {!focused&&<><WarehousesLayer /><RoutesLayer /><VehiclesLayer /><PlanesLayer /></>}
         <VehicleAssignmentZoomController />
         <GuardedJourney />
         <WarehouseFocusLayer />

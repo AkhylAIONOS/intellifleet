@@ -1,3 +1,4 @@
+import {RoadPlanJourney} from './RoadPlanJourney';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -23,6 +24,12 @@ function vehiclePopup(vehicles: Assignment[], mode: string) {
   return card;
 }
 export function SelectedJourneyLayer() {
+  const selected=useAppStore(s=>s.selectedPlan);
+  const plan=useMemo(()=>selected?normalizeVisualPlan(selected):null,[selected]);
+  if(plan?.route_legs.length&&plan.route_legs.every(l=>['road','ground','surface'].includes(l.route_type?.toLowerCase())))return <RoadPlanJourney plan={plan}/>;
+  return <LegacySelectedJourneyLayer/>;
+}
+export function LegacySelectedJourneyLayer() {
   const map = useMap();
   const selectedPlan = useAppStore(s => s.selectedPlan);
   const plan = useMemo(() => selectedPlan ? normalizeVisualPlan(selectedPlan) : null, [selectedPlan]);

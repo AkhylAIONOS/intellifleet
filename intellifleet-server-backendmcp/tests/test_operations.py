@@ -99,7 +99,7 @@ def test_batch(loaded,count):
 
 def test_route_simulation(loaded):
     network,runtime,now=loaded
-    m=service.start_route(1,'Kochi','Chennai')
+    m=service.start_route(1,'Kochi','Chennai',6000)
     assert len(m['route'])>2 and m['data_source']=='SYNTHETIC_NETWORK'
     assert runtime.get(1,m['simulation_id']).route==m['route']
 
@@ -128,7 +128,7 @@ def test_selected_chat_delay_and_network_recovery(loaded,monkeypatch):
     from backend.fedex import telemetry
     network,runtime,now=loaded
     monkeypatch.setattr(telemetry,'runtime',runtime)
-    snapshot=service.start_route(1,'Kochi','Chennai')
+    snapshot=service.start_route(1,'Kochi','Chennai',6000)
     sid=snapshot['simulation_id'];now[0]=5;sim=runtime.get(1,sid)
     previous=sim.current_eta
     response=answer(1,'What happens if this truck is delayed by 30 minutes?',sid)

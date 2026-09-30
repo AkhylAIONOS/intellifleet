@@ -203,8 +203,7 @@ export const useAppStore = create<AppState>()(
                         route_cost:plan.operational_cost, planning:true, legs:plan.route_legs, plan_id:plan.plan_id,
                         assigned_vehicles:plan.vehicles || [] } };
                 set((state) => {
-                    const retainedRoutes = Object.fromEntries(Object.entries(state.activeRoutes)
-                        .filter(([,existing]) => !existing.routeData?.planning));
+                    const retainedRoutes = state.activeRoutes;
                     const resetVehicles = state.vehicles.map(vehicle => state.planningVehicleBackups[vehicle.id] || vehicle);
                     const backups: Record<number, Vehicle> = {};
                     const assignedIds = new Set<number>();

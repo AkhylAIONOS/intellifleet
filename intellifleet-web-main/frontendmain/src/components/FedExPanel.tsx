@@ -14,7 +14,7 @@ export function FedExPanel() {
   const [summary, setSummary] = useState<ScheduleSummary | null>(null);
   const [origin, setOrigin] = useState('UDRPU'); const [gateway, setGateway] = useState('DELGW');
   const [date, setDate] = useState(today); const [ready, setReady] = useState('18:00');
-  const [speed, setSpeed] = useState(600); const [delay, setDelay] = useState(30);
+  const [speed, setSpeed] = useState(120); const [delay, setDelay] = useState(30);
   const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const [connection, setConnection] = useState('Idle');
@@ -30,7 +30,7 @@ export function FedExPanel() {
   useEffect(() => {
     let live = true;
     fedexApi.summary(source).then(s => {if (live) {setSummary(s);if(useFedexStore.getState().telemetry)return;setOrigin(s.lanes[0]?.origin_station || '');setGateway(s.lanes[0]?.gateway || '');}}).catch(() => {if (live) setError('Schedule workbook unavailable. Configure FEDEX_WORKBOOK_PATH on the backend and restart.');});
-    return () => {live=false; useFedexStore.getState().reset();};
+    return () => {live=false;};
   }, [source]);
   useEffect(() => {
     if (!sid) return;
@@ -38,7 +38,7 @@ export function FedExPanel() {
     void streamTelemetry(sid, controller.signal, s => useFedexStore.getState().update(s), setConnection);
     return () => controller.abort();
   }, [sid]);
-  useEffect(() => {setEligibility(null);}, [origin, gateway, date, ready]);
+  useEffect(() => {setEligibility(null);}, [source, origin, gateway, date, ready]);
   const input = (): FedexInput => ({origin_station:origin, gateway, simulation_date:date, shipment_ready_datetime:`${date}T${ready}:00+05:30`});
   const perform = async (fn: () => Promise<void>) => {
     setBusy(true); setError('');
@@ -73,14 +73,26 @@ export function FedExPanel() {
   const canInject = telemetry && !telemetry.stopped && !telemetry.paused && ['IN_TRANSIT', 'DELAYED'].includes(telemetry.status);
   return <section className="fedex-panel" aria-label="Schedules and simulations">
     <div className="fedex-heading"><strong>Schedules / Live Operations</strong><span>SIMULATED TELEMETRY</span></div>
-    <p className="fedex-note">Station → cutoff → ETD → in transit → Gateway · All times IST · Approximate demo locations, synthetic straight-line movement.</p>
+    <p className="fedex-note">All times IST · Surface follows map-derived roads. Air/Rail geometry remains approximate. Telemetry is simulated, not actual GPS.</p>
     <div className="fedex-controls">
       <label>Schedule source<select value={source} disabled={busy || !!sid} onChange={e=>{setSummary(null);setEligibility(null);setError('');setSource(e.target.value);}}><option value="SYNTHETIC">Synthetic schedules</option><option value="FEDEX">FedEx source workbook</option></select></label>
       <label>Origin Station<select value={origin} disabled={busy || !!sid} onChange={e => {setOrigin(e.target.value); setGateway(summary?.lanes.find(l => l.origin_station===e.target.value)?.gateway || '');}}>{origins.map(o => <option key={o}>{o}</option>)}</select></label>
       <label>Gateway<select value={gateway} disabled={busy || !!sid} onChange={e=>setGateway(e.target.value)}>{gateways.map(g=><option key={g}>{g}</option>)}</select></label>
       <label>Simulation Date<input type="date" value={date} disabled={busy || !!sid} onChange={e=>setDate(e.target.value)}/></label>
-      <label>Shipment Ready Time<input type="time" value={ready} disabled={busy || !!sid} onChange={e=>setReady(e.target.value)}/></label>
-      <label>Simulation Speed<select value={speed} disabled={busy} onChange={e=>setSpeed(Number(e.target.value))}>{[60,300,600,1200,3600].map(s=><option key={s} value={s}>{s}×</option>)}</select></label>
+      <label>
+        Shipment Ready Time
+        <select
+          value={ready}
+          disabled={busy || !!sid}
+          onChange={e=>setReady(e.target.value)}
+        >
+          {Array.from({length:48},(_,slot)=>{
+            const value=`${String(Math.floor(slot/2)).padStart(2,'0')}:${slot%2 ? '30' : '00'}`;
+            return <option key={value} value={value}>{value}</option>;
+          })}
+        </select>
+      </label>
+      <label>Simulation Speed<select value={speed} disabled={busy} onChange={e=>setSpeed(Number(e.target.value))}>{[60,120,300,600].map(s=><option key={s} value={s}>{s}×</option>)}</select></label>
       <button disabled={busy || !summary || !!sid || !date || !ready} onClick={()=>perform(async()=>setEligibility(await fedexApi.eligible(input(),source)))}>Evaluate Cutoffs</button>
       <button className="fedex-primary" disabled={busy || !supported || !!sid || !date || !ready} onClick={start}>Start Simulation</button>
     </div>
@@ -91,10 +103,11 @@ export function FedExPanel() {
     </details>}
     {telemetry && <div aria-label="FedEx live state">
       <div className="fedex-state"><strong>{telemetry.origin_station} → {telemetry.gateway}</strong><span>{telemetry.mode} · Run {telemetry.run} · {telemetry.service}</span><strong>{telemetry.paused?'PAUSED':telemetry.stopped?'STOPPED':telemetry.status}</strong><span>{connection}</span></div>
+      {telemetry.road_routing_status==='READY'&&<p className="fedex-note" aria-label="Road route details">Road-network route · {telemetry.optimization_mode} · {telemetry.route_distance_km?.toFixed(1)} km · Map travel estimate {telemetry.road_estimated_duration_minutes?.toFixed(0)} min. Schedule ETA remains authoritative for this simulation. Shortest/cheapest and verified toll costs are unavailable from this provider.</p>}
       <progress max={1} value={telemetry.progress} aria-label="Shipment progress"/>
       <div className="fedex-state"><span>Clock: {fedexTime(telemetry.simulation_timestamp)}</span><span>Progress: {(telemetry.progress*100).toFixed(1)}%</span><span>Speed: {telemetry.simulation_speed}×</span><span>Cutoff: {fedexTime(telemetry.cutoff)}</span><span>ETD: {fedexTime(telemetry.scheduled_etd)}</span><span>Scheduled ETA: {fedexTime(telemetry.scheduled_eta)}</span><strong>Current ETA: {fedexTime(telemetry.current_eta)}</strong><span>Source retrieval: {fedexTime(telemetry.retrieval)}</span></div>
       <div className="fedex-controls">
-        <button disabled={busy || telemetry.stopped || telemetry.status==='ARRIVED_AT_GTW'} onClick={()=>control(telemetry.paused?'resume':'pause')}>{telemetry.paused?'Resume':'Pause'}</button>
+        <button disabled={busy || telemetry.stopped || telemetry.status==='ARRIVED_AT_GTW'} onClick={()=>control(telemetry.paused||telemetry.status==='DELAYED'?'resume':'pause')}>{telemetry.paused||telemetry.status==='DELAYED'?'Resume':'Pause'}</button>
         <button disabled={busy || telemetry.stopped} onClick={()=>control('speed')}>Apply Speed</button>
         <button disabled={busy || telemetry.stopped} onClick={()=>control('stop')}>Stop</button>
         <label>Delay Minutes<input type="number" min={1} max={1440} value={delay} onChange={e=>setDelay(Number(e.target.value))}/></label>
@@ -102,7 +115,7 @@ export function FedExPanel() {
         <button disabled={busy} onClick={()=>control('reset')}>Reset</button>
       </div>
       {alert && <div role="status" className="fedex-alert"><strong>{alert.severity} · {alert.title}</strong><p>{alert.impact}</p><p>{alert.recommended_action}</p><details><summary>Recommendation basis</summary><p>{alert.reason}</p><p>{alert.alternatives_condition}</p><p>{alert.eligible_alternatives.length} eligible origin services; no action executed.</p></details></div>}
-      <p className="fedex-note">Gateway marker is an approximate city location. Onward readiness is unverified; retrieval is a source milestone, not a confirmed onward flight.</p>
+      <p className="fedex-note">Facility coordinates are approximate city locations; Surface endpoints are snapped to roads. Onward readiness is unverified; retrieval is a source milestone, not a confirmed onward flight.</p>
     </div>}
     <details><summary>Schedule assumptions</summary><p className="fedex-note">{summary?.schedule_notice || 'Loading schedule…'}</p></details>
   </section>;

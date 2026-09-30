@@ -11,9 +11,12 @@ export interface Eligibility {
 }
 export interface FedexInput {
   origin_station: string; gateway: string; simulation_date: string; shipment_ready_datetime: string;
-  speed?: number; schedule_id?: string;
+  speed?: number; schedule_id?: string; road_optimization?: 'FASTEST' | 'SHORTEST' | 'CHEAPEST';
 }
 export interface FedexTelemetry {
+  route_id?:string; route_source?:string; route_distance_km?:number; road_estimated_duration_minutes?:number;
+  road_routing_status?:string; optimization_mode?:string; location_notice?:string;
+  distance_travelled_km?:number; distance_remaining_km?:number; current_segment?:number;
   heading?: number; delay_minutes?: number; data_source?: string;
   simulation_id: string; shipment_id: string; origin_station: string; gateway: string; mode: string;
   run: string; service: string; simulation_timestamp: string; latitude: number; longitude: number;

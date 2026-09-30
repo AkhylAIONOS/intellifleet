@@ -27,11 +27,12 @@ class Runtime:
             if now-entry.created > self.ttl:
                 del self.entries[key]
 
-    def create(self, owner, request, schedules):
+    def create(self, owner, request, schedules, road_waypoints=None):
         self.cleanup()
         if len(self.entries) >= self.limit:
             raise ValueError('Simulation limit reached; reset old simulations')
-        s = Simulation(request, schedules, self.clock())
+        s = Simulation(request, schedules, self.clock(), road_waypoints=road_waypoints)
+        s.last_wall = self.clock()  # Route calculation latency must not advance the simulation clock.
         self.entries[s.id] = Entry(owner, s, self.clock())
         return s
 

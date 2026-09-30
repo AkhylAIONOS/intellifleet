@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+DEFAULT_PLAYBACK_SPEED = 120
+
 Mode = Literal['AIR', 'SURFACE', 'RAIL']
 
 
@@ -49,9 +51,10 @@ class EligibilityInput(BaseModel):
 
 
 class SimulationInput(EligibilityInput):
+    road_optimization: Literal['FASTEST', 'SHORTEST', 'CHEAPEST'] = 'FASTEST'
     shipment_id: str = Field(default='DEMO-SHIPMENT', min_length=1, max_length=80)
     schedule_id: str | None = None
-    speed: float = Field(default=600, ge=1, le=10000, allow_inf_nan=False)
+    speed: float = Field(default=DEFAULT_PLAYBACK_SPEED, ge=1, le=10000, allow_inf_nan=False)
     seed: int = 42
     random_events: bool = False
 

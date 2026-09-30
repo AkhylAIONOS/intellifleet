@@ -496,6 +496,8 @@ class PlanningService:
                                       *[leg["to_location"] for leg in route_without_feasible_vehicle]],
                 "distance_km": round(sum(float(leg.get("distance") or 0) for leg in route_without_feasible_vehicle),2),
             }
+        from backend.operations.plan_journeys import remember
+        remember(user_id, ranked)
         return {"planning_request": request.model_dump(mode="json"), "candidate_plans": ranked,
                 "recommended_plan": recommended, "reason": reason, "comparison": comparison,
                 "recommended_plan_id":recommended["plan_id"] if recommended else None,
@@ -623,6 +625,31 @@ class PlanningService:
             return {"fulfilled": False, "allocation": [], "ranked_alternatives": [],
                     "unfulfilled_quantity": quantity, "total_cost": 0, "eta_hours": None,
                     "recommendation": "Exact allocation supports up to 2000 inventory units per request; provide coarser compatible units for larger demand."}
+        # Exact dominance shortcut: sufficient local stock wins cheapest when
+        # even remote base transport per unit is >= local handling per unit.
+        # base * max(1, weight/1000) >= base * weight/1000; all other
+        # cost components must be nonnegative before using this lower bound.
+        local = next((w for w in warehouses if _norm(w['name']) == _norm(destination)
+                      and int(w.get('inventory') or 0)-int(w.get('reserved_inventory') or 0) >= quantity), None)
+        nonnegative = all(float(value) >= 0 for group in ('routes','vehicles','warehouses')
+                          for row in network[group] for key,value in row.items()
+                          if ('cost' in key or key in {'distance','duration'}) and isinstance(value,(int,float)))
+        if objective == 'cheapest' and local is not None and nonnegative:
+            local_unit_cost = float(local.get('handling_cost') or 0)
+            lower_routes = [{**r, '_base_lower_bound': float(r.get('base_transport_cost')
+                            if r.get('base_transport_cost') is not None else r.get('cost') or 0)}
+                            for r in network['routes']]
+            dominates = True
+            for wh in warehouses:
+                if wh is local:
+                    continue
+                path = self._shortest(lower_routes, wh['name'], destination, '_base_lower_bound',
+                                      {'road','air','rail'}, set())
+                if path and sum(r['_base_lower_bound'] for r in path)*weight/quantity/1000 < local_unit_cost:
+                    dominates = False
+                    break
+            if dominates:
+                warehouses = [local]
         states = {0: (0.0, [])}
         alternatives = []
         for wh in warehouses:

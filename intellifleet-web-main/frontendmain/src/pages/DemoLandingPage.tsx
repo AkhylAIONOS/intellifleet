@@ -21,7 +21,7 @@ export function DemoLandingPage() {
     setLoading(true);
     try {
       const response = await authApi.demoAccess();
-      if (!response.success || !response.data?.user || !isTokenUnexpired(response.data.token)) {
+      if (!response.success || !response.data?.user || !response.data?.token) {
         throw new Error('Demo entry failed');
       }
       // Avoid carrying another signed-in user's cached network into demo entry.

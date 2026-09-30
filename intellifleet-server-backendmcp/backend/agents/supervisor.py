@@ -316,7 +316,7 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
             f"Warehouse fulfilment {'succeeds' if result.get('fulfilled') else 'is incomplete'}. "
             f"Unfulfilled quantity: {result.get('unfulfilled_quantity')}.\n\nRecommended allocation:\n"
             f"{chr(10).join(allocation_lines) or '- No feasible allocation'}\n\n"
-            f"Total cost: {_money(result.get('total_cost', 0))}; overall ETA: {result.get('eta_hours')} hours.\n\n"
+            f"Total cost: {_money(result.get('total_cost', 0))}; overall ETA: {str(result['eta_hours']) + ' hours' if result.get('eta_hours') is not None else 'unavailable (no feasible allocation)'}.\n\n"
             f"Ranked alternatives:\n{chr(10).join(ranked_lines) or '- No connected warehouse has sufficient transport capacity.'}\n\n"
             f"Recommendation: {result.get('recommendation')}"
         )

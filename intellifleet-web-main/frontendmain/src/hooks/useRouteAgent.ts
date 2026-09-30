@@ -1,4 +1,5 @@
 import { useOperationsStore } from '../store/operationsStore';
+import {ensurePlanMovement} from '../utils/planMovement';
 import { useState, useRef } from 'react';
 import { chatApi } from '../api/chat';
 import { useAppStore } from '../store/appStore';
@@ -162,7 +163,13 @@ export const useRouteAgent = () => {
         switch (action.type) {
             case 'show_movements': {
                 const state=useOperationsStore.getState();
-                state.patch({enabled:true,filter:action.data.filter || 'ALL',selected:action.data.selected || null,fit:state.fit+1});
+                state.patch({
+                    enabled:true,
+                    viewMode:'LIVE',
+                    filter:action.data.filter || 'ALL',
+                    selected:action.data.selected || null,
+                    fit:state.fit+1
+                });
                 break;
             }
             case "plan_route":
@@ -176,7 +183,7 @@ export const useRouteAgent = () => {
                 // The text response usually covers this, but we could trigger a UI side panel here
                 break;
             case 'clear_chat':
-                handleClearChatAction();
+                await handleClearChatAction();
                 break;
             case 'clear_map':
                 handleClearMap();
@@ -238,7 +245,7 @@ export const useRouteAgent = () => {
                 break;
             case "unified_supply_chain_plan":
             case "supply_chain_planning_operation":
-                handlePlanningResult(action.data);
+                await handlePlanningResult(action.data);
                 break;
             default:
                 console.warn('Unknown action type:', action.type);
@@ -450,7 +457,8 @@ export const useRouteAgent = () => {
 
 
 
-    const handleClearChatAction = () => {
+    const handleClearChatAction = async () => {
+        useAppStore.getState().clearPlanningVisuals();
         clearChatHistory();
     };
 
@@ -462,8 +470,9 @@ export const useRouteAgent = () => {
         setMapViewMode('street');
     };
 
-    const handlePlanningResult = (data: any) => {
-        useAppStore.getState().applyPlanningMapPlan(data);
+    const handlePlanningResult = async (data: any) => {
+        const routeId = useAppStore.getState().applyPlanningMapPlan(data);
+        if (routeId != null) await ensurePlanMovement(useAppStore.getState().selectedPlan);
     };
 
     const handleDisplayRouteAction = (data: any) => {

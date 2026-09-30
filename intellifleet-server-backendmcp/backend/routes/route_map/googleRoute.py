@@ -464,6 +464,20 @@ async def remove_route_function(req, user_id):
     route_id = req.route_id
 
     try:
+        # AI-created Ground journeys live in the operations runtime.
+        # Resolve natural-language lane removal before legacy DB route removal.
+        if not req.route_id and req.source and req.destination:
+            from backend.operations.service import stop_plan_movement
+
+            stopped = stop_plan_movement(
+                user_id,
+                req.source,
+                req.destination
+            )
+
+            if stopped:
+                return stopped
+
         # ❌ Nothing provided
         if not req.route_id:
             return {"message": "Provide route_id or route details to remove the route."}

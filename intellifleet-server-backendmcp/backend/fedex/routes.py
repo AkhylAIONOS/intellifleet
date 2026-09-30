@@ -1,3 +1,4 @@
+from backend.operations.road_routing_engine import RoadRoutingError
 import asyncio
 import json
 import zipfile
@@ -50,9 +51,11 @@ async def eligible(request: EligibilityInput = Depends(), user=Depends(get_curre
 
 
 @router.post('/simulations', status_code=201)
-async def create(request: SimulationInput, user=Depends(get_current_user)):
+def create(request: SimulationInput, user=Depends(get_current_user)):
     try:
         return runtime.create(user['user_id'], request, schedules()).snapshot()
+    except RoadRoutingError as exc:
+        raise HTTPException(503 if exc.code=='ROAD_ROUTE_UNAVAILABLE' else 422, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
 

@@ -148,7 +148,10 @@ def register_route_tools(mcp: FastMCP):
     @mcp.tool()
     async def remove_route(input: RemoveRouteInput) -> RemoveRouteOutput:
         """
-        Remove an existing route from the system.
+        Stop/remove an existing route from the system.
+        Use this when the user says stop, remove, delete, or end a route.
+        Examples: "Stop the Delhi to Bengaluru route" or
+        "Remove the Mumbai to Hyderabad route".
         Can remove by route_id or by source/destination combination.
         """
         request = RemoveRouteRequest(

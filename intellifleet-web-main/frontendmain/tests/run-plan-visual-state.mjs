@@ -26,7 +26,7 @@ try {
   assert.equal(Object.values(state.activeRoutes).filter(r=>r.routeData.planning).length,1);
   store.applyPlanningMapPlan({recommended_plan:air});state=useAppStore.getState();
   assert.equal(state.selectedPlan,air);assert.equal(state.vehicles[0].status,'available');assert.equal(state.vehicles[0].assigned_route,undefined);
-  assert.equal(state.activePlanes.length,1);assert.equal(Object.keys(state.activeRoutes).length,2);
+  assert.equal(state.activePlanes.length,1);assert.equal(Object.keys(state.activeRoutes).length,3);
   assert.equal(state.planComparison.before,road);assert.equal(state.planComparison.after,air);
   const scenario={status:'draft',scenario_id:'draft',baseline:{recommended_plan:air},scenario:{recommended_plan:road},comparison:{cost_difference:-100,eta_difference_hours:15,risk_difference:.1}};
   store.applyPlanningMapPlan(scenario);assert.equal(useAppStore.getState().selectedPlan,air);assert.equal(useAppStore.getState().planComparison.afterLabel,'Scenario');

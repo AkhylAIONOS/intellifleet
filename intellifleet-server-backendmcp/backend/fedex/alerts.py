@@ -50,4 +50,6 @@ def evaluate_compatible_plan(planning_request, verified_network, user_id):
 def create_alert(simulation, event):
     return {'alert_id': event['event_id'], 'severity': event['severity'],
             'title': f"{event['event_type']} DETECTED", 'shipment_id': simulation.request.shipment_id,
+            'origin': simulation.request.origin_station, 'destination': simulation.request.gateway,
+            'previous_eta': event['original_eta'], 'delay_minutes': event['expected_delay_minutes'],
             'synthetic_data': True, **recovery(simulation)}

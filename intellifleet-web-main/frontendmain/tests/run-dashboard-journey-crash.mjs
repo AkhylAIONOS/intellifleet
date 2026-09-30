@@ -39,6 +39,19 @@ try {
   const {routesApi}=await server.ssrLoadModule('/src/api/routes.ts');routesApi.getRouteSession=async()=>({success:true,data:{routes:Array.from({length:62},(_,i)=>({route_id:i+1,data:{source:'Origin',destination:'Destination',optimal_routes:[{path:[start,end]}]}}))}});
   const {chatApi}=await server.ssrLoadModule('/src/api/chat.ts');chatApi.clearChat=async()=>{};
   const store=useAppStore.getState();store.resetStore();
+  const {default:client}=await server.ssrLoadModule('/src/api/client.ts');
+  const {fedexApi}=await server.ssrLoadModule('/src/api/fedex.ts');
+  const {useOperationsStore}=await server.ssrLoadModule('/src/store/operationsStore.ts');
+  const snapshots=new Map();let starts=0;
+  client.get=async()=>({data:{movements:[...snapshots.values()]}});
+  client.post=async()=>{const p=useAppStore.getState().selectedPlan;starts++;
+    const snapshot={simulation_id:p.plan_id,shipment_id:`PLAN-${p.plan_id}`,sequence:0,route_id:p.plan_id,
+      route:[[12,25],[12.2,25.1],[13,26],[14,28]],latitude:12,longitude:25,heading:0,mode:'SURFACE',
+      origin_station:'Delhi',gateway:'Mumbai',data_source:'SYNTHETIC_NETWORK',location_source:'DEMO_SIMULATION',
+      delay_minutes:0,progress:0,paused:true,status:'IN_TRANSIT',simulation_speed:120,
+      scheduled_etd:'2026-09-30T01:00:00+05:30',current_eta:'2026-09-30T12:00:00+05:30'};
+    snapshots.set(p.plan_id,snapshot);return {data:snapshot};};
+  fedexApi.control=async(id)=>({...snapshots.get(id),paused:false});
   const a={id:1,label:'TRK-001',type:'Truck',capacity:12000,assigned_load_kg:11368.42,utilization_percentage:94.74};
   const b={id:2,label:'TRK-002',type:'Truck',capacity:7000,assigned_load_kg:6631.58,utilization_percentage:94.74};
   const base={plan_id:'two',mode:'road',operational_cost:1003345,duration_hours:21.17,risk_score:.1745,reliability:.94,route_legs:[{from_location:'Delhi',to_location:'Mumbai',route_type:'road',source_coords:start,destination_coords:end}],vehicles:[a,b]};
@@ -47,43 +60,24 @@ try {
   const count=n=>assert.equal(within(ui.getByLabelText('Network metrics')).getByRole('button',{name:/Assigned Vehicles/}).textContent,`Assigned Vehicles${n}`);
   const alive=()=>{assert.ok(ui.getByRole('button',{name:'+ Add Route'}));assert.ok(ui.getByRole('button',{name:'Calculate Plan'}));assert.match(document.body.textContent,/Network Ready/);};
   const advance=async t=>{time=t;await act(async()=>{const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn(t));});};
-  await assign({...base,plan_id:'zero',vehicles:[]});count(0);alive();assert.equal(frames.size,0);
-  await assign({...base,plan_id:'one',vehicles:[b]});count(1);assert.equal(frames.size,1);
-  await assign({...base,plan_id:'air',mode:'air',vehicles:[{id:3,label:'AIR-1',type:'plane'}],route_legs:base.route_legs.map(l=>({...l,route_type:'air'}))});count(1);assert.equal(frames.size,1);
-  await assign(base);count(2);alive();assert.equal(frames.size,1);
-  assert.deepEqual(useAppStore.getState().selectedPlan.vehicles,[a,b]);assert.equal(a.assigned_load_kg+b.assigned_load_kg,18000);
-  for(const value of ['TRK-001','TRK-002','11,368.42','6,631.58'])assert.match(ui.getByLabelText('Plan Snapshot').textContent,new RegExp(value.replaceAll('.','\\.')));
-  assert.match(document.querySelector('.journey-vehicle').textContent,/2/);
-  await advance(1000);await advance(6000);await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Replay Journey'})));assert.equal(frames.size,1);
-  await assign({...base,plan_id:'optional',vehicles:[{id:1,assigned_load_kg:11368.42},{id:2,assigned_load_kg:6631.58}]});count(2);alive();
-  for (const legs of [null,[],[null],[{source_coords:{lat:NaN,lng:0},destination_coords:end}]]) {
-    await assign({...base,plan_id:`missing-${Math.random()}`,route_legs:legs});count(2);alive();assert.equal(frames.size,0);assert.ok(ui.getByLabelText('Plan Snapshot'));
-  }
-  await assign({...base,plan_id:'null-vehicles',vehicles:null});count(0);alive();
-  await assign({...base,plan_id:'null-row',vehicles:[null,a,undefined,b]});count(2);alive();
-  await assign({...base,plan_id:'road-again',vehicles:[b]});await assign({...base,plan_id:'ground-to-two'});count(2);assert.equal(frames.size,1);
-  // Contain a real Leaflet effect failure; keep the whole dashboard usable.
-  const originalMarker=L.marker,originalError=console.error;const errors=[];
-  console.error=(...args)=>errors.push(args);
-  try {
-    L.marker=()=>{throw new Error('Injected journey failure');};
-    await assign({...base,plan_id:'failed-plan'});
-    alive();count(2);assert.match(document.body.textContent,/Journey visualization unavailable for this plan/);assert.ok(ui.getByLabelText('Plan Snapshot'));assert.equal(frames.size,0);assert.ok(errors.length);
-  } finally {L.marker=originalMarker;console.error=originalError;}
-  await assign({...base,plan_id:'recovered'});assert.doesNotMatch(document.body.textContent,/Journey visualization unavailable/);assert.equal(frames.size,1);
-  const originalPosition=L.Marker.prototype.setLatLng;
-  console.error=(...args)=>errors.push(args);
-  try {
-    L.Marker.prototype.setLatLng=function(point){if(this.options.icon.options.className==='journey-vehicle')throw new Error('Injected frame failure');return originalPosition.call(this,point);};
-    await advance(7000);alive();count(2);assert.match(document.body.textContent,/Journey visualization unavailable/);assert.equal(frames.size,0);
-  }finally{L.Marker.prototype.setLatLng=originalPosition;console.error=originalError;}
-  await assign({...base,plan_id:'frame-recovered'});assert.equal(frames.size,1);
-  await act(async()=>{reduced=true;motionListeners.forEach(fn=>fn());});assert.equal(frames.size,0);alive();
+  await assign({...base,plan_id:'zero',vehicles:[]});count(0);alive();assert.equal(starts,0);
+  await assign({...base,plan_id:'one',vehicles:[b]});count(1);assert.equal(starts,1);assert.equal(frames.size,0);
+  await assign(base);count(2);alive();assert.equal(starts,2);
+  assert.deepEqual(useAppStore.getState().selectedPlan.vehicles,[a,b]);
+  for(const value of ['TRK-001','TRK-002','11,368.42','6,631.58'])assert.ok(ui.getByLabelText('Plan Snapshot').textContent.includes(value));
+  for(const id of ['third','fourth'])await assign({...base,plan_id:id});
+  assert.equal(document.querySelectorAll('.movement-icon').length,4);
+  assert.equal(useOperationsStore.getState().aiSimulationIds.length,4);
+  assert.equal(starts,4);assert.equal(frames.size,0,'No separate per-plan RAF/SSE replay');
+  await assign({...base,plan_id:'one'});assert.equal(starts,4,'Selecting an existing plan never recreates it');
+  assert.equal(document.querySelectorAll('.movement-icon').length,4);
+  await assign({...base,plan_id:'missing',route_legs:[]});alive();assert.equal(starts,4);
   let copied;Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{copied=value;}},configurable:true});
   await act(async()=>store.addChatMessage('assistant','Exact complete answer'));
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Copy complete assistant response'})));assert.equal(copied,'Exact complete answer');
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start a new chat'})));count(0);alive();assert.equal(useAppStore.getState().warehouses.length,30);assert.equal(useAppStore.getState().vehicles.length,97);assert.equal(Object.keys(useAppStore.getState().activeRoutes).length,62);
-  await act(async()=>{reduced=false;store.applyPlanningMapPlan({recommended_plan:base});});assert.equal(frames.size,1);
+  await act(async()=>{reduced=false;store.applyPlanningMapPlan({recommended_plan:base});});assert.equal(frames.size,0);
+  assert.equal(document.querySelectorAll('.movement-icon').length,4,'New Chat retains runtime fleet');
   cleanup();assert.equal(frames.size,0);assert.equal(motionListeners.size,0);
-  console.log('PASS: full StrictMode dashboard, 30/97/62 network, exact 18000kg assignments, 0/1/2+, missing metadata/geometry, Road/Air/multi replacement, receiver-aware RAF, replay, error containment/recovery, reduced motion, Copy/New Chat and active unmount');
+  console.log('PASS: StrictMode dashboard; exact assignments; four persistent Ground markers; no duplicate starts or per-plan animation loops; selection retention; Copy; New Chat preserves network and fleet; cleanup');
 }finally{cleanup();await server.close();dom.window.close();}

@@ -27,6 +27,7 @@ try {
   const token=tokenFor(3600);
   let resolveRequest,calls=0;
   apiClient.defaults.adapter=config=>{
+    if(config.url==='/operations/movements')return Promise.resolve({status:200,statusText:'OK',headers:{},config,data:{movements:[]}});
     calls++;assert.equal(config.url,'/auth/demo-access');assert.equal(config.method,'post');
     return new Promise(resolve=>{resolveRequest=()=>resolve({status:200,statusText:'OK',headers:{},config,data:{success:true,data:{token,user}}});});
   };
