@@ -152,3 +152,35 @@ def test_schedule_import_atomic_and_source_isolation(loaded):
         ss=client.get('/operations/schedules').json()['schedules']
         assert len(ss)==36 and all(s['data_source']=='SYNTHETIC_SCHEDULE' for s in ss)
     routes.custom_schedules.clear()
+
+
+@pytest.mark.parametrize('with_ai', [False, True])
+def test_show_all_populates_once_and_preserves_ai(loaded, monkeypatch, with_ai):
+    from concurrent.futures import ThreadPoolExecutor
+    from backend.operations import plan_journeys
+    from backend.planning.models import PlanningRequest
+    import backend.fedex.telemetry as telemetry
+    monkeypatch.setattr(telemetry, 'runtime', loaded[1])
+    plan = PlanningService().plan(1, PlanningRequest(source='Mumbai', destination='Bengaluru',
+        shipment={'weight_kg': 6000}, allowed_modes=['road']))['recommended_plan']
+    ai = plan_journeys.start(1, plan['plan_id']) if with_ai else None
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: service.start_demo(1, 10, reuse_existing=True), range(2)))
+    def live(result):
+        return [m for m in result['movements'] if m['status'] != 'SCHEDULE_TEMPLATE']
+    first = live(results[0])
+    assert len(first) == 10 + int(with_ai)
+    assert {m['simulation_id'] for m in first} == {m['simulation_id'] for m in live(results[1])}
+    assert {'SURFACE', 'AIR', 'RAIL'} == {m['mode'] for m in first}
+    assert all(m['latitude'] is not None and m['longitude'] is not None and len(m['route']) >= 2 for m in first)
+    assert all(len(m['route']) > 2 for m in first if m['mode'] == 'SURFACE')
+    if ai:
+        assert loaded[1].get(1, ai['simulation_id']).paused
+    app = FastAPI(); app.include_router(routes.router)
+    with TestClient(app) as client:
+        assert client.post('/operations/demo', json={'reuse_existing': True}).status_code == 401
+        app.dependency_overrides[get_current_user] = lambda: {'user_id': 1}
+        again = client.post('/operations/demo', json={'reuse_existing': True})
+        assert again.status_code == 200
+        assert {m['simulation_id'] for m in live(again.json())} == {m['simulation_id'] for m in first}
+    assert all(m['status'] == 'SCHEDULE_TEMPLATE' for m in service.movements(2)['movements'])

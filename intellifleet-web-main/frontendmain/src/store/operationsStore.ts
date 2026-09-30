@@ -62,6 +62,7 @@ interface OperationsState {
 
   // Only simulations created from AI planning questions.
   aiSimulationIds:string[];
+  aiSessionGeneration:number;
 
   patch:(value:Partial<Omit<OperationsState,'patch'>>) => void;
 }
@@ -78,6 +79,7 @@ export const useOperationsStore=create<OperationsState>((set)=>({
 
   // AI journeys are accumulated here for the current frontend session.
   aiSimulationIds:[],
+  aiSessionGeneration:0,
 
   patch:(value)=>set(state=>{
     if(!value.movements)return value;

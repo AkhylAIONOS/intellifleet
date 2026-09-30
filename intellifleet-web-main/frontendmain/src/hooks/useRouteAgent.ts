@@ -1,5 +1,6 @@
 import { useOperationsStore } from '../store/operationsStore';
 import {ensurePlanMovement} from '../utils/planMovement';
+import {createSessionId} from '../utils/sessionId';
 import { useState, useRef } from 'react';
 import { chatApi } from '../api/chat';
 import { useAppStore } from '../store/appStore';
@@ -59,7 +60,12 @@ const formatRouteResponse = (data: any): string => {
 export const useRouteAgent = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const sessionIdRef = useRef<string | undefined>(undefined);
-    const startNewSession = () => { sessionIdRef.current = crypto.randomUUID(); };
+    const startNewSession = () => {
+        sessionIdRef.current = createSessionId();
+        const state=useOperationsStore.getState();
+        state.patch({aiSessionGeneration:state.aiSessionGeneration+1,aiSimulationIds:[],selected:null,
+            enabled:false,viewMode:'AI',filter:'ALL'});
+    };
 
     const {
         vehicles,
@@ -84,7 +90,9 @@ export const useRouteAgent = () => {
         try {
             // Call /agent endpoint
             if (!sessionIdRef.current) startNewSession();
+            const session=sessionIdRef.current;
             const response = await chatApi.sendMessage(message, sessionIdRef.current);
+            if(session!==sessionIdRef.current)return;
 
             // Update session ID
             if (response.session_id) {
@@ -165,10 +173,9 @@ export const useRouteAgent = () => {
                 const state=useOperationsStore.getState();
                 state.patch({
                     enabled:true,
-                    viewMode:'LIVE',
+                    viewMode:state.viewMode==='AI' && state.aiSimulationIds.includes(action.data.selected)?'AI':'LIVE',
                     filter:action.data.filter || 'ALL',
                     selected:action.data.selected || null,
-                    fit:state.fit+1
                 });
                 break;
             }

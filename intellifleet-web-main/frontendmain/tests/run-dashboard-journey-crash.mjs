@@ -76,8 +76,11 @@ try {
   await act(async()=>store.addChatMessage('assistant','Exact complete answer'));
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Copy complete assistant response'})));assert.equal(copied,'Exact complete answer');
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start a new chat'})));count(0);alive();assert.equal(useAppStore.getState().warehouses.length,30);assert.equal(useAppStore.getState().vehicles.length,97);assert.equal(Object.keys(useAppStore.getState().activeRoutes).length,62);
+  assert.equal(document.querySelectorAll('.movement-icon').length,0,'New Chat hides all previous AI journeys');
+  assert.equal(useOperationsStore.getState().aiSimulationIds.length,0);
   await act(async()=>{reduced=false;store.applyPlanningMapPlan({recommended_plan:base});});assert.equal(frames.size,0);
-  assert.equal(document.querySelectorAll('.movement-icon').length,4,'New Chat retains runtime fleet');
+  assert.equal(document.querySelectorAll('.movement-icon').length,1,'New Chat shows only the current session plan');
+  assert.equal(snapshots.size,4,'New Chat preserves backend fleet');
   cleanup();assert.equal(frames.size,0);assert.equal(motionListeners.size,0);
   console.log('PASS: StrictMode dashboard; exact assignments; four persistent Ground markers; no duplicate starts or per-plan animation loops; selection retention; Copy; New Chat preserves network and fleet; cleanup');
 }finally{cleanup();await server.close();dom.window.close();}

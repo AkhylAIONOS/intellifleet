@@ -416,6 +416,11 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
             return (f"I could not produce a safe revised plan for the current shipment.{route_text} but no available compatible "
                     f"source-vehicle combination satisfies the {detail.get('shipment_weight_kg')} kg load and full-route range "
                     "requirements. The current plan remains unchanged.")
+        if result.get("feasibility"):
+            detail=result['feasibility']
+            return (str(result.get('reason') or 'No feasible vehicle assignment.') +
+                    f" Loaded path distance: {detail.get('distance_km')} km; shipment: {detail.get('shipment_weight_kg')} kg. "
+                    "No journey was created; provide a compatible vehicle or revise the constraints.")
         modes=request.get("allowed_modes") or []
         if len(modes)==1 and request.get("source") and request.get("destination"):
             mode={"road":"road","air":"air","multimodal":"multimodal"}.get(str(modes[0]).casefold(),str(modes[0]))

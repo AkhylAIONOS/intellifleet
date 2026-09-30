@@ -184,11 +184,19 @@ def all_movements(user=Depends(get_current_user), include_geometry: bool=True):
 class DemoInput(BaseModel):
     count: Literal[10,50,100]=10
     seed: int=42
+    reuse_existing: bool=False
+
+
+@router.post('/movements/initialize')
+def initialize_movements(user=Depends(get_current_user)):
+    from .fleet import initialize
+    try: return initialize(user['user_id'])
+    except (ValueError, KeyError) as exc: raise HTTPException(422,str(exc)) from exc
 
 
 @router.post('/demo')
 def demo(request: DemoInput,user=Depends(get_current_user)):
-    try: return start_demo(user['user_id'],request.count,request.seed)
+    try: return start_demo(user['user_id'],request.count,request.seed,request.reuse_existing)
     except RoadRoutingError as exc: raise HTTPException(503 if exc.code=='ROAD_ROUTE_UNAVAILABLE' else 422,str(exc)) from exc
     except (ValueError,KeyError) as exc: raise HTTPException(422,str(exc)) from exc
 

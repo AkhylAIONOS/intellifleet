@@ -63,5 +63,7 @@ def _start(owner, plan_id):
     # Replay begins at the plan's departure, never at elapsed wall-clock progress.
     sim.selected.update(etd=etd,eta=eta,cutoff=etd)
     sim.duration=duration;sim.now=etd;sim.current_eta=eta;sim.paused=True
+    sim.network_vehicle_ids=[v['id'] for v in plan['vehicles']]
+    sim.network_route_ids=[leg.get('route_id') for leg in legs]
     sim.status='IN_TRANSIT';sim.last_wall=runtime.clock()
     return sim.snapshot()

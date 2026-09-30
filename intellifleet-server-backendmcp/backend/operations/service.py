@@ -155,7 +155,26 @@ def network_path(network, origin, destination, mode='road'):
     return legs,points
 
 
-def start_demo(owner,count,seed=42):
+from threading import RLock
+
+_demo_lock = RLock()
+
+
+def start_demo(owner,count,seed=42,reuse_existing=False):
+    # Serialize check/create with explicit batch replacement in this runtime.
+    with _demo_lock:
+        if reuse_existing:
+            existing = movements(owner)
+            if any(m['status'] != 'SCHEDULE_TEMPLATE' and not m.get('stopped')
+                   and not m['shipment_id'].startswith('PLAN-')
+                   and (m.get('progress') or 0) < 1
+                   and m.get('latitude') is not None and m.get('longitude') is not None
+                   for m in existing['movements']):
+                return existing
+        return _start_demo(owner,count,seed)
+
+
+def _start_demo(owner,count,seed=42):
     if count not in (10,50,100): raise ValueError('Choose 10, 50 or 100 entities')
     network=PlanningService().load_network(owner)
     rng=random.Random(seed)
@@ -224,6 +243,8 @@ def movements(owner, schedules=None, include_geometry=True):
             continue
 
         state = entry.simulation.advance(runtime.clock())
+        state['network_vehicle_ids'] = getattr(entry.simulation, 'network_vehicle_ids', [])
+        state['network_route_ids'] = getattr(entry.simulation, 'network_route_ids', [])
 
         nodes = getattr(
             entry.simulation,
