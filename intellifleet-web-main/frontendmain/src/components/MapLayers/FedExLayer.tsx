@@ -7,7 +7,9 @@ import {useOperationsStore} from '../../store/operationsStore';
 import {vehicleFollower} from '../../utils/vehicleFollow';
 
 export function FedExLayer() {
-  const state = useFedexStore(s=>s.telemetry);
+  const telemetry = useFedexStore(s=>s.telemetry);
+  const viewMode = useOperationsStore(s=>s.viewMode);
+  const state = viewMode === 'AI' ? null : telemetry;
   const map = useMap();
   const route = useMemo(()=>state?.route,[state?.simulation_id,state?.route_id]);
   const fitted = useRef<string | null>(null);

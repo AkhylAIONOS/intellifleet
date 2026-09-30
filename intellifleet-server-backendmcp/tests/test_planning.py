@@ -255,7 +255,8 @@ def test_express_ground_numeric_comparison(service):
         "express": result["options"]["express"]["sla_met"],
     }
     assert result["planning_request"]["shipment"]["weight_kg"]==1000
-    assert result["options"]["multimodal"]
+    # This fixture has separate road/air paths but no mixed-mode connection.
+    assert result["options"]["multimodal"] is None
 
 
 @pytest.mark.asyncio

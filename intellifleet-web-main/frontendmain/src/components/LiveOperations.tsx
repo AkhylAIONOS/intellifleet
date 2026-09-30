@@ -4,7 +4,7 @@ import {useAppStore} from '../store/appStore';
 import {fedexApi} from '../api/fedex';
 import api from '../api/client';
 import {pollMovements} from '../api/operations';
-import {movementMatches,useOperationsStore,type Movement} from '../store/operationsStore';
+import {movementMatches,visibleAiMovement,useOperationsStore,type Movement} from '../store/operationsStore';
 export function LiveOperations(){
  const warehouses=useAppStore(s=>s.warehouses); const [origin,setOrigin]=useState('');const [destination,setDestination]=useState('');
  const [weight,setWeight]=useState('');const [playback,setPlayback]=useState(120);
@@ -43,7 +43,7 @@ export function LiveOperations(){
  catch(e:any){setError(e.response?.data?.detail||'Unable to start demo');}finally{setBusy(false);}};
  const selected=state.movements.find(m=>m.simulation_id===state.selected);
  const operate=async(action:string)=>{if(!selected)return;setBusy(true);try{if(action==='delay')await fedexApi.event(selected.simulation_id,30);else if(action==='breakdown')await api.post(`/fedex/simulations/${selected.simulation_id}/events`,{event_type:'BREAKDOWN',expected_delay_minutes:30});else await fedexApi.control(selected.simulation_id,action,playback);const r=await api.get('/operations/movements');state.patch({movements:r.data.movements});setError('');}catch(e:any){setError(e.response?.data?.detail||'Action unavailable');}finally{setBusy(false);}};
- const filtered=state.movements.filter(m=>!m.stopped && m.status!=='SCHEDULE_TEMPLATE' && movementMatches(m,state.filter) && (state.viewMode!=='AI'||state.aiSimulationIds.includes(m.simulation_id)));
+ const filtered=state.movements.filter(m=>!m.stopped && m.status!=='SCHEDULE_TEMPLATE' && movementMatches(m,state.filter) && (state.viewMode!=='AI'||visibleAiMovement(m,state)));
  return <section className="fedex-panel" aria-label="Live network">
   <div className="fedex-controls"><button
     aria-pressed={state.viewMode==='LIVE'}

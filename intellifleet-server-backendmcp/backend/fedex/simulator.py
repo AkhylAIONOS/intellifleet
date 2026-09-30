@@ -121,7 +121,9 @@ class Simulation:
         moving = self.status == 'IN_TRANSIT' and not self.paused and not self.stopped
         return dict(data_source=self.data_source, schedule_id=self.selected["schedule_id"], heading=heading, delay_minutes=round((self.current_eta-self.selected["eta"]).total_seconds()/60,2), simulation_id=self.id, shipment_id=self.request.shipment_id,
                     origin_station=self.request.origin_station, gateway=self.request.gateway,
-                    mode=self.selected['mode'], run=self.selected['run'], service=self.selected['service'],
+                    risk_score=getattr(self, 'plan_risk', None), journey_id=getattr(self, 'journey_id', None), plan_id=getattr(self, 'plan_revision_id', None),
+                    revision=getattr(self, 'plan_revision', None), journey_segments=getattr(self, 'journey_segments', []),
+                    mode=next((segment['mode'] for segment in getattr(self, 'journey_segments', []) if segment['start_index'] <= index < segment['end_index']), self.selected['mode']), run=self.selected['run'], service=self.selected['service'],
                     simulation_timestamp=self.now.isoformat(), latitude=lat, longitude=lng,
                     speed_kmph=round(self._geometry_distance / (self.duration/3600) * self.travel_factor, 2) if moving else 0,
                     speed_basis='Map-road distance / existing schedule duration; simulated, not live traffic' if self.road_route else 'Synthetic straight-line distance, not measured vehicle speed',

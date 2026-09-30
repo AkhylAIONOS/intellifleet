@@ -8,11 +8,14 @@ from .routes import all_movements, schedules_for
 
 def answer(owner,message,selected_id=None):
     text=message.casefold()
+    from backend.planning.lifecycle import is_action
+    if is_action(message) and 'what happens' not in text and not (selected_id and text.startswith('compare fastest road')):
+        return None
     schedule_query = any(w in text for w in ('which service', 'scheduled movement', 'can still reach', 'can catch')) or ('can ' in text and ' catch ' in text)
     operational = any(w in text for w in ('movement', 'active vehicles', 'delayed trucks', 'revised eta',
         'current eta', 'shipment on the map', 'truck is delayed', 'cutoff is missed', 'current location',
         'its progress', 'shipment status', 'current shipment', 'selected shipment', 'delayed shipment',
-        'current status', 'happening with'))
+        'current status', 'operational status', 'happening with'))
     road_query = bool(selected_id) and any(w in text for w in ('fastest road', 'shortest road', 'cheapest route', 'compare fastest', 'road ahead', 'reroute', 'where is the truck'))
     operational = operational or road_query
     result = None
@@ -29,8 +32,11 @@ def answer(owner,message,selected_id=None):
         explicit = [m for m in live if mentioned(m['simulation_id']) or mentioned(m['shipment_id'])]
         origins = {m['origin_station'] for m in live if mentioned(m['origin_station'])}
         gateways = {m['gateway'] for m in live if mentioned(m['gateway'])}
+        lane_matches = [m for m in live if re.search(re.escape(m['origin_station'].casefold()) + r'\s*(?:to|→|->)\s*' + re.escape(m['gateway'].casefold()), text)]
         if explicit:
             live = explicit
+        elif lane_matches:
+            live = lane_matches
         else:
             if origins: live = [m for m in live if m['origin_station'] in origins]
             if gateways: live = [m for m in live if m['gateway'] in gateways]
@@ -41,14 +47,16 @@ def answer(owner,message,selected_id=None):
         if re.search(r'\brail\b', text): live = [m for m in live if m['mode'] == 'RAIL']
         if re.search(r'\b(trucks?|surface)\b', text): live = [m for m in live if m['mode'] == 'SURFACE']
         if 'delayed' in text and 'what happens' not in text: live = [m for m in live if m['delay_minutes'] > 0]
-        contextual = road_query or any(w in text for w in ('current shipment', 'selected shipment', 'this shipment', 'this truck',
+        contextual = bool(re.search(r'\b(?:current|active)\b.*\bshipment\b', text)) or road_query or any(w in text for w in ('current shipment', 'selected shipment', 'this shipment', 'this truck',
             'its revised', 'its current', 'its progress', 'current status', 'cutoff is missed', 'happening with'))
         if contextual and not explicit and selected_id:
             selected = [m for m in live if m['simulation_id'] == selected_id]
             if selected: live = selected
             elif not (origins or gateways): live = []
+        if contextual:
+            live = [m for m in live if m.get('progress', 0) < 1]
         if contextual and len(live) != 1:
-            return {'success': True, 'response': 'Specify the shipment ID or select one movement so I can use its authoritative simulation state.', 'actions': []}
+            return {'success': True, 'response': 'Specify the shipment ID or select one movement. Candidates: ' + ', '.join(str(m['shipment_id']) + ' (' + m['status'] + ')' for m in live[:10]), 'actions': []}
         lines = []
         from datetime import timedelta
         def display_time(value):
@@ -59,6 +67,8 @@ def answer(owner,message,selected_id=None):
                     f"Status: {m['status']}; progress {m['progress']:.1%}; delay {m['delay_minutes']:g} min\n"
                     f"Scheduled ETA: {display_time(m['scheduled_eta'])}\nRevised ETA: {display_time(m['current_eta'])}\n"
                     f"Source: {m['data_source']} / DEMO_SIMULATION (synthetic telemetry)")
+            if m.get('risk_score') is not None:
+                line += f"\nCurrent plan risk: {m['risk_score']:.1%}."
             if m.get('road_routing_status') == 'READY':
                 line += (f"\nMap position: {m['latitude']:.5f}, {m['longitude']:.5f}; "
                          f"{m['distance_travelled_km']:.1f} km travelled, {m['distance_remaining_km']:.1f} km remaining."

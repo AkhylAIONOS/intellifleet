@@ -2,6 +2,10 @@ import {create} from 'zustand';
 
 export interface Movement {
   sequence?:number;
+  journey_id?:string;
+  plan_id?:string;
+  revision?:number;
+  journey_segments?:Array<{start_index:number;end_index:number;mode:string;route_id?:number}>;
   simulation_speed?:number;
   route_id?:string;
   route_source?:string;
@@ -38,6 +42,12 @@ export interface Movement {
   route:[number,number][];
 }
 
+// Revisions share a logical key; independent same-OD shipments never do.
+export const movementIdentity=(m:Movement)=>m.journey_id ? `journey:${m.journey_id}` :
+  m.shipment_id?.startsWith('PLAN-') ? `journey:${m.shipment_id.slice(5)}` : `movement:${m.simulation_id}`;
+
+export type JourneyDisplayMode = 'SINGLE_ROUTE' | 'MULTI_ROUTE';
+
 export type MovementViewMode = 'OFF' | 'AI' | 'LIVE';
 
 export const movementMatches=(m:Movement,filter:string)=>
@@ -63,6 +73,8 @@ interface OperationsState {
   // Only simulations created from AI planning questions.
   aiSimulationIds:string[];
   aiSessionGeneration:number;
+  aiDisplayMode:JourneyDisplayMode;
+  aiVisibleSimulationIds:string[];
 
   patch:(value:Partial<Omit<OperationsState,'patch'>>) => void;
 }
@@ -80,16 +92,40 @@ export const useOperationsStore=create<OperationsState>((set)=>({
   // AI journeys are accumulated here for the current frontend session.
   aiSimulationIds:[],
   aiSessionGeneration:0,
+  aiDisplayMode:'SINGLE_ROUTE',
+  aiVisibleSimulationIds:[],
 
   patch:(value)=>set(state=>{
+    // Clearing a chat/session always restores the default display mode.
+    if(value.aiSimulationIds?.length===0)value={...value,aiDisplayMode:'SINGLE_ROUTE',aiVisibleSimulationIds:[]};
+    if(value.viewMode==='AI' && value.selected && !value.aiDisplayMode && state.aiDisplayMode==='MULTI_ROUTE'
+       && !state.aiVisibleSimulationIds.includes(value.selected))value={...value,aiDisplayMode:'SINGLE_ROUTE',aiVisibleSimulationIds:[]};
     if(!value.movements)return value;
-    const previous=new Map(state.movements.map(m=>[m.simulation_id,m]));
-    return {...value,movements:value.movements.map(m=>{
-      const old=previous.get(m.simulation_id);
-      if(old && old.sequence!=null && m.sequence!=null && old.sequence>m.sequence)return old;
-      // Geometry identity changes on reroute; telemetry alone retains the
-      // reference so Leaflet does not rebuild every route each second.
-      return old && m.route_id && old.route_id===m.route_id ? {...m,route:old.route} : m;
-    })};
+    const previous=new Map(state.movements.map(m=>[movementIdentity(m),m]));
+    const next=new Map<string,Movement>();
+    for(const m of value.movements){
+      const key=movementIdentity(m), old=next.get(key) || previous.get(key);
+      const olderRevision=old && (old.revision || 0)>(m.revision || 0);
+      const sameRevision=old && old.revision===m.revision && old.plan_id===m.plan_id;
+      if(old && (olderRevision || (sameRevision && old.sequence!=null && m.sequence!=null && old.sequence>m.sequence))){next.set(key,old);continue;}
+      // Sequence numbers may restart on a revision. Reuse geometry only for
+      // the same revision, never discard a newer plan because of an old counter.
+      next.set(key,old && sameRevision && m.route_id && old.route_id===m.route_id ? {...m,route:old.route} : m);
+    }
+    const replacements=new Map<string,string>();
+    for(const [key,m] of next){const old=previous.get(key);if(old)replacements.set(old.simulation_id,m.simulation_id);}
+    const selected=value.selected===undefined?state.selected:value.selected;
+    return {...value,movements:[...next.values()],
+      selected:selected ? replacements.get(selected) || selected : selected,
+      aiVisibleSimulationIds:(value.aiVisibleSimulationIds || state.aiVisibleSimulationIds).map(id=>replacements.get(id)||id),
+      aiSimulationIds:[...new Set((value.aiSimulationIds || state.aiSimulationIds).map(id=>replacements.get(id)||id))]};
   }),
 }));
+
+// Retained session journeys are history, not an instruction to show every route.
+export function visibleAiMovement(m:Movement, state:Pick<OperationsState,'aiSimulationIds'|'aiDisplayMode'|'aiVisibleSimulationIds'|'selected'>):boolean {
+  if(!state.aiSimulationIds.includes(m.simulation_id))return false;
+  if(state.aiDisplayMode==='MULTI_ROUTE')return state.aiVisibleSimulationIds.includes(m.simulation_id);
+  const selected=state.selected && state.aiSimulationIds.includes(state.selected) ? state.selected : state.aiSimulationIds.at(-1);
+  return m.simulation_id===selected;
+}

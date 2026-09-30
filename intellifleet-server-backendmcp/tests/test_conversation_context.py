@@ -19,8 +19,11 @@ FUEL='What happens if fuel cost increases by 20%? Keep this as a draft scenario,
 
 @pytest.fixture
 def chat(monkeypatch):
+    from backend.fedex import telemetry
+    # Planning follow-ups run at the origin; wall-clock drift must not imply dispatch.
+    monkeypatch.setattr(telemetry, "runtime", telemetry.Runtime(clock=lambda: 0.0))
     network=copy.deepcopy(NETWORK)
-    network['routes'].append(dict(route_id=51,from_location='Origin Hub',to_location='Destination Hub',distance=100,duration=.5,cost=500,route_type='air'))
+    network['routes'].append(dict(route_id=51,from_location='Origin Hub',to_location='Destination Hub',distance=100,duration=.5,cost=500,route_type='air',source_coords={'lat':11,'lng':11},destination_coords={'lat':12,'lng':12}))
     network['vehicles'].append(dict(id=3,label='Cargo plane',type='plane',capacity=25000,max_range_km=2000,current_location='Origin Hub',is_available=1))
     service=PlanningService(':memory:');monkeypatch.setattr(service,'load_network',lambda _:copy.deepcopy(network))
     monkeypatch.setattr(planning_tools,'PlanningService',lambda:service)

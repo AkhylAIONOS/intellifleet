@@ -7,12 +7,13 @@ import {useAppStore} from '../store/appStore';
 const pending = new Map<string, Promise<void>>();
 export function ensurePlanMovement(plan:any):Promise<void> {
   if(!plan?.plan_id || !plan.vehicles?.length || !plan.route_legs?.length ||
-    !plan.route_legs.every((leg:any)=>['road','ground','surface'].includes(String(leg?.route_type).toLowerCase())))return Promise.resolve();
+    !plan.route_legs.every((leg:any)=>['road','ground','surface','air'].includes(String(leg?.route_type).toLowerCase())))return Promise.resolve();
   const id=String(plan.plan_id);
+  const journeyId=String(plan.journey_id || id);
   const scope=useOperationsStore.getState();
   const generation=scope.aiSessionGeneration;
-  const existing=scope.movements.find(m=>m.shipment_id===`PLAN-${id}`);
-  if(existing){
+  const existing=scope.movements.find(m=>m.shipment_id===`PLAN-${journeyId}`);
+  if(existing && (!plan.revision || existing.revision===plan.revision)){
     if(!existing.stopped)scope.patch({enabled:true,viewMode:'AI',filter:'ALL',selected:existing.simulation_id,
       aiSimulationIds:[...new Set([...scope.aiSimulationIds,existing.simulation_id])]});
     return Promise.resolve();

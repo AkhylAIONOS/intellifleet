@@ -66,6 +66,8 @@ try {
   assert.deepEqual(useAppStore.getState().selectedPlan.vehicles,[a,b]);
   for(const value of ['TRK-001','TRK-002','11,368.42','6,631.58'])assert.ok(ui.getByLabelText('Plan Snapshot').textContent.includes(value));
   for(const id of ['third','fourth'])await assign({...base,plan_id:id});
+  assert.equal(document.querySelectorAll('.movement-icon').length,1,'Single route is the default');
+  await act(async()=>useOperationsStore.getState().patch({aiDisplayMode:'MULTI_ROUTE',aiVisibleSimulationIds:useOperationsStore.getState().aiSimulationIds}));
   assert.equal(document.querySelectorAll('.movement-icon').length,4);
   assert.equal(useOperationsStore.getState().aiSimulationIds.length,4);
   assert.equal(starts,4);assert.equal(frames.size,0,'No separate per-plan RAF/SSE replay');
@@ -82,5 +84,5 @@ try {
   assert.equal(document.querySelectorAll('.movement-icon').length,1,'New Chat shows only the current session plan');
   assert.equal(snapshots.size,4,'New Chat preserves backend fleet');
   cleanup();assert.equal(frames.size,0);assert.equal(motionListeners.size,0);
-  console.log('PASS: StrictMode dashboard; exact assignments; four persistent Ground markers; no duplicate starts or per-plan animation loops; selection retention; Copy; New Chat preserves network and fleet; cleanup');
+  console.log('PASS: StrictMode dashboard; exact assignments; single default and four explicitly visible Ground markers; no duplicate starts or per-plan animation loops; selection retention; Copy; New Chat preserves network and fleet; cleanup');
 }finally{cleanup();await server.close();dom.window.close();}

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppStore } from '../../store/appStore';
+import { useOperationsStore } from '../../store/operationsStore';
 import { normalizeVisualPlan, validPoint, continuousJourney, legPoints, type Assignment } from '../../utils/planVisuals';
 import { playJourney } from '../../utils/journeyPlayback';
 import '../PlanVisuals.css';
@@ -25,8 +26,20 @@ function vehiclePopup(vehicles: Assignment[], mode: string) {
 }
 export function SelectedJourneyLayer() {
   const selected=useAppStore(s=>s.selectedPlan);
+
+  // AI operational journeys are rendered exclusively by NetworkMovementsLayer.
+  // Keeping this legacy selected-plan renderer active at the same time causes
+  // duplicate polylines/markers and N+1 routes in MULTI_ROUTE mode.
+  const operationalAiJourney = useOperationsStore(
+    s => s.enabled && s.viewMode === 'AI' && s.aiSimulationIds.length > 0
+  );
+
   const plan=useMemo(()=>selected?normalizeVisualPlan(selected):null,[selected]);
+
+  if(plan?.journey_id)return <RoadPlanJourney plan={plan}/>;
   if(plan?.route_legs.length&&plan.route_legs.every(l=>['road','ground','surface'].includes(l.route_type?.toLowerCase())))return <RoadPlanJourney plan={plan}/>;
+  // Registration renders no layers and must still run for a new/revised plan.
+  if(operationalAiJourney)return null;
   return <LegacySelectedJourneyLayer/>;
 }
 export function LegacySelectedJourneyLayer() {

@@ -21,6 +21,23 @@ def _norm(value: str) -> str:
     return value.strip().casefold()
 
 
+
+def _compressed_mode_sequence(legs: list[dict]) -> list[str]:
+    """Return ordered transport segments, collapsing consecutive same-mode legs."""
+    sequence = []
+
+    for leg in legs:
+        mode = str(leg.get("route_type") or "road").casefold()
+
+        if mode == "ground":
+            mode = "road"
+
+        if not sequence or sequence[-1] != mode:
+            sequence.append(mode)
+
+    return sequence
+
+
 class PlanningService:
     """Pure calculations plus thin SQLite data access; the LLM is never used here."""
 
@@ -274,6 +291,7 @@ class PlanningService:
                 segments.append(calculated)
             plan = copy.deepcopy(segments[0])
             plan.update(plan_id=str(uuid.uuid4()), mode="multimodal", product="Express", route_legs=legs)
+            plan["vehicles"] = [v for segment in segments for v in segment["vehicles"]]
             plan["leg_assignments"] = [{"route_legs": segment["route_legs"], "vehicles": segment["vehicles"]} for segment in segments]
             plan["distance_km"] = round(sum(x["distance_km"] for x in segments), 2)
             plan["duration_hours"] = round(sum(x["duration_hours"] for x in segments) + .5*(len(segments)-1), 2)
@@ -386,6 +404,11 @@ class PlanningService:
                 "weighted_contributions": {k: round(v/total, 6) for k, v in weighted.items()},
                 "balanced_score": round(balanced, 4)}
             plan["score"] = round({"cheapest": cost, "fastest": time, "lowest-risk": risk}.get(request.objective,balanced)+(10 if request.sla_mandatory and plan["sla_met"] is False else 0),4)
+        metric = {"cheapest":"operational_cost", "fastest":"duration_hours", "lowest-risk":"risk_score"}.get(request.objective)
+        if metric:
+            # Rank raw deterministic values; rounded display scores must not
+            # turn distinct costs/durations/risks into a tie.
+            return sorted(candidates, key=lambda x:(x["sla_met"] is False,x[metric],x["operational_cost"]))
         return sorted(candidates, key=lambda x: (x["sla_met"] is False, x["score"], x["operational_cost"]))
 
     def plan(self, user_id: int, request: PlanningRequest, network: dict | None = None,
@@ -410,19 +433,29 @@ class PlanningService:
                                         or _norm(str(w.get("city", ""))) in wanted)]
             return contained[0]["name"] if len(contained) == 1 else value
 
+        requested_source = request.source
+        requested_destination = request.destination
+
         request = request.model_copy(update={
             "source": resolve_location(request.source),
             "destination": resolve_location(request.destination),
             "intermediate_stops": [resolve_location(x) for x in request.intermediate_stops],
         })
-        changes = changes or {}
+        changes = copy.deepcopy(changes or {})
+        if changes.pop("normal_ground_disrupted", False):
+            baseline = self.plan(user_id, request.model_copy(update={"allowed_modes": ["road"]}), network=network)
+            original = baseline.get("recommended_plan")
+            if original:
+                changes["blocked_route_ids"] = list(set(changes.get("blocked_route_ids", []) + [leg["route_id"] for leg in original["route_legs"]]))
         blocked = {tuple(map(_norm, pair)) for pair in changes.get("blocked_routes", [])}
         unavailable_vehicles = {str(x) for x in changes.get("unavailable_vehicles", [])}
         unavailable_warehouses = {_norm(x) for x in changes.get("unavailable_warehouses", [])}
+        unavailable_warehouses.update(_norm(w["name"]) for w in network["warehouses"] if not w.get("is_active",1))
         network["vehicles"] = [v for v in network["vehicles"] if str(v.get("label")) not in unavailable_vehicles]
         network["warehouses"] = [w for w in network["warehouses"] if _norm(w["name"]) not in unavailable_warehouses]
-        network["routes"] = [r for r in network["routes"]
-                             if _norm(r["from_location"]) not in unavailable_warehouses
+        blocked_ids = {str(x) for x in changes.get("blocked_route_ids", [])}
+        network["routes"] = [r for r in network["routes"] if str(r["route_id"]) not in blocked_ids
+                             and _norm(r["from_location"]) not in unavailable_warehouses
                              and _norm(r["to_location"]) not in unavailable_warehouses]
         candidates = []
         route_without_feasible_vehicle = None
@@ -448,6 +481,14 @@ class PlanningService:
                 candidate = self._candidate(legs, request, network["vehicles"], changes, network["warehouses"])
                 if legs and candidate is None and route_without_feasible_vehicle is None:
                     route_without_feasible_vehicle = legs
+                if candidate and request.allowed_modes == ["multimodal"] and candidate["mode"] != "multimodal":
+                    continue
+
+                if candidate and request.required_mode_sequence:
+                    actual_sequence = _compressed_mode_sequence(candidate.get("route_legs") or [])
+
+                    if actual_sequence != list(request.required_mode_sequence):
+                        continue
                 if candidate and not any(x["route_legs"] == candidate["route_legs"] for x in candidates):
                     candidates.append(candidate)
         allocation = self.allocate_inventory(network["warehouses"], request.source, request.shipment.quantity)
@@ -498,7 +539,10 @@ class PlanningService:
             }
         from backend.operations.plan_journeys import remember
         remember(user_id, ranked)
-        return {"planning_request": request.model_dump(mode="json"), "candidate_plans": ranked,
+        return {"planning_request": request.model_dump(mode="json"),
+                "requested_source": requested_source,
+                "requested_destination": requested_destination,
+                "candidate_plans": ranked,
                 "recommended_plan": recommended, "reason": reason, "comparison": comparison,
                 "recommended_plan_id":recommended["plan_id"] if recommended else None,
                 "explanation_inputs":{"recommended":recommended,"comparisons":comparison} if recommended else None,
@@ -577,7 +621,7 @@ class PlanningService:
     def disruption_mitigation(self,user_id:int,request:PlanningRequest,changes:dict)->dict:
         scenario=self.create_scenario(user_id,request,changes)
         scenario["affected_resources"]={k:v for k,v in changes.items() if k in {
-            "blocked_routes","unavailable_vehicles","unavailable_warehouses","risk_delta","allowed_modes"
+            "blocked_routes","blocked_route_ids","unavailable_vehicles","unavailable_warehouses","risk_delta","allowed_modes"
         }}
         scenario["recovery_plan"]=scenario["scenario"].get("recommended_plan")
         scenario["alternatives"]=scenario["scenario"].get("candidate_plans",[])
@@ -720,12 +764,14 @@ class PlanningService:
         result["inventory_case"]={"sku":sku,"required_quantity":quantity,"network_available":total}
         return result
 
-    def breakdown_recovery(self,user_id:int,vehicle_label:str,current_location:str,destination:str,weight:float,deadline=None,plan_id=None,shipment_id=None)->dict:
+    def breakdown_recovery(self,user_id:int,vehicle_label:str,current_location:str,destination:str,weight:float,deadline=None,plan_id=None,shipment_id=None,changes=None)->dict:
         if not current_location:
             return {"recovery_plan":None,"reason":"Additional breakdown location is required.","missing_fields":["current_location"]}
         if isinstance(deadline,str):
             deadline=datetime.fromisoformat(deadline.replace("Z","+00:00"))
         network=copy.deepcopy(self.load_network(user_id))
+        changes = changes or {}
+        network["routes"] = [r for r in network["routes"] if str(r["route_id"]) not in {str(x) for x in changes.get("blocked_route_ids", [])}]
         broken=next((v for v in network["vehicles"] if str(v.get("label"))==vehicle_label),None)
         if broken is None:
             return {"recovery_plan":None,"reason":"Failed vehicle is not present in the loaded network.","replacement_vehicles":[]}
@@ -751,7 +797,7 @@ class PlanningService:
                         continue
                     moved.append({**v,"current_location":current_location,
                                   "max_range_km":float(v["max_range_km"])-approach_distance if v.get("max_range_km") else None})
-                recovery=self.plan(user_id,request.model_copy(update={"allowed_modes":[mode]}),{**network,"vehicles":moved})
+                recovery=self.plan(user_id,request.model_copy(update={"allowed_modes":[mode]}),{**network,"vehicles":moved},changes=changes)
                 plan=recovery.get("recommended_plan")
                 if not plan:
                     continue
@@ -933,7 +979,13 @@ class PlanningService:
 
     def create_scenario(self, user_id: int, request: PlanningRequest, changes: dict, baseline: dict | None = None) -> dict:
         supported = {"demand_quantity", "demand_weight_kg", "deadline", "allowed_modes", "cost_multiplier",
-                     "inventory_changes", "fuel_cost_multiplier", "blocked_routes", "unavailable_vehicles", "unavailable_warehouses", "risk_delta"}
+                     "inventory_changes", "fuel_cost_multiplier", "blocked_routes", "blocked_route_ids", "unavailable_vehicles", "unavailable_warehouses", "risk_delta"}
+        for key in ("fuel_cost_multiplier", "cost_multiplier"):
+            if key in changes and float(changes[key])<=0:
+                raise ValueError(key+" must be positive")
+        for update in changes.get("inventory_changes",[]):
+            if float(update.get("inventory",-1))<0:
+                raise ValueError("Scenario inventory must be nonnegative")
         unknown = set(changes)-supported
         if unknown:
             raise ValueError("Unsupported scenario changes: " + ", ".join(sorted(unknown)))
@@ -1005,6 +1057,10 @@ class PlanningService:
                     ids=[r[0] for r in conn.execute("SELECT route_id FROM nodes WHERE user_id=? AND lower(from_location)=lower(?) AND lower(to_location)=lower(?) UNION SELECT route_id FROM nodes_air WHERE user_id=? AND lower(from_location)=lower(?) AND lower(to_location)=lower(?)",(user_id,pair[0],pair[1],user_id,pair[0],pair[1]))]
                     for route_id in ids:
                         conn.execute("INSERT INTO route_conditions(user_id,route_id,operational_risk,reliability,status) VALUES(?,?,1,0,'closed') ON CONFLICT(user_id,route_id) DO UPDATE SET operational_risk=1,reliability=0,status='closed'",(user_id,route_id))
+                for route_id in changes.get("blocked_route_ids",[]):
+                    known=conn.execute("SELECT route_id FROM nodes WHERE user_id=? AND route_id=? UNION SELECT route_id FROM nodes_air WHERE user_id=? AND route_id=?",(user_id,route_id,user_id,route_id)).fetchone()
+                    if not known:raise ValueError("Scenario route ID is not in the owner's network")
+                    conn.execute("INSERT INTO route_conditions(user_id,route_id,operational_risk,reliability,status) VALUES(?,?,1,0,'closed') ON CONFLICT(user_id,route_id) DO UPDATE SET operational_risk=1,reliability=0,status='closed'",(user_id,route_id))
                 applied_at=datetime.now(timezone.utc).isoformat()
                 conn.execute("UPDATE planning_scenarios SET status='applied',updated_at=?,applied_at=? WHERE scenario_id=?", (applied_at,applied_at,scenario_id))
                 plan = item["scenario"]["recommended_plan"]

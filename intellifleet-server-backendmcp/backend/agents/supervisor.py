@@ -61,10 +61,8 @@ OBJECTIVE_ALIASES = {
     "lowest-risk": ("risk", "safe", "safest", "reliable", "reliability"),
     "balanced": ("balance", "best-overall", "best-tradeoff", "tradeoff"),
 }
-MODE_ALIASES = {
-    "ground": "road", "truck": "road", "road-transport": "road",
-    "express": "air", "air-express": "air", "flight": "air", "air-transport": "air",
-}
+from backend.planning.models import MODE_ALIASES, normalize_modes
+
 
 
 def _is_mode_comparison(message: str) -> bool:
@@ -119,10 +117,7 @@ def _canonicalize_planning_values(values: dict) -> dict:
     if "allowed_modes" not in values and isinstance(values.get("modes"), list):
         values["allowed_modes"] = values.pop("modes")
     if isinstance(values.get("allowed_modes"), list):
-        values["allowed_modes"] = list(dict.fromkeys(
-            MODE_ALIASES.get(str(mode).strip().casefold().replace(" ", "-"),
-                             str(mode).strip().casefold()) for mode in values["allowed_modes"]
-        ))
+        values["allowed_modes"] = normalize_modes(values["allowed_modes"])
     if values.get("risk_constraint") is not None and values.get("max_risk") is None:
         values["max_risk"] = values.pop("risk_constraint")
     if values.get("target_margin") is None:
@@ -191,7 +186,7 @@ def _route_text(plan: dict) -> str:
         return "No feasible route legs were found."
     return "\n".join(
         f"- {leg.get('from_location')} → {leg.get('to_location')} "
-        f"({leg.get('route_type', 'configured')}, {leg.get('distance')} km, {leg.get('duration')} hours)"
+        f"({leg.get('route_type', 'configured')}, Route ID: {leg.get('route_id')}, {leg.get('distance')} km, {leg.get('duration')} hours)"
         for leg in legs
     )
 
@@ -236,13 +231,28 @@ def _vehicle_text(plan: dict, shipment: dict) -> str:
         return "No currently available compatible vehicle covers this load."
     total=shipment.get("weight_kg")
     displayed=[]; allocated=0.0
+    is_multimodal = str(plan.get("mode") or "").casefold() == "multimodal"
+
     for index,vehicle in enumerate(vehicles):
         raw=float(vehicle.get("assigned_load_kg",total or 0))
-        load=round(float(total)-allocated,2) if total is not None and index==len(vehicles)-1 else round(raw,2)
-        allocated+=load
+
+        # Multimodal vehicles are sequential carriers of the SAME shipment.
+        # Do not subtract prior segment loads from later segments.
+        if is_multimodal:
+            load=round(raw,2)
+        else:
+            # For parallel/multi-vehicle assignment, preserve the existing
+            # final-vehicle rounding correction.
+            load=(
+                round(float(total)-allocated,2)
+                if total is not None and index==len(vehicles)-1
+                else round(raw,2)
+            )
+            allocated+=load
+
         shown=f"{load:,.2f}".rstrip("0").rstrip(".")
         displayed.append(
-            f"- {vehicle.get('label') or vehicle.get('id')} ({vehicle.get('type')}): capacity {vehicle.get('capacity')} kg, "
+            f"- {vehicle.get('label') or vehicle.get('id')} (Vehicle ID: {vehicle.get('id')}; {vehicle.get('type')}): capacity {vehicle.get('capacity')} kg, "
             f"assigned load {shown} kg, utilization {vehicle.get('utilization_percentage')}%"
         )
     return "\n".join(displayed)
@@ -257,7 +267,7 @@ def _sla_text(plan: dict) -> str:
 
 
 def _format_planning_result(result: dict, user_message: str = "") -> str:
-    details = any(term in user_message.casefold() for term in ("breakdown", "explain calculation", "show details", "scoring", "deterministic score", "normalized", "weighted contribution"))
+    details = any(term in user_message.casefold() for term in ("compare all feasible", "breakdown", "explain calculation", "show details", "scoring", "deterministic score", "normalized", "weighted contribution"))
     """Complete deterministic customer response; every number is copied from planner output."""
     if result.get("scope")=="international" and result.get("requested_multimodal_feasible") is False:
         direct=result.get("recommended_plan") or {}
@@ -429,13 +439,17 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
     request = result.get("planning_request") or {}
     shipment = request.get("shipment") or {}
     objective=request.get("objective","balanced")
-    product=plan.get("product",plan.get("mode","selected plan"))
+    product="Multimodal / Express" if plan.get("mode")=="multimodal" else plan.get("product",plan.get("mode","selected plan"))
     objective_reason={
         "cheapest":f"It has the lowest calculated operational cost among the feasible options.",
         "fastest":f"It has the shortest calculated ETA among the feasible options.",
         "lowest-risk":f"It has the lowest calculated disruption risk among the feasible options.",
         "balanced":f"It provides the strongest calculated balance of cost, time, reliability, risk and utilization.",
     }.get(objective,"It has the best deterministic result for the requested objective.")
+    def requested_label(key):
+        requested=result.get('requested_'+key) or request.get(key)
+        canonical=request.get(key)
+        return f"{requested} ({canonical})" if requested and canonical and requested.casefold()!=canonical.casefold() else requested
     pricing_requested=any(term in user_message.casefold() for term in ("price it","pricing","revenue","profit","margin","selling price"))
     cost_line=f"Operational cost: {_money(plan.get('operational_cost',0))}."
     if pricing_requested:
@@ -444,7 +458,7 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
     parts = [
         f"Recommended plan: {product}.",
         f"Why: {objective_reason}",
-        f"Shipment: {request.get('source')} → {request.get('destination')}; weight {shipment.get('weight_kg')} kg; quantity {shipment.get('quantity')}.",
+        f"Shipment: {requested_label('source')} → {requested_label('destination')}; weight {shipment.get('weight_kg')} kg; quantity {shipment.get('quantity')}.",
         f"Route:\n{_route_text(plan)}",
         f"Vehicles:\n{_vehicle_text(plan, shipment)}",
         cost_line + ("\n" + _breakdown_text("Cost breakdown", plan.get("cost_breakdown", {})) if details else ""),
@@ -466,7 +480,7 @@ def _format_planning_result(result: dict, user_message: str = "") -> str:
         delta_lines=[
             "What changed (before → after):",
             f"- Mode: {_mode_label(before)} → {_mode_label(plan)}",
-            f"- Route: {before_route} → {after_route}",
+            f"- Route before: {before_route}\n- Route after: {after_route}",
             f"- Vehicle: {before_vehicle} → {after_vehicle}",
             f"- Cost: {_money(before_cost)} → {_money(after_cost)} (delta {_money(float(after_cost)-float(before_cost))})",
             f"- ETA: {before_eta} hours → {after_eta} hours (delta {float(after_eta)-float(before_eta):+.2f} hours)",
@@ -616,11 +630,11 @@ def _objective_from_message(message: str) -> str | None:
     text = message.casefold()
     if any(x in text for x in ("cost matters most", "recommend the cheapest", "lowest cost", "minimum cost", "minimize cost", "cheapest")):
         return "cheapest"
-    if any(x in text for x in ("risk matters most", "recommend the safest", "lowest risk", "minimize risk", "most reliable", "safest")):
+    if any(x in text for x in ("risk matters most", "recommend the safest", "lowest risk", "lowest-risk", "least risk", "minimize risk", "most reliable", "safest")):
         return "lowest-risk"
     if any(x in text for x in ("recommend the fastest", "fastest feasible", "minimum eta", "quickest", "earliest", "fastest")):
         return "fastest"
-    if any(x in text for x in ("best overall", "best tradeoff", "balanced objective", "balance cost")):
+    if any(x in text for x in ("best overall", "best tradeoff", "balanced", "balance cost", "balance of cost", "cost-efficient", "cost efficient", "economical while reasonably fast")):
         return "balanced"
     return None
 
@@ -705,6 +719,54 @@ def _specialized_operation_params(message: str) -> dict | None:
     return None
 
 
+
+def _enforce_message_mode_constraints(message: str, params: dict) -> dict:
+    """Deterministically enforce explicit transport-mode requirements."""
+    from backend.planning.intent import explicit_multimodal_request
+
+    result = dict(params or {})
+    text = str(message or "").casefold()
+
+    # supply_chain_planning_operation uses a canonical envelope:
+    # {"operation": "...", "parameters": {...}}
+    if isinstance(result.get("parameters"), dict):
+        target = dict(result["parameters"])
+        nested = True
+    else:
+        target = dict(result)
+        nested = False
+
+    # Strongest rule: explicit Road/Ground + Air requirement means
+    # multimodal ONLY. Never allow Ground-only/Air-only fallback.
+    if explicit_multimodal_request(message):
+        target["allowed_modes"] = ["multimodal"]
+
+        # Preserve an explicitly requested ordered transport chain.
+        if re.search(
+            r'\b(?:ground|road|surface|truck)\b.*\b(?:air|airway|flight|aircraft)\b.*\b(?:ground|road|surface|truck)\b',
+            text,
+            re.I | re.S,
+        ):
+            target["required_mode_sequence"] = ["road", "air", "road"]
+
+    else:
+        has_road = bool(re.search(r"\b(?:ground|road|surface|truck)\b", text))
+        has_air = bool(re.search(r"\b(?:air|airway|flight|aircraft)\b", text))
+
+        if has_road and has_air:
+            target["allowed_modes"] = ["multimodal"]
+        elif has_air:
+            target["allowed_modes"] = ["air"]
+        elif has_road:
+            target["allowed_modes"] = ["road"]
+
+    if nested:
+        result["parameters"] = target
+    else:
+        result = target
+
+    return result
+
 def _context_from_result(result: dict, previous: dict | None = None) -> dict:
     """Create the per-session planning context from deterministic tool output."""
     context = dict(previous or {})
@@ -731,6 +793,18 @@ def _context_from_result(result: dict, previous: dict | None = None) -> dict:
         for key in ("source", "destination", "objective", "deadline"):
             if request.get(key) is not None:
                 context[key] = request[key]
+
+        # Preserve the user's original lane wording separately from the
+        # canonical network locations returned by the planner.
+        if result.get("requested_source"):
+            context["requested_source"] = result["requested_source"]
+        elif request.get("requested_source"):
+            context["requested_source"] = request["requested_source"]
+
+        if result.get("requested_destination"):
+            context["requested_destination"] = result["requested_destination"]
+        elif request.get("requested_destination"):
+            context["requested_destination"] = request["requested_destination"]
         if shipment.get("weight_kg") is not None:
             context["weight_kg"] = shipment["weight_kg"]
         if shipment.get("quantity") is not None:
@@ -772,7 +846,7 @@ def _is_context_route_disruption(message: str) -> bool:
     """Recognize a route outage plus a reference to the active shipment, not city-specific wording."""
     lower = message.casefold()
     outage = re.search(r"\b(?:unavailable|blocked|closed|cancelled|canceled|disrupted|disruption)\b", lower)
-    reference = re.search(r"\b(?:current|this|my|new|direct)\s+(?:selected\s+)?(?:route|plan|shipment)\b|\breplan\s+it\b", lower)
+    reference = re.search(r"\b(?:current|this|my|same|new|direct|replan)\b", lower)
     return bool(outage and reference and "route" in lower)
 
 
@@ -874,7 +948,7 @@ def _contextual_planning_params(message: str, params: dict, context: dict | None
             matches = [leg for leg in legs if all(
                 re.search(r"(?<!\w)" + re.escape(name.strip()) + r"(?!\w)", str(leg.get(field) or ""), re.I)
                 for name, field in zip(named.groups(), ("from_location", "to_location")))]
-        if len(matches) != 1:
+        if not matches or (len(matches) != 1 and not re.search(r"\b(?:blocked|cannot be used)\b", lower)):
             return resolved, "Which leg of the current route is unavailable? Please name its start and end locations."
         blocked = matches[0]
         if not blocked.get("from_location") or not blocked.get("to_location"):
@@ -886,9 +960,10 @@ def _contextual_planning_params(message: str, params: dict, context: dict | None
             modes = [mode] if mode in {"road", "air", "multimodal"} else ["road", "air", "multimodal"]
         changes = dict(context.get("planning_changes") or {})
         pairs = list(changes.get("blocked_routes") or [])
-        pair = [blocked["from_location"], blocked["to_location"]]
-        if pair not in pairs:
-            pairs.append(pair)
+        for blocked in matches:
+            pair = [blocked["from_location"], blocked["to_location"]]
+            if pair not in pairs:
+                pairs.append(pair)
         changes["blocked_routes"] = pairs
         nested = {**inherited, **base, "shipment": {**(inherited.get("shipment") or {}), **shipment},
                   "allowed_modes": modes, "changes": changes}
@@ -956,6 +1031,13 @@ def _contextual_planning_params(message: str, params: dict, context: dict | None
                           "sla_plan", "compare_modes", "global_plan", "create_scenario", "what_if", "disruption_mitigation", "mitigate_disruption"}
     if operation in request_operations:
         nested = _canonicalize_planning_values(nested)
+        if not context.get("selected_plan_id") and re.search(r"normal\s+(?:ground|road)\s+route.*(?:disrupted|blocked)", lower):
+            operation = "route_alternatives"
+            nested["changes"] = {**(nested.get("changes") or {}), "normal_ground_disrupted": True}
+            if "air" in lower:
+                nested["allowed_modes"] = ["road", "air", "multimodal"]
+        if re.search(r"\broad\s*(?:\+|and)\s*air\b", lower):
+            nested["allowed_modes"] = ["multimodal"]
         inherited = {**base, **(context.get("planning_request") or {})}
         explicit = {key: value for key, value in nested.items() if value is not None}
         nested = {**inherited, **explicit, "shipment": {
@@ -1326,7 +1408,7 @@ If warehouses list is empty, ask user to upload CSV first."""
     # Main entry point
     # ------------------------------------------------------------------
 
-    async def process_message(self, user_id: int, message: str) -> Dict[str, Any]:
+    async def process_message(self, user_id: int, message: str, selected_id: str | None = None) -> Dict[str, Any]:
         logger.info("=" * 80)
         logger.info(f"PROCESSING MESSAGE - User: {user_id}  |  '{message}'")
         logger.info("=" * 80)
@@ -1345,6 +1427,14 @@ If warehouses list is empty, ask user to upload CSV first."""
         # ── 1. Load history & record the incoming user message ──────────
         history = await self._load_history(user_id)
         active_context = await get_active_planning_context(user_id) or {}
+        from backend.planning.lifecycle import resolve, is_new, record
+        session_context = active_context
+        if is_new(message):
+            active_context = {"journeys": session_context.get("journeys", {})}
+        elif active_context.get("selected_plan_id"):
+            active_context, reference_error = resolve(active_context, message, selected_id)
+            if reference_error:
+                return {"success": True, "response": reference_error, "actions": []}
         history = await self._append_and_save(user_id, history, "user", message)
 
         try:
@@ -1511,6 +1601,7 @@ STRICT RULES:
                             tool_name = "supply_chain_planning_operation"
                             tool = next(t for t in self.tools if t.name == tool_name)
                         params = _adapt_canonical_params(tool_name, params)
+                        params = _enforce_message_mode_constraints(message, params)
 
                     # Validate schema
                     try:
@@ -1540,7 +1631,7 @@ STRICT RULES:
                     result = await tool.ainvoke(validated.model_dump())
                     logger.info(f"✅ Tool done in {time.time() - tool_start:.2f}s")
 
-                    if active_context and (tool_name == "unified_supply_chain_plan" or
+                    if active_context.get("selected_plan_id") and (tool_name == "unified_supply_chain_plan" or
                             params.get("operation") in {"route_alternatives","breakdown_recovery","plan"}):
                         result["_active_plan_before"] = {
                             "mode": _actual_mode({"route_legs": active_context.get("route_legs") or []}),
@@ -1552,7 +1643,7 @@ STRICT RULES:
                             "sla_met": active_context.get("sla_met"),
                         }
 
-                    if active_context and (tool_name == "unified_supply_chain_plan" or
+                    if active_context.get("selected_plan_id") and (tool_name == "unified_supply_chain_plan" or
                             params.get("operation") in {"route_alternatives", "plan"}):
                         _attach_replan_baseline(result, active_context, params.get("parameters", {}).get("changes"))
 
@@ -1564,14 +1655,16 @@ STRICT RULES:
                         )
                         return {"success": True, "response": failure_msg, "actions": []}
 
+                    if tool_name in {"unified_supply_chain_plan", "supply_chain_planning_operation"}:
+                        updated_context = _context_from_result(result, active_context)
+                        updated_context = record(user_id, result, active_context, updated_context,
+                                                 revise=bool(active_context.get("selected_plan_id")))
+                        if updated_context:
+                            await set_active_planning_context(user_id, updated_context)
+
                     # Build conversational reply
                     llm_reply = await self._llm_response(message, tool_name, result, user_id)
                     result.pop("_active_plan_before", None)
-
-                    if tool_name in {"unified_supply_chain_plan", "supply_chain_planning_operation"}:
-                        updated_context = _context_from_result(result, active_context)
-                        if updated_context:
-                            await set_active_planning_context(user_id, updated_context)
 
                     # Persist the assistant's reply
                     # history = await self._append_and_save(

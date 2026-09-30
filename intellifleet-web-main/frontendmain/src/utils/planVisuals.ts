@@ -12,7 +12,7 @@ export interface Assignment {
   assigned_load_kg?: number; utilization_percentage?: number;
 }
 export interface VisualPlan {
-  plan_id?: string; mode: string; route_legs: PlanLeg[]; vehicles?: Assignment[];
+  plan_id?: string; journey_id?: string; revision?: number; mode: string; route_legs: PlanLeg[]; vehicles?: Assignment[];
   leg_assignments?: {route_legs: PlanLeg[]; vehicles: Assignment[]}[];
   operational_cost?: number; duration_hours?: number; risk_score?: number;
   reliability?: number; vehicle_utilization?: number; distance_km?: number;

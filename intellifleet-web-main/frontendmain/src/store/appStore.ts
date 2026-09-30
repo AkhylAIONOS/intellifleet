@@ -174,7 +174,8 @@ export const useAppStore = create<AppState>()(
                 const candidates = recovery ? [data.recovery_plan?.recommended_plan, data.recovery_plan] :
                     [data.approved_plan, data.recommended_plan, ...(data.allocation || []).map((item: any) => item.plan)];
                 const candidate = candidates.find((item: any) => item && typeof item === 'object' && (item.plan_id || item.route_legs || item.vehicles));
-                const plan: VisualPlan | undefined = candidate ? normalizeVisualPlan(candidate) : undefined;
+                const registeredJourney = data.movement?.journey_id || (data.movement?.shipment_id?.startsWith('PLAN-') ? data.movement.shipment_id.slice(5) : undefined);
+                const plan: VisualPlan | undefined = candidate ? normalizeVisualPlan(registeredJourney && candidate.journey_id!==registeredJourney ? {...candidate,journey_id:registeredJourney} : candidate) : undefined;
                 if (!plan) {
                     if (recovery || Object.prototype.hasOwnProperty.call(data, 'recommended_plan'))
                         set({planNotice: state.selectedPlan ? 'No feasible revised plan — current plan retained.' : 'No feasible plan available.', planComparison:null});
@@ -186,32 +187,33 @@ export const useAppStore = create<AppState>()(
                     ? {before:modeBefore, after:modeAfter, beforeLabel:'Ground', afterLabel:'Express', differences:data.express_vs_ground ? {
                         cost_difference:data.express_vs_ground.additional_cost, eta_difference_hours:-data.express_vs_ground.time_saved_hours,
                         risk_difference:data.express_vs_ground.risk_difference} : undefined}
-                    : (before || state.selectedPlan) ? {before:before || state.selectedPlan, after:plan,
+                    : (before || (state.selectedPlan && (!plan.journey_id || state.selectedPlan.journey_id===plan.journey_id))) ? {before:before || state.selectedPlan!, after:plan,
                         beforeLabel:before ? 'Baseline' : 'Current', afterLabel:'Revised', differences:data.comparison} : null;
                 const path = plan.route_legs.flatMap(legPoints);
                 // The snapshot remains useful even when network geometry is missing.
                 const request = data.planning_request || data.scenario?.planning_request || {};
                 const source = request.source || plan.route_legs[0]?.from_location || 'Origin unavailable';
                 const destination = request.destination || plan.route_legs.at(-1)?.to_location || 'Destination unavailable';
-                const identity = String(plan.plan_id || `${source}-${destination}`);
+                const identity = String(plan.journey_id || plan.plan_id || `${source}-${destination}`);
                 let routeId = -1 - Math.abs(identity.split('').reduce((value: number, character: string) => ((value << 5) - value) + character.charCodeAt(0), 0));
                 while (state.activeRoutes[routeId] && !state.activeRoutes[routeId].routeData?.planning) routeId--;
                 const route: ActiveRoute = { id: routeId, source, destination,
                     intermediates: plan.route_legs.slice(0,-1).map((leg: any) => leg.to_location),
                     waypoints: [source,...plan.route_legs.slice(0,-1).map(leg => leg.to_location),destination], created: new Date(), isActive: true,
                     routeData: { optimal_routes: [{path,distance:plan.distance_km,duration:plan.duration_hours,isOptimal:true}],
-                        route_cost:plan.operational_cost, planning:true, legs:plan.route_legs, plan_id:plan.plan_id,
+                        route_cost:plan.operational_cost, planning:true, legs:plan.route_legs, plan_id:plan.plan_id, journey_id:plan.journey_id, revision:plan.revision,
                         assigned_vehicles:plan.vehicles || [] } };
                 set((state) => {
-                    const retainedRoutes = state.activeRoutes;
-                    const resetVehicles = state.vehicles.map(vehicle => state.planningVehicleBackups[vehicle.id] || vehicle);
-                    const backups: Record<number, Vehicle> = {};
+                    const retainedRoutes = Object.fromEntries(Object.entries(state.activeRoutes).filter(([,existing]) =>
+                        !plan.journey_id || existing.routeData?.journey_id!==plan.journey_id));
+                    const resetVehicles = state.vehicles.map(vehicle => (!plan.journey_id || vehicle.assigned_route?.route_id===routeId) ? state.planningVehicleBackups[vehicle.id] || vehicle : vehicle);
+                    const backups: Record<number, Vehicle> = plan.journey_id ? {...state.planningVehicleBackups} : {};
                     const assignedIds = new Set<number>();
                     const nextVehicles = resetVehicles.map(vehicle => {
                         const assigned = (plan.vehicles || []).find((item:any) => String(item.id)===String(vehicle.id) || (item.label != null && item.label===vehicle.label));
                         if (!assigned) return vehicle;
                         assignedIds.add(vehicle.id);
-                        backups[vehicle.id] = vehicle;
+                        backups[vehicle.id] = state.planningVehicleBackups[vehicle.id] || vehicle;
                         return {...vehicle,status:'assigned' as const,is_available:false,current_location:source,
                             current_position:path[0] || vehicle.current_position,capacity:assigned.capacity ?? vehicle.capacity,
                             assigned_route:{route_id:routeId,route_data:route.routeData,waypoints:[source,destination],source,destination,

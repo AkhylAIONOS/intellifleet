@@ -169,6 +169,20 @@ export const useRouteAgent = () => {
     const handleAction = async (action: ChatAction) => {
         //console.log('Executing Action:', action);
         switch (action.type) {
+            case 'set_journey_display': {
+                const state=useOperationsStore.getState();
+                const ids=action.data.simulation_ids as string[];
+                state.patch({enabled:true,viewMode:'AI',filter:'ALL',fit:state.fit+1,aiDisplayMode:action.data.mode,
+                    aiVisibleSimulationIds:ids,selected:ids.includes(state.selected || '')?state.selected:ids[0] || null,
+                    aiSimulationIds:[...new Set([...state.aiSimulationIds,...ids])],
+                    movements:[...state.movements.filter(m=>!ids.includes(m.simulation_id)),...action.data.movements]});
+                break;
+            }
+            case 'movement_updated': {
+                const state=useOperationsStore.getState();
+                state.patch({movements:[...state.movements.filter(m=>m.simulation_id!==action.data.simulation_id),action.data],selected:action.data.simulation_id});
+                break;
+            }
             case 'show_movements': {
                 const state=useOperationsStore.getState();
                 state.patch({
@@ -478,6 +492,51 @@ export const useRouteAgent = () => {
     };
 
     const handlePlanningResult = async (data: any) => {
+        if(data.movement){
+            const state=useOperationsStore.getState();
+            const incoming=data.movement;
+
+            const previous=state.movements.find(m =>
+                (incoming.journey_id && m.journey_id===incoming.journey_id) ||
+                m.simulation_id===incoming.simulation_id
+            );
+
+            const routeSignature=(movement:any)=>{
+                if(!movement)return '';
+                const route=Array.isArray(movement.route)?movement.route:[];
+                const middle=route.length?route[Math.floor(route.length/2)]:null;
+                const segmentIds=(movement.journey_segments || [])
+                    .map((segment:any)=>segment.route_id ?? `${segment.start_index}-${segment.end_index}-${segment.mode}`)
+                    .join(',');
+
+                return JSON.stringify({
+                    route_id:movement.route_id,
+                    distance:movement.route_distance_km,
+                    length:route.length,
+                    first:route[0] || null,
+                    middle,
+                    last:route.length?route[route.length-1]:null,
+                    segmentIds,
+                });
+            };
+
+            const geometryChanged=!previous ||
+                routeSignature(previous)!==routeSignature(incoming);
+
+            state.patch({
+                enabled:true,
+                viewMode:'AI',
+                filter:'ALL',
+                selected:incoming.simulation_id,
+                fit:geometryChanged ? state.fit+1 : state.fit,
+                aiSimulationIds:[...new Set([...state.aiSimulationIds,incoming.simulation_id])],
+                movements:[
+                    ...state.movements.filter(m=>m.simulation_id!==incoming.simulation_id),
+                    incoming
+                ]
+            });
+        }
+
         const routeId = useAppStore.getState().applyPlanningMapPlan(data);
         if (routeId != null) await ensurePlanMovement(useAppStore.getState().selectedPlan);
     };
