@@ -3,6 +3,7 @@ import { planningApi, type PlanningInput } from '../api/planning';
 import './PlanningPanel.css';
 import { PlanSnapshot, PlanDelta } from './PlanVisuals';
 import { useAppStore } from '../store/appStore';
+import { ensurePlanMovement } from '../utils/planMovement';
 
 export const planResultPanelReducer=(_visible:boolean,action:'show'|'close')=>action==='show';
 
@@ -25,7 +26,10 @@ export const PlanningPanel = () => {
   };
   const update = (key: string, value: unknown) => setInput({ ...input, [key]: value });
 
-  const showOnMap=(recommended:any)=>applyPlanningMapPlan({planning_request:input,recommended_plan:recommended});
+  const showOnMap=(recommended:any)=>{
+    applyPlanningMapPlan({planning_request:input,recommended_plan:recommended});
+    void ensurePlanMovement(recommended);
+  };
   const plan = async () => {
     setBusy(true); setError('');
     try { const value=await planningApi.createPlan(input); setResult(value); setActivePlanId(value.recommended_plan_id); if(value.recommended_plan){showOnMap(value.recommended_plan); dispatchResultVisibility('show');}else{setError(value.reason || value.message || 'No feasible plan for these inputs. Try another mode, load or route.');} } catch(error){setError(describeError(error));} finally { setBusy(false); }

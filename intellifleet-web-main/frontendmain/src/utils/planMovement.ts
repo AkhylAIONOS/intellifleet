@@ -12,7 +12,10 @@ export function ensurePlanMovement(plan:any):Promise<void> {
   const journeyId=String(plan.journey_id || id);
   const scope=useOperationsStore.getState();
   const generation=scope.aiSessionGeneration;
-  const existing=scope.movements.find(m=>m.shipment_id===`PLAN-${journeyId}`);
+  const existing=scope.movements.find(m =>
+    m.shipment_id===`PLAN-${journeyId}` &&
+    String(m.plan_id || '')===id
+  );
   if(existing && (!plan.revision || existing.revision===plan.revision)){
     if(!existing.stopped)scope.patch({enabled:true,viewMode:'AI',filter:'ALL',selected:existing.simulation_id,
       aiSimulationIds:[...new Set([...scope.aiSimulationIds,existing.simulation_id])]});
@@ -38,7 +41,7 @@ export function ensurePlanMovement(plan:any):Promise<void> {
       }
     } catch(error:any) {
       const detail=error?.response?.data?.detail;
-      if(useOperationsStore.getState().aiSessionGeneration===generation)useAppStore.setState({planNotice:typeof detail==='string'?detail:'Road journey unavailable. Check the routing service and retry.'});
+      if(useOperationsStore.getState().aiSessionGeneration===generation)useAppStore.setState({planNotice:typeof detail==='string'?detail:'Plan journey unavailable. Check the routing service and retry.'});
     }
   })().finally(()=>pending.delete(key));
   pending.set(key,task);return task;
