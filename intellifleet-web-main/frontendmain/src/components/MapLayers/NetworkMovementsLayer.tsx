@@ -29,6 +29,27 @@ export function NetworkMovementsLayer(){
   if(fitted.current!==state.fit){map.fitBounds(entities.flatMap(m=>m.route.length?m.route:[[m.latitude!,m.longitude!] as [number,number]]),{padding:[40,40],maxZoom:8});fitted.current=state.fit;}
  },[state.enabled,state.fit,entities,map]);
  useEffect(()=>{const m=entities.find(m=>m.simulation_id===state.selected);if(!m?.route.length)return;if(selected.current!==state.selected){vehicleFollower(map).select(m.simulation_id,[m.latitude!,m.longitude!]);selected.current=state.selected;}vehicleFollower(map).update(m.simulation_id,[m.latitude!,m.longitude!],(m.progress||0)>0);},[state.selected,entities,map]);
+
+ const selectedMovement=entities.find(m=>m.simulation_id===state.selected);
+ const mapRenderKey=selectedMovement
+   ? `${selectedMovement.simulation_id}:${selectedMovement.plan_id||''}:${selectedMovement.route_id||''}:${selectedMovement.route?.length||0}`
+   : `${state.selected||''}:${entities.length}`;
+
+ useEffect(()=>{
+   const refresh=()=>map.invalidateSize(false);
+
+   // Refresh once immediately and again after React/layout transitions settle.
+   refresh();
+   const frame=window.requestAnimationFrame(refresh);
+   const shortTimer=window.setTimeout(refresh,75);
+   const layoutTimer=window.setTimeout(refresh,250);
+
+   return()=>{
+     window.cancelAnimationFrame(frame);
+     window.clearTimeout(shortTimer);
+     window.clearTimeout(layoutTimer);
+   };
+ },[map,mapRenderKey,state.fit]);
  if(!state.enabled || state.viewMode==='OFF')return null;
  return <>{entities.map(m=><Marker key={movementIdentity(m)} position={[m.latitude!,m.longitude!]} icon={movementIcon(activeCarrier(m).mode,m.heading,m.simulation_id===state.selected,m.status==='SCHEDULE_TEMPLATE')} eventHandlers={{click:()=>state.patch({selected:m.simulation_id})}}>
   <Tooltip><strong>{m.shipment_id} · {activeCarrier(m).mode} · {activeCarrier(m).vehicles.map(v=>v.label || v.id).join(', ')}</strong><br/>{m.origin_station} → {m.gateway}<br/>{m.status} {m.progress==null?'':`${(m.progress*100).toFixed(1)}%`}<br/>ETD {operationalTime(m.scheduled_etd)} · ETA {operationalTime(m.current_eta)}<br/>Delay {m.delay_minutes} min<br/>{m.data_source} / {m.location_source}<br/>{m.route_source || 'Approximate demo geometry'}</Tooltip>
