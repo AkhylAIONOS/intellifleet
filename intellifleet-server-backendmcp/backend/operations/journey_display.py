@@ -7,6 +7,23 @@ def display_intent(message):
     if re.search(r'\b(?:route|vehicle)\s+ids?\b',text) and not re.search(r'\bmap|together|visible\b',text):
         return None
 
+    # Operational planning/recovery requests must never be consumed as
+    # read-only map-display commands merely because they contain words
+    # such as "show", "keep", "shipment" or "only".
+    operational_request = re.search(
+        r'\b(?:'
+        r'unavailable|blocked|closed|outage|'
+        r'disrupt(?:ed|ion)?|'
+        r'replan|reroute|'
+        r'recover(?:y|ed)?|'
+        r'alternative|another\s+feasible|'
+        r'find\s+another|cannot\s+be\s+used'
+        r')\b',
+        text,
+    )
+    if operational_request:
+        return None
+
     # Information queries must be handled by operations/comparison handlers,
     # not consumed as map-display commands merely because they contain
     # words such as "show", "shipment" or "only".

@@ -96,3 +96,16 @@ def test_comparison_member_revision_keeps_two_backend_movements(session):
     assert {k:v for k,v in after.items() if k!='sequence'}=={k:v for k,v in before.items() if k!='sequence'}
     result=answer(1,'Keep both routes visible.',memory)
     assert set(result['actions'][0]['data']['simulation_ids'])=={first,second}
+
+
+def test_display_intent_does_not_consume_air_recovery_request():
+    from backend.operations.journey_display import display_intent
+
+    message = (
+        "The current Air route is unavailable. "
+        "Keep this shipment Air-only and do not use Ground. "
+        "Find another feasible Air recovery if one exists. "
+        "Show the result and explain why if no Air-only recovery is feasible."
+    )
+
+    assert display_intent(message) is None
