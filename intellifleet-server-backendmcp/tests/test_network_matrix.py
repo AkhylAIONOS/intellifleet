@@ -111,3 +111,45 @@ def test_all_loaded_cities_routes_vehicles_and_modes(matrix):
     report={'cities':len(cities),'routes':len(network['routes']),'vehicles':len(network['vehicles']),**counts,'ordered_multimodal_feasible':ordered,'example_pairs':example}
     Path('/private/tmp/unifleet-network-matrix'+('-current' if os.environ.get('UNIFLEET_MATRIX_DB') else '')+'.json').write_text(json.dumps(report,indent=2))
     print(json.dumps(report))
+
+
+def test_network_disruption_recovery_matrix(matrix):
+    from backend.planning.recovery import recover_air
+    network,owner=matrix;service=PlanningService();counts=Counter()
+    for edge in network['routes']:
+        mode=edge['route_type']
+        request=PlanningRequest(source=edge['from_location'],destination=edge['to_location'],shipment={'weight_kg':1},allowed_modes=[mode])
+        # Prove this edge itself is usable, rather than accidentally planning a sibling path.
+        edge_network={**network,'routes':[edge]}
+        baseline=service.plan(owner,request,network=edge_network)['recommended_plan']
+        if not baseline:continue
+        validate_plan(baseline,request,network)
+        changes={'blocked_route_ids':[edge['route_id']]}
+        if mode=='air':
+            counts['air_routes_tested']+=1
+            results=[]
+            for strict in (True,False):
+                result=recover_air(service,owner,request.model_dump(mode='json'),changes,strict=strict,network=network)
+                counts['air_'+('strict' if strict else 'flexible')+('_alternatives_found' if strict and result['recommended_plan'] else '_recoveries_found' if result['recommended_plan'] else '_infeasible')]+=1
+                results.append(result)
+                if strict and result['recommended_plan']:assert {l['route_type'] for l in result['recommended_plan']['route_legs']}=={'air'}
+        else:
+            counts['ground_disruptions_tested']+=1
+            results=[service.plan(owner,request,network=network,changes=changes)]
+            counts['ground_alternate_recoveries' if results[0]['recommended_plan'] else 'ground_infeasible']+=1
+            for objective in ('cheapest','fastest'):
+                objective_request=request.model_copy(update={'objective':objective})
+                results.append(service.plan(owner,objective_request,network=network,changes=changes))
+        for result in results:
+            p=result['recommended_plan']
+            if not p:continue
+            validate_plan(p,request,network)
+            assert edge['route_id'] not in {l['route_id'] for l in p['route_legs']}
+            if p['mode']=='multimodal':counts['multimodal_recoveries']+=1
+            again=service.plan(owner,PlanningRequest(**result['planning_request']),network=network,changes=changes)
+            match=next(x for x in again['candidate_plans'] if [l['route_id'] for l in x['route_legs']]==[l['route_id'] for l in p['route_legs']])
+            for key in ('operational_cost','duration_hours','risk_score'):assert p[key]==match[key]
+    for key in ('air_routes_tested','air_strict_alternatives_found','air_strict_infeasible','air_flexible_recoveries_found','air_flexible_infeasible','ground_disruptions_tested','ground_alternate_recoveries','ground_infeasible','multimodal_recoveries'):
+        counts.setdefault(key,0)
+    Path('/private/tmp/unifleet-recovery-matrix.json').write_text(json.dumps(counts,indent=2))
+    print(json.dumps(counts))

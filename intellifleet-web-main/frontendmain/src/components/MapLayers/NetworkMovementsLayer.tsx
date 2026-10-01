@@ -1,7 +1,7 @@
 import {operationalTime} from '../../utils/operationalTime';
 import {useEffect,useRef} from 'react';
 import {Marker,Polyline,Tooltip,useMap} from 'react-leaflet';
-import {useOperationsStore,movementMatches,movementIdentity,visibleAiMovement} from '../../store/operationsStore';
+import {useOperationsStore,movementMatches,movementIdentity,visibleAiMovement,activeCarrier} from '../../store/operationsStore';
 import {useFedexStore} from '../../store/fedexStore';
 import {movementIcon} from './movementIcon';
 import {vehicleFollower} from '../../utils/vehicleFollow';
@@ -30,8 +30,8 @@ export function NetworkMovementsLayer(){
  },[state.enabled,state.fit,entities,map]);
  useEffect(()=>{const m=entities.find(m=>m.simulation_id===state.selected);if(!m?.route.length)return;if(selected.current!==state.selected){vehicleFollower(map).select(m.simulation_id,[m.latitude!,m.longitude!]);selected.current=state.selected;}vehicleFollower(map).update(m.simulation_id,[m.latitude!,m.longitude!],(m.progress||0)>0);},[state.selected,entities,map]);
  if(!state.enabled || state.viewMode==='OFF')return null;
- return <>{entities.map(m=><Marker key={movementIdentity(m)} position={[m.latitude!,m.longitude!]} icon={movementIcon(m.mode,m.heading,m.simulation_id===state.selected,m.status==='SCHEDULE_TEMPLATE')} eventHandlers={{click:()=>state.patch({selected:m.simulation_id})}}>
-  <Tooltip><strong>{m.shipment_id} · {m.mode}</strong><br/>{m.origin_station} → {m.gateway}<br/>{m.status} {m.progress==null?'':`${(m.progress*100).toFixed(1)}%`}<br/>ETD {operationalTime(m.scheduled_etd)} · ETA {operationalTime(m.current_eta)}<br/>Delay {m.delay_minutes} min<br/>{m.data_source} / {m.location_source}<br/>{m.route_source || 'Approximate demo geometry'}</Tooltip>
+ return <>{entities.map(m=><Marker key={movementIdentity(m)} position={[m.latitude!,m.longitude!]} icon={movementIcon(activeCarrier(m).mode,m.heading,m.simulation_id===state.selected,m.status==='SCHEDULE_TEMPLATE')} eventHandlers={{click:()=>state.patch({selected:m.simulation_id})}}>
+  <Tooltip><strong>{m.shipment_id} · {activeCarrier(m).mode} · {activeCarrier(m).vehicles.map(v=>v.label || v.id).join(', ')}</strong><br/>{m.origin_station} → {m.gateway}<br/>{m.status} {m.progress==null?'':`${(m.progress*100).toFixed(1)}%`}<br/>ETD {operationalTime(m.scheduled_etd)} · ETA {operationalTime(m.current_eta)}<br/>Delay {m.delay_minutes} min<br/>{m.data_source} / {m.location_source}<br/>{m.route_source || 'Approximate demo geometry'}</Tooltip>
  </Marker>)}{entities.filter(m=>m.route.length>1).flatMap(m=>(m.journey_segments?.length ? m.journey_segments : [{start_index:0,end_index:m.route.length-1,mode:m.mode}]).map((segment,index)=><Polyline
    key={`route-${movementIdentity(m)}-${index}`}
    positions={m.route.slice(segment.start_index,segment.end_index+1)}

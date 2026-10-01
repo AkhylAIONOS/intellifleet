@@ -292,7 +292,7 @@ class PlanningService:
             plan = copy.deepcopy(segments[0])
             plan.update(plan_id=str(uuid.uuid4()), mode="multimodal", product="Express", route_legs=legs)
             plan["vehicles"] = [v for segment in segments for v in segment["vehicles"]]
-            plan["leg_assignments"] = [{"route_legs": segment["route_legs"], "vehicles": segment["vehicles"]} for segment in segments]
+            plan["leg_assignments"] = [{"route_legs": segment["route_legs"], "vehicles": segment["vehicles"], "duration_hours": segment["duration_hours"]} for segment in segments]
             plan["distance_km"] = round(sum(x["distance_km"] for x in segments), 2)
             plan["duration_hours"] = round(sum(x["duration_hours"] for x in segments) + .5*(len(segments)-1), 2)
             plan["eta"] = (datetime.now(timezone.utc)+timedelta(hours=plan["duration_hours"])).isoformat()

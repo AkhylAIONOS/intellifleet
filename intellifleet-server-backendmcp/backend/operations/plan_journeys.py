@@ -104,7 +104,13 @@ def _start(owner, plan_id, *, planner_reroute=False):
         from backend.operations.road_routing_engine import road_routing_engine
         geometry = []
         segments = []
+        elapsed = 0.0
+        assignments = plan.get('leg_assignments') or [{'route_legs':legs, 'vehicles':plan['vehicles'], 'duration_hours':plan['duration_hours']}]
         for leg in legs:
+            assignment = next(x for x in assignments if any(l['route_id'] == leg['route_id'] for l in x['route_legs']))
+            travel = sum(float(l.get('duration') or 0) for l in assignment['route_legs'])
+            share = float(leg.get('duration') or 0)/travel if travel else 1/len(assignment['route_legs'])
+            hours = float(assignment.get('duration_hours') or travel)*share
             a = (leg['source_coords']['lat'], leg['source_coords']['lng'])
             b = (leg['destination_coords']['lat'], leg['destination_coords']['lng'])
             road = leg['route_type'].lower() != 'air'
@@ -112,7 +118,15 @@ def _start(owner, plan_id, *, planner_reroute=False):
             start_index = max(0, len(geometry)-1)
             geometry.extend(points if not geometry else points[1:])
             segments.append({'start_index': start_index, 'end_index': len(geometry)-1,
-                             'mode': 'SURFACE' if road else 'AIR', 'route_id': leg.get('route_id')})
+                             'mode': 'SURFACE' if road else 'AIR', 'route_id': leg.get('route_id'),
+                             'from_location':leg['from_location'], 'to_location':leg['to_location'],
+                             'vehicles':deepcopy(assignment['vehicles']), 'duration_hours':hours,
+                             'start_hours':elapsed, 'end_hours':elapsed+hours})
+            elapsed += hours
+        # Include deterministic transfer overhead in each segment's playback share.
+        for segment in segments:
+            segment['start_progress'] = segment['start_hours']/elapsed
+            segment['end_progress'] = segment['end_hours']/elapsed
     sim = runtime.create(owner,SimulationInput(origin_station=schedule.origin_station,gateway=schedule.gateway,
         simulation_date=etd.date(),shipment_ready_datetime=etd.replace(hour=0,minute=0,second=0,microsecond=0),
         shipment_id='PLAN-'+identity),[schedule],

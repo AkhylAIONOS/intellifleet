@@ -114,19 +114,6 @@ async def answer(owner, message, context, selected_id=None):
                     if str(leg.get('route_type') or '').casefold() in {'air', 'flight'}
                 ]
 
-                # Preserve pure-Air vs multimodal constraint.
-                actual_modes = {
-                    str(leg.get('route_type') or '').casefold()
-                    for leg in selected.get('route_legs', [])
-                }
-
-                if 'air' in actual_modes and actual_modes.intersection(
-                    {'road', 'ground', 'surface'}
-                ):
-                    request['allowed_modes'] = ['multimodal']
-                else:
-                    request['allowed_modes'] = ['air']
-
             elif re.search(r'\b(ground|road)\b', message, re.I):
                 legs = [
                     leg for leg in legs
@@ -154,59 +141,37 @@ async def answer(owner, message, context, selected_id=None):
                 ]
             ))
 
-            if re.search(
-                r'\b(?:air|airway|flight|air service|selected air service)\b',
-                message,
-                re.I,
-            ):
-                aircraft = [
-                    v.get('label') or v.get('id')
-                    for v in selected.get('assigned_vehicles', [])
-                    if str(v.get('type') or '').casefold() in {'plane', 'aircraft'}
-                ]
-
-                changes['unavailable_vehicles'] = list(set(
-                    changes.get('unavailable_vehicles', [])
-                    + [v for v in aircraft if v is not None]
-                ))
-        # An unavailable Air service must exclude the currently selected
-        # Air route before replanning. Otherwise the optimizer can return
-        # the exact same disrupted flight again.
-        if re.search(
-            r'\b(?:air|flight|air service|airway)\b.*\b(?:unavailable|blocked|closed|cancelled|cannot be used)\b',
-            message,
-            re.I,
-        ):
-            air_legs = [
-                leg for leg in selected.get('route_legs', [])
-                if str(leg.get('route_type') or '').casefold() in {'air', 'flight'}
-            ]
-
-            if air_legs:
-                changes['blocked_route_ids'] = list(set(
-                    changes.get('blocked_route_ids', [])
-                    + [
-                        leg['route_id']
-                        for leg in air_legs
-                        if leg.get('route_id') is not None
-                    ]
-                ))
-
-            # Preserve the shipment's actual transport constraint.
-            actual_modes = {
-                str(leg.get('route_type') or '').casefold()
-                for leg in selected.get('route_legs', [])
-            }
-            if 'air' in actual_modes and actual_modes.intersection({'road', 'ground', 'surface'}):
-                request['allowed_modes'] = ['multimodal']
-            else:
-                request['allowed_modes'] = ['air']
-
         if re.search(r'\bcompare\b', message, re.I) and re.search(r'\bair\b', message, re.I):
             request['allowed_modes'] = ['road','air','multimodal']
         for objective in ('fastest','cheapest','lowest-risk'):
             if objective in message.casefold().replace('lowest risk','lowest-risk'): request['objective'] = objective
-        result = service.plan(owner, PlanningRequest(**request), changes=changes)
+        from backend.planning.recovery import recover_air, strict_air_only
+        air_recovery = (outage or bool(changes.get('blocked_route_ids'))) and any(l.get('route_type') == 'air' for l in selected.get('route_legs', []))
+        if air_recovery:
+            # Explicit instructions in the current message override historical
+            # Air-only preference. This allows:
+            #   "keep it Air-only" -> strict Air recovery
+            # followed later by:
+            #   "you may use Ground and Air" -> flexible recovery.
+            explicit_flexible = bool(re.search(
+                r'\b(?:may|can|allow|use)\s+(?:ground|road).*\bair\b'
+                r'|\b(?:ground|road)\s*(?:and|\+|/|→|->)\s*air\b'
+                r'|\bair\s*(?:and|\+|/|→|->)\s*(?:ground|road)\b'
+                r'|\bmultimodal\b',
+                message,
+                re.I,
+            ))
+            if explicit_flexible:
+                strict = False
+            elif strict_air_only(message):
+                strict = True
+            else:
+                strict = bool(selected.get('strict_air_only', False))
+
+            selected['strict_air_only'] = bool(strict)
+            result = recover_air(service, owner, request, changes, message, strict=strict)
+        else:
+            result = service.plan(owner, PlanningRequest(**request), changes=changes)
         result['planning_operation'] = 'route_alternatives'
         result['applied_changes'] = changes
     revised = result.get('recommended_plan') or result.get('recovery_plan')
@@ -219,12 +184,18 @@ async def answer(owner, message, context, selected_id=None):
         if outage: sim.paused = True
         return reply('A network alternative exists, but applying it from the current mid-route position requires a verified transfer/rejoin location. No route replacement was applied.' , [{'type':'movement_updated','data':sim.snapshot()}])
     _attach_replan_baseline(result, selected, changes)
-    result['_active_plan_before'] = {'route_legs':selected['route_legs'], 'vehicles':selected['assigned_vehicles'], 'cost':selected['cost'], 'duration_hours':selected['duration_hours'], 'risk':selected['risk']}
+    result['_active_plan_before'] = {'route_legs':selected['route_legs'], 'vehicles':selected['assigned_vehicles'], 'cost':selected['cost'], 'duration_hours':selected['duration_hours'], 'risk':selected['risk'], 'deadline':selected.get('deadline'), 'sla_met':selected.get('sla_met')}
     updated = record(owner, result, selected, _context_from_result(result, selected), revise=True, planner_reroute=not live_recovery and not breakdown)
     await set_active_planning_context(owner, updated)
     for key in ('requested_source','requested_destination'):
         if updated.get(key):result[key]=updated[key]
     text = _format_planning_result(result, message)
+    if result.get('recovery_explanation'):
+        text = result['recovery_explanation'] + '\n\n' + text
+    if revised.get('deadline'):
+        text += (f"\nOld ETA: {selected.get('eta')}; New ETA: {revised['eta']}; Deadline: {revised['deadline']}. "
+                 f"SLA before disruption: {selected.get('sla_met')}; SLA after disruption: {revised['sla_met']}. "
+                 f"Delay: {revised.get('sla_delay_hours')} hours; slack: {revised.get('sla_slack_hours')} hours.")
     if revised['route_legs']==selected['route_legs'] and objective:
         text += f'\nThe current route is already the {objective} feasible route under the active constraints.'
     result.pop('_active_plan_before', None)

@@ -43,6 +43,11 @@ async def agent_chat(
     from backend.operations.journey_chat import answer as journey_answer
     context = await get_active_planning_context(user_id) or {}
 
+    from backend.operations.batch_planning import answer as batch_answer
+    batch_result = await batch_answer(user_id, req.message, context)
+    if batch_result is not None:
+        return batch_result
+
     # A complete explicit Plan/Create request with its own origin and
     # destination is always a NEW planning request.
     #

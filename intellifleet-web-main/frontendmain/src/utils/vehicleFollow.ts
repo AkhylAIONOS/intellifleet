@@ -17,7 +17,7 @@ function createFollower(map:L.Map) {
   return {
     select(id:string,point:L.LatLngExpression){if(key!==id){following=false;close=false;button.setAttribute('aria-pressed','false');}key=id;position=point;},
     focus(id:string,route:L.LatLngExpression[],point:L.LatLngExpression){key=id;position=point;following=true;close=false;map.stop();map.fitBounds(L.latLngBounds(route),{padding:[45,45],maxZoom:10,animate:false});button.setAttribute('aria-pressed','true');},
-    update(id:string,point:L.LatLngExpression,moving:boolean){if(id!==key)return;position=point;if(!following)return;if(moving&&!close){close=true;map.setView(point,11,{animate:false});}else if(close)map.panTo(point,{animate:false});},
+    update(id:string,point:L.LatLngExpression,moving:boolean){if(id!==key)return;position=point;if(!following || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;if(moving&&!close){close=true;map.setView(point,11,{animate:false});}else if(close)map.panTo(point,{animate:false});},
     release(id:string){if(key===id){key='';following=false;}},
   };
 }

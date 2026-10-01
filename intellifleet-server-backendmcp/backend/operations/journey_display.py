@@ -62,6 +62,15 @@ def answer(owner, message, context, selected_id=None):
         contexts = [context]
     if mode == 'SINGLE_ROUTE':
         scope={**next((c for c in contexts if c.get('journey_id')==context.get('journey_id')),{}), 'map_comparison_ids':context.get('map_comparison_ids',[]), 'journeys':{c.get('journey_id') or c['selected_plan_id']:c for c in contexts}}
+        ordinal = re.search(r'\b(first|second|third|fourth|fifth|\d+(?:st|nd|rd|th))\s+(?:shipment|route|journey)\b', message, re.I)
+        if ordinal:
+            word = ordinal[1].lower()
+            number = {'first':1,'second':2,'third':3,'fourth':4,'fifth':5}.get(word)
+            number = number or int(re.match(r'\d+', word)[0])
+            ids = context.get('map_comparison_ids') or [c.get('movement_id') for c in contexts]
+            if number > len(ids):
+                return clarification('That shipment number is not in the current batch.')
+            selected_id = ids[number-1]
         selected, error = resolve(scope, message, selected_id)
         if error:
             return clarification(error)

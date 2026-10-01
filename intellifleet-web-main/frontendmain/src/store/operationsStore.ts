@@ -5,7 +5,13 @@ export interface Movement {
   journey_id?:string;
   plan_id?:string;
   revision?:number;
-  journey_segments?:Array<{start_index:number;end_index:number;mode:string;route_id?:number}>;
+  active_leg_index?:number;
+  current_segment?:number;
+  segment_progress?:number;
+  active_vehicles?:Array<{id:number|string;label?:string;type?:string}>;
+  journey_segments?:Array<{start_index:number;end_index:number;mode:string;route_id?:number;
+    start_progress?:number;end_progress?:number;duration_hours?:number;
+    from_location?:string;to_location?:string;vehicles?:Array<{id:number|string;label?:string;type?:string}>}>;
   simulation_speed?:number;
   route_id?:string;
   route_source?:string;
@@ -57,8 +63,8 @@ export const movementMatches=(m:Movement,filter:string)=>
     : filter==='SYNTHETIC'
       ? m.data_source.startsWith('SYNTHETIC')
       : filter==='SURFACE'
-        ? ['SURFACE','ROAD'].includes(m.mode)
-        : m.mode===filter);
+        ? ['SURFACE','ROAD'].includes(m.mode) || !!m.journey_segments?.some(s=>['SURFACE','ROAD'].includes(s.mode))
+        : m.mode===filter || !!m.journey_segments?.some(s=>s.mode===filter));
 
 interface OperationsState {
   enabled:boolean;
@@ -128,4 +134,13 @@ export function visibleAiMovement(m:Movement, state:Pick<OperationsState,'aiSimu
   if(state.aiDisplayMode==='MULTI_ROUTE')return state.aiVisibleSimulationIds.includes(m.simulation_id);
   const selected=state.selected && state.aiSimulationIds.includes(state.selected) ? state.selected : state.aiSimulationIds.at(-1);
   return m.simulation_id===selected;
+}
+
+// Carrier comes from the active leg, never from the overall multimodal service.
+export function activeCarrier(m:Movement) {
+  const segments=m.journey_segments || [];
+  const segment=(m.active_leg_index!=null ? segments[m.active_leg_index] : undefined)
+    || segments.find(s=>s.end_progress!=null && (m.progress || 0)<s.end_progress)
+    || segments.find(s=>m.current_segment!=null && s.start_index<=m.current_segment && m.current_segment<s.end_index);
+  return {mode:segment?.mode || m.mode, vehicles:segment?.vehicles || m.active_vehicles || []};
 }

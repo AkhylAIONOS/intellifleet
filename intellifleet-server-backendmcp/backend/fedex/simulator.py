@@ -111,8 +111,20 @@ class Simulation:
         self._geometry_distance = self._cumulative[-1]
 
     def snapshot(self):
+        segments = getattr(self, 'journey_segments', [])
+        timed_segments = [s for s in segments if 'end_progress' in s]
+        active_segment = next((s for s in timed_segments if self.progress < s['end_progress']), timed_segments[-1] if timed_segments else None)
+        segment_progress = None
         travelled = self._geometry_distance*self.progress
+        if active_segment and 'start_progress' in active_segment:
+            segment_progress = min(1.0, max(0.0, (self.progress-active_segment['start_progress']) /
+                max(active_segment['end_progress']-active_segment['start_progress'], 1e-12)))
+            start = self._cumulative[active_segment['start_index']]
+            end = self._cumulative[active_segment['end_index']]
+            travelled = start + (end-start)*segment_progress
         index = min(len(self._lengths)-1, max(0, bisect_right(self._cumulative, travelled)-1))
+        if active_segment is None:
+            active_segment = next((s for s in segments if s['start_index'] <= index < s['end_index']), None)
         a,b = self.route[index:index+2]
         fraction = min(1.0, max(0.0, (travelled-self._cumulative[index])/max(self._lengths[index],1e-12)))
         lat = a[0]+(b[0]-a[0])*fraction
@@ -123,7 +135,9 @@ class Simulation:
                     origin_station=self.request.origin_station, gateway=self.request.gateway,
                     risk_score=getattr(self, 'plan_risk', None), journey_id=getattr(self, 'journey_id', None), plan_id=getattr(self, 'plan_revision_id', None),
                     revision=getattr(self, 'plan_revision', None), journey_segments=getattr(self, 'journey_segments', []),
-                    mode=next((segment['mode'] for segment in getattr(self, 'journey_segments', []) if segment['start_index'] <= index < segment['end_index']), self.selected['mode']), run=self.selected['run'], service=self.selected['service'],
+                    active_leg_index=segments.index(active_segment) if active_segment else None,
+                    segment_progress=segment_progress, active_vehicles=active_segment.get('vehicles', []) if active_segment else [],
+                    mode=active_segment['mode'] if active_segment else next((segment['mode'] for segment in getattr(self, 'journey_segments', []) if segment['start_index'] <= index < segment['end_index']), self.selected['mode']), run=self.selected['run'], service=self.selected['service'],
                     simulation_timestamp=self.now.isoformat(), latitude=lat, longitude=lng,
                     speed_kmph=round(self._geometry_distance / (self.duration/3600) * self.travel_factor, 2) if moving else 0,
                     speed_basis='Map-road distance / existing schedule duration; simulated, not live traffic' if self.road_route else 'Synthetic straight-line distance, not measured vehicle speed',
@@ -140,8 +154,8 @@ class Simulation:
                     road_estimated_duration_minutes=self.road_route.duration_minutes if self.road_route else None,
                     optimization_mode=self.road_route.optimization if self.road_route else None,
                     road_routing_status='READY' if self.road_route else 'NOT_APPLICABLE',
-                    distance_travelled_km=round(self._geometry_distance*self.progress,3),
-                    distance_remaining_km=round(self._geometry_distance*(1-self.progress),3), current_segment=index,
+                    distance_travelled_km=round(travelled,3),
+                    distance_remaining_km=round(self._geometry_distance-travelled,3), current_segment=index,
                     road_snapping={name:asdict(getattr(self.road_route,name)) for name in ('origin','destination','snapped_origin','snapped_destination')} if self.road_route else None,
                     routing_capabilities={'FASTEST':True,'SHORTEST':False,'CHEAPEST':False,'blocked_segment_avoidance':False,'exact_tolls':False} if self.road_route else None,
                     location_notice='Road-network simulation based on OpenStreetMap routing data; approximate facility coordinates snapped to roads, not actual FedEx GPS. Schedule ETA retained; map travel time is an estimate.' if self.road_route else 'Approximate city centres and synthetic straight-line interpolation; not actual GPS or rail geometry.',

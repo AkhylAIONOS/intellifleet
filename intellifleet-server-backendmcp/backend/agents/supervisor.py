@@ -616,6 +616,10 @@ def _vehicle_selection_params(message: str, warehouse_names: list[str]) -> dict 
 def _deadline_from_message(message: str) -> str | None:
     match = re.search(r"\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?", message)
     if match:return match.group(0)
+    relative = re.search(r"\b(?:today|tomorrow)\s+(?:at\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm)\b", message, re.I)
+    if relative:
+        from backend.planning.models import parse_planning_deadline
+        return parse_planning_deadline(relative.group(0)).isoformat()
     natural=re.search(r"\b(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4}),?\s+(?:at\s+)?(\d{1,2}):?(\d{2})?\s*(AM|PM)\s*(IST)\b",message,re.I)
     if natural:
         from datetime import datetime
@@ -632,7 +636,7 @@ def _objective_from_message(message: str) -> str | None:
         return "cheapest"
     if any(x in text for x in ("risk matters most", "recommend the safest", "lowest risk", "lowest-risk", "least risk", "minimize risk", "most reliable", "safest")):
         return "lowest-risk"
-    if any(x in text for x in ("recommend the fastest", "fastest feasible", "minimum eta", "quickest", "earliest", "fastest")):
+    if any(x in text for x in ("recommend the fastest", "fastest feasible", "minimum eta", "quickest", "earliest", "fastest", "as fast as possible", "as quickly as possible")):
         return "fastest"
     if any(x in text for x in ("best overall", "best tradeoff", "balanced", "balance cost", "balance of cost", "cost-efficient", "cost efficient", "economical while reasonably fast")):
         return "balanced"
@@ -1656,6 +1660,9 @@ STRICT RULES:
                         return {"success": True, "response": failure_msg, "actions": []}
 
                     if tool_name in {"unified_supply_chain_plan", "supply_chain_planning_operation"}:
+                        from backend.planning.recovery import strict_air_only
+                        if strict_air_only(message):
+                            active_context['strict_air_only'] = True
                         updated_context = _context_from_result(result, active_context)
                         updated_context = record(user_id, result, active_context, updated_context,
                                                  revise=bool(active_context.get("selected_plan_id")))

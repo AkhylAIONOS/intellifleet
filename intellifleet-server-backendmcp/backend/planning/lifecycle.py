@@ -28,7 +28,7 @@ def is_action(message):
         return True
     if explicit_live_recovery(message) and re.search(r'\brecovery\b', message, re.I):
         return True
-    return bool(re.search(r'\b(replan|optimi[sz]e|fastest|quickest|cheapest|lowest[ -]cost|lowest[ -]risk|least risk|safest|balanced|cost[ -]efficient|best overall|blocked|disrupted|breakdown|broke down|broken down|delayed by|add .*delay|change .*(?:truck|vehicle))\b', message, re.I)
+    return bool(re.search(r'\b(replan|recover|recovery|another way|optimi[sz]e|fastest|quickest|cheapest|lowest[ -]cost|lowest[ -]risk|least risk|safest|balanced|cost[ -]efficient|best overall|blocked|disrupted|breakdown|broke down|broken down|delayed by|add .*delay|change .*(?:truck|vehicle))\b', message, re.I)
                 or re.search(r'^\s*(?:(?:please|now|can you|could you)\s+)*delay\b', message, re.I))
 
 
