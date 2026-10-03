@@ -32,3 +32,20 @@ def test_authoritative_plan_replay(loaded,monkeypatch,origin,destination,weight)
 
 def test_expired_plan_cannot_be_replayed():
     with pytest.raises(KeyError):plan_journeys.start(1,'not-a-real-plan')
+
+
+def test_form_scenario_revision_reuses_movement_and_rejects_stale_baseline(loaded,monkeypatch):
+    from copy import deepcopy
+    _,runtime,_=loaded
+    import backend.fedex.telemetry as telemetry
+    monkeypatch.setattr(telemetry,'runtime',runtime)
+    plan=PlanningService().plan(1,PlanningRequest(source='Mumbai',destination='Bengaluru',shipment={'weight_kg':1000},allowed_modes=['road']))['recommended_plan']
+    baseline=plan_journeys.start(1,plan['plan_id'])
+    revised=deepcopy(plan)
+    revised.update(plan_id=plan['plan_id']+'-scenario',operational_cost=plan['operational_cost']+100)
+    plan_journeys.remember(1,[revised])
+    applied=plan_journeys.revise(1,revised['plan_id'],plan['plan_id'])
+    assert applied['simulation_id']==baseline['simulation_id']
+    assert applied['plan_id']==revised['plan_id'] and applied['revision']==2
+    assert len([x for x in runtime.entries.values() if x.owner==1])==1
+    with pytest.raises(ValueError):plan_journeys.revise(1,revised['plan_id'],plan['plan_id'])

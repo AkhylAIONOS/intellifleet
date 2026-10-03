@@ -1,6 +1,10 @@
 import {create} from 'zustand';
 
 export interface Movement {
+  business_status?:string;
+  baseline_sla_met?:boolean|null;
+  current_sla_met?:boolean|null;
+  telemetry_source?:string;
   sequence?:number;
   journey_id?:string;
   plan_id?:string;

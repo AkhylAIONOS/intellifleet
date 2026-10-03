@@ -4,6 +4,7 @@ import pytest
 from backend.planning.metrics_v2 import risk, additional_air_cost
 from backend.planning.service import PlanningService
 from backend.planning.models import PlanningRequest
+from test_operations import loaded
 
 
 @pytest.mark.parametrize('mode', ['road','air'])
@@ -20,6 +21,21 @@ def test_air_cost_keeps_legitimate_additions():
     assert additional_air_cost(dict(route_type='air',base_transport_cost=100,air_cost=100))==0
     assert additional_air_cost(dict(route_type='air',base_transport_cost=100,air_cost=25))==25
     assert additional_air_cost(dict(route_type='air',base_transport_cost=100,air_cost=100,air_cost_is_additional=True))==100
+
+
+def test_uploaded_air_cost_is_counted_once_and_other_charges_remain(loaded):
+    network,_,_=loaded
+    request=PlanningRequest(source='Delhi',destination='Mumbai',shipment={'weight_kg':1000},allowed_modes=['air'])
+    service=PlanningService()
+    plan=service.plan(1,request)['recommended_plan']
+    assert plan and plan['cost_breakdown']['air_cost']==0
+    assert plan['cost_breakdown']['base_transport']==sum(leg['base_transport_cost'] for leg in plan['route_legs'])
+    legs=deepcopy(plan['route_legs'])
+    original=service._candidate(legs,request,network['vehicles'])
+    for leg in legs:
+        leg['air_cost']=25
+    charged=service._candidate(legs,request,network['vehicles'])
+    assert charged['operational_cost']==original['operational_cost']+25*len(legs)
 
 
 def test_multimodal_projected_availability_and_utilization():

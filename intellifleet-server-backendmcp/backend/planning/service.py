@@ -1014,6 +1014,8 @@ class PlanningService:
         if "allowed_modes" in changes: scenario_request.allowed_modes=changes["allowed_modes"]
         if "cost_multiplier" in changes:
             for route in network["routes"]:
+                from .metrics_v2 import additional_air_cost
+                route['air_cost']=additional_air_cost(route)
                 route["cost"]=float(route.get("cost") or 0)*float(changes["cost_multiplier"])
                 if route.get("base_transport_cost") is not None:
                     route["base_transport_cost"]*=float(changes["cost_multiplier"])

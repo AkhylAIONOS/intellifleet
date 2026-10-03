@@ -4,6 +4,8 @@ import './PlanningPanel.css';
 import { PlanSnapshot, PlanDelta } from './PlanVisuals';
 import { useAppStore } from '../store/appStore';
 import { ensurePlanMovement } from '../utils/planMovement';
+import api from '../api/client';
+import {useOperationsStore} from '../store/operationsStore';
 
 export const planResultPanelReducer=(_visible:boolean,action:'show'|'close')=>action==='show';
 
@@ -40,7 +42,28 @@ export const PlanningPanel = () => {
     if(blockedRoute.includes('→')) changes.blocked_routes=[blockedRoute.split('→').map(x=>x.trim())];
     try { const value=await planningApi.createScenario(input, changes); setScenario(value); applyPlanningMapPlan(value); } catch(error){setError(describeError(error));} finally { setBusy(false); }
   };
-  const act = async (action: 'apply' | 'discard') => { setBusy(true);setError('');try{const value=await planningApi.scenarioAction(scenario.scenario_id, action); setScenario({ ...scenario, ...value }); applyPlanningMapPlan(value);}catch(error){setError(describeError(error));}finally{setBusy(false);} };
+  const act = async (action: 'apply' | 'discard') => { setBusy(true);setError('');try{const value=await planningApi.scenarioAction(scenario.scenario_id, action); setScenario({ ...scenario, ...value }); applyPlanningMapPlan(value);
+    if(action==='apply' && value.approved_plan){
+      let applied=value.approved_plan;
+      const baseline=useOperationsStore.getState().movements.find(m=>m.plan_id===scenario.baseline?.recommended_plan?.plan_id);
+      if(baseline){
+        try{
+          const {data:movement}=await api.post(`/operations/plan-journeys/${encodeURIComponent(applied.plan_id)}/revise`,{previous_plan_id:baseline.plan_id});
+          applied={...applied,journey_id:movement.journey_id,revision:movement.revision};
+          const state=useOperationsStore.getState();
+          state.patch({enabled:true,viewMode:'AI',selected:movement.simulation_id,movements:[...state.movements.filter(m=>m.simulation_id!==movement.simulation_id),movement]});
+          applyPlanningMapPlan({...value,approved_plan:applied,movement});
+        }catch{
+          applyPlanningMapPlan({recommended_plan:scenario.baseline.recommended_plan});
+          setError('Scenario approved, but playback revision is unavailable. Baseline movement retained; refresh before retrying.');
+          return;
+        }
+      }
+      setResult({...scenario.scenario,recommended_plan:applied,recommended_plan_id:applied.plan_id,candidate_plans:[applied]});
+      setActivePlanId(applied.plan_id);dispatchResultVisibility('show');
+      await ensurePlanMovement(applied);
+    }
+  }catch(error){setError(describeError(error));}finally{setBusy(false);} };
   const recommended = result?.candidate_plans?.find((x:any)=>x.plan_id===activePlanId) || result?.recommended_plan;
   const scenarioPlan = scenario?.scenario?.recommended_plan;
   useEffect(()=>{

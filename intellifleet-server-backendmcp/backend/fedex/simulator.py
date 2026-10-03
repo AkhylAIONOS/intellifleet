@@ -66,6 +66,8 @@ class Simulation:
         self.state_history = ['READY', 'ASSIGNED']
         self.duration = (selected['eta'] - selected['etd']).total_seconds()
         self.current_eta = selected['eta']
+        self.actual_departure_at = None
+        self.actual_arrival_at = None
         self.hold_until = None
         self.travel_factor = 1.0
         self.events = []
@@ -85,6 +87,7 @@ class Simulation:
         self.progress = min(1.0, self.progress + moving_seconds * self.travel_factor / self.duration)
         if self.progress >= 1:
             self.now = self.current_eta
+            self.actual_arrival_at = self.current_eta
             state = 'ARRIVED_AT_GTW'
         elif self.now < self.selected['etd']:
             state = 'WAITING_FOR_DEPARTURE'
@@ -95,6 +98,8 @@ class Simulation:
         if self.status != state:
             self.state_history.append(state)
         self.status = state
+        if self.progress > 0 and self.actual_departure_at is None:
+            self.actual_departure_at = self.selected['etd']
         self.sequence += 1
         return self.snapshot()
 
@@ -131,7 +136,7 @@ class Simulation:
         lng = a[1]+(b[1]-a[1])*fraction
         heading = (math.degrees(math.atan2(b[1]-a[1],b[0]-a[0]))+360)%360
         moving = self.status == 'IN_TRANSIT' and not self.paused and not self.stopped
-        return dict(data_source=self.data_source, schedule_id=self.selected["schedule_id"], heading=heading, delay_minutes=round((self.current_eta-self.selected["eta"]).total_seconds()/60,2), simulation_id=self.id, shipment_id=self.request.shipment_id,
+        result = dict(data_source=self.data_source, schedule_id=self.selected["schedule_id"], heading=heading, delay_minutes=round((self.current_eta-self.selected["eta"]).total_seconds()/60,2), simulation_id=self.id, shipment_id=self.request.shipment_id,
                     origin_station=self.request.origin_station, gateway=self.request.gateway,
                     risk_score=getattr(self, 'plan_risk', None), journey_id=getattr(self, 'journey_id', None), plan_id=getattr(self, 'plan_revision_id', None),
                     revision=getattr(self, 'plan_revision', None), journey_segments=getattr(self, 'journey_segments', []),
@@ -161,6 +166,17 @@ class Simulation:
                     location_notice='Road-network simulation based on OpenStreetMap routing data; approximate facility coordinates snapped to roads, not actual FedEx GPS. Schedule ETA retained; map travel time is an estimate.' if self.road_route else 'Approximate city centres and synthetic straight-line interpolation; not actual GPS or rail geometry.',
                     schedule_notice=self.notice, seed=self.request.seed, random_events=self.request.random_events,
                     sequence=self.sequence, events=self.events, alerts=self.alerts, state_history=self.state_history)
+        from backend.control_tower.status import operational_fields
+        facts=dict(planned_eta=self.selected['eta'],current_eta=self.current_eta,
+                   actual_departure_at=self.actual_departure_at,actual_arrival_at=self.actual_arrival_at,
+                   deadline=getattr(self,'plan_deadline',None))
+        fields=operational_fields(facts,self.now)
+        result.update(business_status=fields.pop('status'),operational_metrics=fields,
+                      actual_departure_at=self.actual_departure_at.isoformat() if self.actual_departure_at else None,
+                      actual_arrival_at=self.actual_arrival_at.isoformat() if self.actual_arrival_at else None,
+                      actual_timestamp_source='SYNTHETIC_TELEMETRY',telemetry_source='SYNTHETIC_TELEMETRY',
+                      baseline_sla_met=fields['baseline_sla_met'],current_sla_met=fields['current_sla_met'])
+        return result
 
     def control(self, action, wall_time, speed=None):
         self.advance(wall_time)

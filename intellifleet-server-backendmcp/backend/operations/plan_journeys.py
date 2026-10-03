@@ -49,6 +49,27 @@ def start(owner, plan_id, *, planner_reroute=False):
         return _start(owner, plan_id, planner_reroute=planner_reroute)
 
 
+def revise(owner, plan_id, previous_plan_id):
+    """Form-driven scenario revisions reuse an exact prior movement binding."""
+    from backend.fedex.telemetry import runtime
+    with _lock:
+        identity=canonical_identity(owner,previous_plan_id)
+        if not identity.get('movement_id'):
+            raise KeyError('Baseline movement is unavailable')
+        existing=runtime.get(owner,identity['movement_id'])
+        if existing.stopped or existing.progress>=1:
+            raise ValueError('Stopped/completed journeys cannot be revised')
+        if getattr(existing,'plan_revision_id',None)!=previous_plan_id:
+            raise ValueError('Baseline revision changed; create a fresh scenario')
+        saved=_plans.get((owner,plan_id))
+        if not saved:
+            raise KeyError('Scenario plan expired or unavailable')
+        plan=deepcopy(saved[1])
+        plan.update(journey_id=identity['journey_id'],revision=getattr(existing,'plan_revision',1)+1)
+        remember(owner,[plan])
+        return start(owner,plan_id,planner_reroute=True)
+
+
 def _start(owner, plan_id, *, planner_reroute=False):
     from backend.fedex.models import Schedule, SimulationInput
     from backend.fedex.telemetry import runtime
@@ -138,6 +159,7 @@ def _start(owner, plan_id, *, planner_reroute=False):
     sim.plan_revision_id = plan_id
     sim.plan_revision = plan.get('revision', 1)
     sim.plan_risk = plan.get('risk_score')
+    sim.plan_deadline = plan.get('deadline')
     if existing:
         # Publish a revision under the same runtime key. Never create a second movement.
         del runtime.entries[sim.id]
@@ -145,6 +167,8 @@ def _start(owner, plan_id, *, planner_reroute=False):
         runtime.entries[existing.id].simulation = sim
         sim.progress = 0 if restart_replay else existing.progress
         sim.events = existing.events
+        sim.actual_departure_at = existing.actual_departure_at
+        sim.actual_arrival_at = existing.actual_arrival_at
         sim.alerts = existing.alerts
         sim.speed = existing.speed
         sim.sequence = existing.sequence + 1

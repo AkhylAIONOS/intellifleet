@@ -3,12 +3,14 @@ import {useAuthStore} from '../store/authStore';
 import {fedexApi} from '../api/fedex';
 import {useOperationsStore} from '../store/operationsStore';
 import {useAppStore} from '../store/appStore';
+import {useControlTowerStore} from '../store/controlTowerStore';
 
 const pending = new Map<string, Promise<void>>();
 export function ensurePlanMovement(plan:any):Promise<void> {
   if(!plan?.plan_id || !plan.vehicles?.length || !plan.route_legs?.length ||
     !plan.route_legs.every((leg:any)=>['road','ground','surface','air'].includes(String(leg?.route_type).toLowerCase())))return Promise.resolve();
   const id=String(plan.plan_id);
+  useControlTowerStore.getState().select(null);
   const journeyId=String(plan.journey_id || id);
   const scope=useOperationsStore.getState();
   const generation=scope.aiSessionGeneration;
@@ -35,6 +37,9 @@ export function ensurePlanMovement(plan:any):Promise<void> {
       current.patch({enabled:true,viewMode:'AI',filter:'ALL',selected:simulation.simulation_id,
         aiSimulationIds:[...new Set([...current.aiSimulationIds,simulation.simulation_id])],
         movements:[...current.movements.filter(m=>m.simulation_id!==simulation.simulation_id),simulation]});
+      if(simulation.journey_id && useAppStore.getState().selectedPlan?.plan_id===id){
+        useAppStore.getState().applyPlanningMapPlan({recommended_plan:{...plan,journey_id:simulation.journey_id,revision:simulation.revision},movement:simulation});
+      }
       // Only a newly prepared origin is resumed. A duplicate request must not
       // resume an operator-paused movement that is already in transit.
       if(simulation.paused && simulation.progress===0){

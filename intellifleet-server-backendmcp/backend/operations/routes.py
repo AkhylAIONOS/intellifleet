@@ -207,6 +207,21 @@ class RouteInput(BaseModel):
     weight: float = Field(gt=0, allow_inf_nan=False)
 
 
+class RevisionInput(BaseModel):
+    previous_plan_id: str
+
+
+@router.post('/plan-journeys/{plan_id}/revise')
+def revise_plan_journey(plan_id:str,request:RevisionInput,user=Depends(get_current_user)):
+    from .plan_journeys import revise
+    try:
+        return revise(user['user_id'],plan_id,request.previous_plan_id)
+    except KeyError as exc:
+        raise HTTPException(404,str(exc)) from exc
+    except (ValueError,RoadRoutingError) as exc:
+        raise HTTPException(422,str(exc)) from exc
+
+
 @router.post('/plan-journeys/reset-all')
 def reset_plan_journeys(user=Depends(get_current_user)):
     from .service import reset_plan_movements
