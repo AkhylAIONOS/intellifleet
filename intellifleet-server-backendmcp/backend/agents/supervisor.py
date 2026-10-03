@@ -1239,6 +1239,11 @@ class SchemaAwareSupervisor:
         user_id: int = 0,
     ) -> str:
         if tool_name in {"unified_supply_chain_plan", "supply_chain_planning_operation"}:
+            if re.search(r'\b(?:brief|briefly|concise|short answer)\b',user_message,re.I):
+                from .grounded_composer import compose
+                compact=await compose(result,user_message,self.llm)
+                if compact:
+                    return compact
             return _format_planning_result(result, user_message)
         try:
             result_for_llm = self._strip_encoded_fields(result)

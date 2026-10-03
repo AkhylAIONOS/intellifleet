@@ -40,6 +40,11 @@ async def agent_chat(
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
 
+    from backend.control_tower.chat import answer as control_tower_answer
+    tower_result=control_tower_answer(user_id,req.message)
+    if tower_result is not None:
+        return tower_result
+
     from backend.operations.journey_chat import answer as journey_answer
     context = await get_active_planning_context(user_id) or {}
 
