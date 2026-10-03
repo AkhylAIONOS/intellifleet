@@ -51,6 +51,15 @@ def test_time_remaining_is_not_progress():
     assert fields['elapsed_hours']==2 and fields['estimated_time_left_hours']==1
 
 
+def test_operational_sla_preserves_baseline_after_delay_and_arrival():
+    run=dict(actual_departure_at=NOW,planned_eta=NOW+timedelta(hours=1),current_eta=NOW+timedelta(hours=3),deadline=NOW+timedelta(hours=2))
+    delayed=operational_fields(run,NOW)
+    assert delayed['baseline_sla_met'] is True and delayed['current_sla_met'] is False
+    run['actual_arrival_at']=NOW+timedelta(hours=3)
+    arrived=operational_fields(run,NOW+timedelta(hours=4))
+    assert arrived['current_sla_met'] is False and arrived['actual_tt_hours']==3
+
+
 def test_network_separation_preservation_and_versioning(tower):
     rows=load(tower)
     assert len(rows)==2 and len(load(tower))==2
@@ -139,5 +148,10 @@ def test_api_authorization_and_validation(tower,monkeypatch):
     assert client.get('/operations/control-tower/runs?limit=201').status_code==422
     assert client.post(f'/operations/control-tower/runs/{rid}/events',json=event(at=datetime(2030,1,1))).status_code==422
     assert client.put('/operations/alerts/recipients',json={'emails':['bad']}).status_code==422
+    monkeypatch.setattr(routes.settings,'FEDEX_SCAN_INGEST_TOKEN',None)
+    assert client.post(f'/operations/control-tower/runs/{rid}/events',json=event()).status_code==503
+    monkeypatch.setattr(routes.settings,'FEDEX_SCAN_INGEST_TOKEN','test-ingestion-token')
+    assert client.post(f'/operations/control-tower/runs/{rid}/events',json=event()).status_code==403
+    assert client.post(f'/operations/control-tower/runs/{rid}/events',json=event(),headers={'X-FedEx-Ingest-Token':'test-ingestion-token'}).status_code==200
     app.dependency_overrides[get_current_user]=lambda:{'user_id':2}
     assert client.get(f'/operations/control-tower/runs/{rid}').status_code==404

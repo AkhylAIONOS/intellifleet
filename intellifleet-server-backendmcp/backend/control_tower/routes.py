@@ -1,14 +1,15 @@
 from datetime import date, datetime
 from typing import Literal
 import asyncio
-import os
-from fastapi import APIRouter, Depends, HTTPException
+import secrets
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from backend.routes.auth import get_current_user
 from backend.fedex.models import SimulationInput
 from backend.operations.road_routing_engine import RoadRoutingError
 from .service import ControlTower
 from .status import timestamp
+from backend.config.config import settings
 
 router=APIRouter(prefix='/operations',tags=['FedEx Control Tower'])
 service=ControlTower()
@@ -70,6 +71,16 @@ def invoke(fn,*args,**kwargs):
         raise HTTPException(503,'Road geometry unavailable; existing run retained') from exc
 
 
+def verify_ingestion(source,token):
+    if source!='FEDEX_SCAN':
+        return
+    configured=settings.FEDEX_SCAN_INGEST_TOKEN
+    if not configured:
+        raise HTTPException(503,'Real FedEx scan ingestion is not configured')
+    if not token or not secrets.compare_digest(token,configured):
+        raise HTTPException(403,'Invalid scan ingestion credential')
+
+
 @router.post('/control-tower/import')
 def import_plan(request: ImportInput,user=Depends(get_current_user)):
     from backend.fedex.routes import schedules
@@ -78,10 +89,11 @@ def import_plan(request: ImportInput,user=Depends(get_current_user)):
 
 @router.get('/control-tower/runs')
 def runs(service_date:date|None=None,mode:Literal['AIR','SURFACE','RAIL']|None=None,status:str|None=None,
-         critical:bool|None=None,search:str='',offset:int=0,limit:int=100,user=Depends(get_current_user)):
+         critical:bool|None=None,search:str='',sort:Literal['lane','status','eta']='lane',offset:int=0,limit:int=100,user=Depends(get_current_user)):
     if offset<0 or not 1<=limit<=200:
         raise HTTPException(422,'Invalid pagination')
     rows=service.runs(user['user_id'],service_date,mode,status,critical,search)
+    rows.sort(key=lambda r:r['status'] if sort=='status' else (r['current_eta'] or '') if sort=='eta' else r['schedule']['lane'])
     return {'runs':rows[offset:offset+limit],'total':len(rows),'source':'FEDEX_SOURCE'}
 
 
@@ -101,7 +113,8 @@ def critical(run_id:str,request:CriticalInput,user=Depends(get_current_user)):
 
 
 @router.post('/control-tower/runs/{run_id}/events')
-def event(run_id:str,request:ScanInput,user=Depends(get_current_user)):
+def event(run_id:str,request:ScanInput,user=Depends(get_current_user),x_fedex_ingest_token:str|None=Header(default=None)):
+    verify_ingestion(request.source,x_fedex_ingest_token)
     return invoke(service.event,user['user_id'],run_id,request.model_dump(mode='json'))
 
 
@@ -123,11 +136,12 @@ def set_recipients(request:RecipientInput,user=Depends(get_current_user)):
 @router.get('/alerts')
 def alerts(user=Depends(get_current_user)):
     return {'alerts':service.alerts(user['user_id']),
-        'delivery_enabled':os.getenv('FEDEX_ALERT_DELIVERY_ENABLED','false').lower()=='true'}
+        'delivery_enabled':settings.FEDEX_ALERT_DELIVERY_ENABLED}
 
 
 @router.post('/cons/events')
-def con_event(request:ConInput,user=Depends(get_current_user)):
+def con_event(request:ConInput,user=Depends(get_current_user),x_fedex_ingest_token:str|None=Header(default=None)):
+    verify_ingestion(request.source,x_fedex_ingest_token)
     return invoke(service.con_event,user['user_id'],request.model_dump(mode='json'))
 
 
@@ -144,7 +158,7 @@ async def monitor():
                 owners=[r[0] for r in conn.execute('SELECT DISTINCT owner FROM ct_runs')]
             for owner in owners:
                 await asyncio.to_thread(service.observe,owner)
-            await service.deliver(enabled=os.getenv('FEDEX_ALERT_DELIVERY_ENABLED','false').lower()=='true')
+            await service.deliver(enabled=settings.FEDEX_ALERT_DELIVERY_ENABLED)
         except Exception:
             from backend.config.logger import logger
             logger.warning('Control Tower monitor unavailable; operational records retained')

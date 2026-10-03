@@ -21,6 +21,8 @@ def main():
     os.environ['FRONTEND_URL'] = 'http://127.0.0.1:5178'
     os.environ['BACKEND_URL'] = 'http://127.0.0.1:4208'
     os.environ['AI_PROVIDER'] = 'local-demo-no-llm'
+    os.environ['FEDEX_ALERT_DELIVERY_ENABLED'] = 'false'
+    os.environ['FEDEX_SCAN_INGEST_TOKEN'] = ''
     # Chat is outside this offline launcher; do not use the production Redis URL.
     os.environ['REDIS_URL'] = 'redis://127.0.0.1:6399/15'
     print(f'Isolated local demo data: {runtime}', flush=True)

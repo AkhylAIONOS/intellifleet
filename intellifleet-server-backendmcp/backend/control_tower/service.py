@@ -93,7 +93,7 @@ class ControlTower:
             else:
                 query+=' AND network_version=(SELECT network_version FROM ct_network_imports i WHERE i.owner=ct_runs.owner AND i.service_date=ct_runs.service_date)'
             rows=[self._decorate(conn,dict(r)) for r in conn.execute(query,params)]
-        return [r for r in rows if (not mode or r['schedule']['mode']==mode)
+        return [r for r in rows if (not mode or r['schedule']['mode']==mode or (mode=='SURFACE' and r['schedule']['source_sheet']=='Surface'))
             and (not status or r['status']==status) and (critical is None or r['critical']==critical)
             and (not search or search.casefold() in json.dumps(r['schedule']).casefold())]
 
@@ -107,7 +107,7 @@ class ControlTower:
     def summary(self, rows):
         counts={s:sum(r['status']==s for r in rows) for s in ['SCHEDULED','ON TIME','EXPECTED DELAY','DELAYED','ARRIVED']}
         return dict(total_runs=len(rows),air_runs=sum(r['schedule']['mode']=='AIR' for r in rows),
-            surface_runs=sum(r['schedule']['mode']=='SURFACE' for r in rows),statuses=counts,
+            surface_runs=sum(r['schedule']['mode']=='SURFACE' or r['schedule']['source_sheet']=='Surface' for r in rows),statuses=counts,
             critical_lanes=len({r['lane_key'] for r in rows if r['critical']}),
             critical_lanes_at_risk=len({r['lane_key'] for r in rows if r['critical'] and r['status'] in {'EXPECTED DELAY','DELAYED'}}))
 

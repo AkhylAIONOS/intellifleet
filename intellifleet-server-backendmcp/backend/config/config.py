@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     EMAIL_FROM: str | None = None
+    FEDEX_ALERT_DELIVERY_ENABLED: bool = False
+    FEDEX_SCAN_INGEST_TOKEN: Optional[str] = None
 
     OPENAI_API_KEY: Optional[str] = None
     AI_PROVIDER: str = "openai"
