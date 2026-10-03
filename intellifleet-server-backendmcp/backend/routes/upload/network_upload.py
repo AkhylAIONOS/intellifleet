@@ -143,7 +143,7 @@ async def upload_network(
             conn.executemany("INSERT INTO nodes_air(user_id,route_id,from_location,to_location,distance,duration,cost,route_type) VALUES(?,?,?,?,?,?,?,?)",air)
             conditions=[]
             for user,route_id,source,dest,distance,duration,cost,mode,row,external_id,record_id,intermediate in route_rows:
-                status=str(_value(row,"Status","active")); conditions.append((user,route_id,float(_value(row,"ReliabilityScore",.9)),float(_value(row,"WeatherRiskScore",0)),float(_value(row,"DisruptionRiskScore",0)),float(_value(row,"TollCostINR",0)),0,0,cost if mode=="air" else 0,
+                status=str(_value(row,"Status","active")); conditions.append((user,route_id,float(_value(row,"ReliabilityScore",.9)),float(_value(row,"WeatherRiskScore",0)),float(_value(row,"DisruptionRiskScore",0)),float(_value(row,"TollCostINR",0)),0,0,0,
                     _value(row,"CapacityPerDayKg"),_value(row,"CurrentUtilizationPct"),_value(row,"ServiceClass"),_bool(_value(row,"ExpressEligible",False)),_value(row,"SLAHours"),_value(row,"CarbonKg"),status,_value(row,"Notes"),cost))
             conn.executemany("INSERT INTO route_conditions(user_id,route_id,reliability,weather_risk,operational_risk,toll_cost,handling_cost,fuel_cost,air_cost,capacity_per_day_kg,current_utilization_pct,service_class,express_eligible,sla_hours,carbon_kg,status,notes,base_transport_cost) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",conditions)
             persistent=[]

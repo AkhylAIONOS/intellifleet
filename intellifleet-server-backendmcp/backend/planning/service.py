@@ -106,7 +106,12 @@ class PlanningService:
         return {"routes": routes, "warehouses": warehouses, "vehicles": vehicles}
 
     @staticmethod
-    def risk_breakdown(legs: list[dict], vehicle_utilization: float, vehicles: list[dict] | None = None,
+    def risk_breakdown(legs, vehicle_utilization, vehicles=None, warehouses=None, changes=None):
+        from .metrics_v2 import risk
+        return risk(legs, vehicle_utilization, vehicles, warehouses, changes)
+
+    @staticmethod
+    def legacy_risk_breakdown(legs: list[dict], vehicle_utilization: float, vehicles: list[dict] | None = None,
                        warehouses: list[dict] | None = None, changes: dict | None = None) -> dict:
         if not legs:
             return {"route":1.0,"vehicle":1.0,"weather":0.0,"warehouse":0.0,"mode":1.0,"overall":1.0}
@@ -117,7 +122,7 @@ class PlanningService:
         route=min(1,route+min(distance/10000,.15)+float((changes or {}).get("risk_delta",0)))
         weather=min(1,sum(float(x.get("weather_risk",0)) for x in legs)/len(legs))
         vehicle_list=vehicles or []
-        vehicle=min(1,(sum((1-float(v.get("reliability") or .9))+float(v.get("breakdown_risk") or 0) for v in vehicle_list)/len(vehicle_list) if vehicle_list else .25)+max(0,vehicle_utilization-.9)*.25)
+        vehicle=min(1,(sum((1-float(v.get("reliability") if v.get("reliability") is not None else .9))+float(v.get("breakdown_risk") or 0) for v in vehicle_list)/len(vehicle_list) if vehicle_list else .25)+max(0,vehicle_utilization-.9)*.25)
         warehouse_list=warehouses or []
         warehouse=min(1,sum((1-float(w.get("reliability") or .9))+float(w.get("disruption_risk") or 0) for w in warehouse_list)/len(warehouse_list)) if warehouse_list else .1
         # Weighted, normalized deterministic formula: route 35%, vehicle 25%, weather 15%, warehouse 10%, mode 15%.
@@ -130,10 +135,11 @@ class PlanningService:
 
     @staticmethod
     def select_vehicles(vehicles: list[dict], source: str, weight: float, mode: str,
-                        required_range_km: float = 0, objective: str = "balanced", travel_hours: float = 0) -> tuple[list[dict], float]:
+                        required_range_km: float = 0, objective: str = "balanced", travel_hours: float = 0, at_time: datetime | None = None) -> tuple[list[dict], float]:
         import json
         accepted = {"air": {"plane", "aircraft"}, "road": {"truck", "car", "auto", "bike"}}
-        now = datetime.now(timezone.utc).timestamp()
+        reference = at_time or datetime.now(timezone.utc)
+        now = reference.timestamp()
         valid = []
         for vehicle in vehicles:
             if (not vehicle.get("is_available") or not vehicle.get("is_active", 1)
@@ -159,7 +165,7 @@ class PlanningService:
             wait_hours = 0.0
             if availability and "T" not in availability and len(availability) <= 8:
                 # Loaded HH:MM values describe recurring dispatch windows.
-                local_now = datetime.now().astimezone()
+                local_now = reference.astimezone(__import__("zoneinfo").ZoneInfo("Asia/Kolkata"))
                 start_time = datetime.strptime(availability[:5], "%H:%M").time()
                 start = local_now.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
                 if until and len(until) <= 8:
@@ -196,7 +202,7 @@ class PlanningService:
             hours += max(float(v.get("_departure_wait_hours") or 0) for v in combo)
             hours += sum(float(v.get("loading_time_min") or 0)+float(v.get("unloading_time_min") or 0) for v in combo)/60
             cost = sum(float(v.get("fixed_dispatch_cost") or 0)+float(v.get("cost_per_km") or 0)*required_range_km+float(v.get("cost_per_hour") or 0)*hours for v in combo)
-            risk = sum(1-float(v.get("reliability") or .9)+float(v.get("breakdown_risk") or 0) for v in combo)/len(combo)
+            risk = sum(1-float(v.get("reliability") if v.get("reliability") is not None else .9)+float(v.get("breakdown_risk") or 0) for v in combo)/len(combo)
             excess = (capacity-weight)/capacity
             key = {"cheapest":(cost,excess,risk),"fastest":(hours,cost,excess),"lowest-risk":(risk,cost,excess)}.get(objective,(excess+cost/1_000_000+risk,cost,len(combo)))
             options.append((key,combo,capacity))
@@ -275,27 +281,36 @@ class PlanningService:
         return found
 
     def _candidate(self, legs: list[dict], request: PlanningRequest, vehicles: list[dict],
-                   changes: dict | None = None, warehouses: list[dict] | None = None) -> dict | None:
+                   changes: dict | None = None, warehouses: list[dict] | None = None, start_at: datetime | None = None) -> dict | None:
         if not legs:
             return None
+        start_at = start_at or datetime.now(timezone.utc)
         modes = {str(x.get("route_type") or "road").casefold() for x in legs}
         mode = next(iter(modes)) if len(modes) == 1 else "multimodal"
         if mode == "multimodal":
             segments = []
+            projected_start = start_at
             for _, group in itertools.groupby(legs, key=lambda leg: str(leg.get("route_type") or "road").casefold()):
                 segment = list(group)
                 segment_request = request.model_copy(update={"source": segment[0]["from_location"], "destination": segment[-1]["to_location"]})
-                calculated = self._candidate(segment, segment_request, vehicles, changes, warehouses)
+                if segments:
+                    projected_start += timedelta(hours=.5)
+                calculated = self._candidate(segment, segment_request, vehicles, changes, warehouses, start_at=projected_start)
                 if calculated is None:
                     return None
                 segments.append(calculated)
+                projected_start += timedelta(hours=calculated["duration_hours"])
             plan = copy.deepcopy(segments[0])
             plan.update(plan_id=str(uuid.uuid4()), mode="multimodal", product="Express", route_legs=legs)
             plan["vehicles"] = [v for segment in segments for v in segment["vehicles"]]
-            plan["leg_assignments"] = [{"route_legs": segment["route_legs"], "vehicles": segment["vehicles"], "duration_hours": segment["duration_hours"]} for segment in segments]
+            plan["leg_assignments"] = [{"route_legs": segment["route_legs"], "vehicles": segment["vehicles"], "duration_hours": segment["duration_hours"], "vehicle_utilization":segment["vehicle_utilization"], "departure_wait_hours":segment["departure_wait_hours"]} for segment in segments]
+            plan["segment_utilizations"] = [x["vehicle_utilization"] for x in segments]
+            plan["vehicle_utilization"] = round(sum(plan["segment_utilizations"])/len(segments), 4)
+            plan["utilization_basis"] = "Arithmetic mean of mode-segment load/capacity ratios"
+            plan["departure_wait_hours"] = round(sum(x["departure_wait_hours"] for x in segments), 2)
             plan["distance_km"] = round(sum(x["distance_km"] for x in segments), 2)
             plan["duration_hours"] = round(sum(x["duration_hours"] for x in segments) + .5*(len(segments)-1), 2)
-            plan["eta"] = (datetime.now(timezone.utc)+timedelta(hours=plan["duration_hours"])).isoformat()
+            plan["eta"] = (start_at+timedelta(hours=plan["duration_hours"])).isoformat()
             plan["cost_breakdown"] = {key: round(sum(x["cost_breakdown"][key] for x in segments), 2) for key in plan["cost_breakdown"]}
             plan["cost_breakdown"]["handling_cost"] += request.handling_cost_per_stop*(len(segments)-1)
             plan["operational_cost"] = round(sum(plan["cost_breakdown"].values()), 2)
@@ -312,7 +327,7 @@ class PlanningService:
         route_distance = sum(float(x.get("distance") or 0) for x in legs)
         selected, utilization = self.select_vehicles(vehicles, request.source,
                                                      request.shipment.weight_kg, vehicle_mode,
-                                                     route_distance, request.objective, sum(float(x.get("duration") or 0) for x in legs))
+                                                     route_distance, request.objective, sum(float(x.get("duration") or 0) for x in legs), at_time=start_at)
         if not selected:
             return None
         # Existing routes already contain transport cost; deterministic modifiers cover shipment and scenario.
@@ -322,7 +337,8 @@ class PlanningService:
         handling = max(0, len(legs) - 1) * request.handling_cost_per_stop
         fuel = sum(float(x.get("fuel_cost") or 0) for x in legs) * fuel_multiplier
         tolls = sum(float(x.get("toll_cost") or 0) for x in legs)
-        air_cost = sum(float(x.get("air_cost") or 0) for x in legs)
+        from .metrics_v2 import additional_air_cost
+        air_cost = sum(additional_air_cost(x) for x in legs)
         route_handling = sum(float(x.get("handling_cost") or 0) for x in legs)
         total_distance=sum(float(x.get("distance") or 0) for x in legs)
         travel_hours=sum(float(x.get("duration") or 0) for x in legs)
@@ -345,7 +361,7 @@ class PlanningService:
         duration_h = round(travel_hours+handling_hours+transfer_hours+departure_wait_hours, 2)
         risk_breakdown=self.risk_breakdown(legs,utilization,selected,warehouses=[w for w in warehouses or [] if any(_norm(w["name"]) in {_norm(leg["from_location"]), _norm(leg["to_location"])} for leg in legs)],changes=changes)
         risk = risk_breakdown["overall"]
-        now = datetime.now(timezone.utc)
+        now = start_at
         eta = now.timestamp() + duration_h * 3600
         deadline = request.deadline
         slack = None if deadline is None else round((deadline.timestamp() - eta) / 3600, 2)
@@ -368,7 +384,7 @@ class PlanningService:
             "operational_cost": operational_cost, "cost_breakdown": cost_breakdown, "selling_price": selling,
             "expected_revenue": selling, "profit": round(selling - operational_cost, 2),
             "margin_percentage": round(request.target_margin * 100, 2),
-            "risk_score": risk,"risk_breakdown":risk_breakdown, "reliability": round(sum(float(x.get("reliability") or .9) for x in legs)/len(legs),4),
+            "risk_score": risk,"risk_breakdown":risk_breakdown, "reliability": round(sum(float(x.get("reliability") if x.get("reliability") is not None else .9) for x in legs)/len(legs),4),
             "sla_met": sla_met, "deadline":deadline.isoformat() if deadline else None,"sla_slack_hours":max(0,slack) if slack is not None else None,"sla_delay_hours":max(0,-slack) if slack is not None else None,
             "vehicles": assigned,
             "vehicle_utilization": utilization, "product": "Express" if mode in {"air","multimodal"} else "Ground",
