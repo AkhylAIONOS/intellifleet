@@ -24,6 +24,7 @@ from backend.planning.routes import router as planning_router
 from backend.routes.upload.network_upload import router as network_upload_router
 from backend.fedex.routes import router as fedex_router
 from backend.fedex.telemetry import runtime as fedex_runtime
+from backend.control_tower.routes import router as control_tower_router, monitor as control_tower_monitor
 import asyncio
 from contextlib import suppress
 
@@ -45,10 +46,14 @@ async def lifespan(app: FastAPI):
     await supervisor.initialize()
 
     fedex_task = asyncio.create_task(fedex_runtime.run())
+    control_tower_task = asyncio.create_task(control_tower_monitor())
     try:
         yield
     finally:
         fedex_task.cancel()
+        control_tower_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await control_tower_task
         with suppress(asyncio.CancelledError):
             await fedex_task
 
@@ -99,6 +104,7 @@ app.include_router(disruption_router)
 app.include_router(planning_router)
 app.include_router(network_upload_router)
 app.include_router(fedex_router)
+app.include_router(control_tower_router)
 
 
 @app.get("/health")
