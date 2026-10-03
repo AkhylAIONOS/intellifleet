@@ -26,7 +26,10 @@ export function ensurePlanMovement(plan:any):Promise<void> {
   const ownerToken=useAuthStore.getState().token;
   const task=(async()=>{
     try {
-      const {data:simulation}=await api.post(`/operations/plan-journeys/${encodeURIComponent(id)}`);
+      const {data:received}=await api.post(`/operations/plan-journeys/${encodeURIComponent(id)}`);
+      // Older replay responses omit revision metadata. The requested plan ID
+      // is authoritative at this boundary, never inferred from an OD pair.
+      const simulation={...received,plan_id:received.plan_id || id};
       if(useAuthStore.getState().token!==ownerToken || useOperationsStore.getState().aiSessionGeneration!==generation)return;
       const current=useOperationsStore.getState();
       current.patch({enabled:true,viewMode:'AI',filter:'ALL',selected:simulation.simulation_id,
@@ -37,7 +40,7 @@ export function ensurePlanMovement(plan:any):Promise<void> {
       if(simulation.paused && simulation.progress===0){
         const updated=await fedexApi.control(simulation.simulation_id,'resume');
         const latest=useOperationsStore.getState();
-        latest.patch({movements:latest.movements.map(m=>m.simulation_id===updated.simulation_id?updated:m)});
+        latest.patch({movements:latest.movements.map(m=>m.simulation_id===updated.simulation_id?{...updated,plan_id:updated.plan_id || id}:m)});
       }
     } catch(error:any) {
       const detail=error?.response?.data?.detail;

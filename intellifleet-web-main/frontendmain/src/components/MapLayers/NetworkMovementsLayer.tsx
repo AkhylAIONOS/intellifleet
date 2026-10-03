@@ -36,16 +36,28 @@ export function NetworkMovementsLayer(){
    : `${state.selected||''}:${entities.length}`;
 
  useEffect(()=>{
-   const refresh=()=>map.invalidateSize(false);
+   const refresh=()=>{
+     const container=map.getContainer(), size=map.getSize();
+     if(size.x!==container.clientWidth || size.y!==container.clientHeight){
+       map.invalidateSize({pan:false,animate:false});
+     }else{
+       // invalidateSize resets Leaflet's cached centre even without a resize.
+       // Redraw vectors directly when layout is unchanged to preserve manual pan.
+       map.eachLayer(layer=>{if('redraw' in layer && typeof layer.redraw==='function')layer.redraw();});
+     }
+   };
 
    // Refresh once immediately and again after React/layout transitions settle.
    refresh();
-   const frame=window.requestAnimationFrame(refresh);
+   // The immediate refresh already handles a measurable container. Keep the
+   // frame fallback only for a hidden/zero-sized map; settled-layout timers
+   // remain in place so selection still repaints without manual zoom.
+   const frame=map.getContainer().clientWidth===0 ? window.requestAnimationFrame(refresh) : null;
    const shortTimer=window.setTimeout(refresh,75);
    const layoutTimer=window.setTimeout(refresh,250);
 
    return()=>{
-     window.cancelAnimationFrame(frame);
+     if(frame!==null)window.cancelAnimationFrame(frame);
      window.clearTimeout(shortTimer);
      window.clearTimeout(layoutTimer);
    };

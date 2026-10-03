@@ -109,8 +109,13 @@ export const useOperationsStore=create<OperationsState>((set)=>({
     if(!value.movements)return value;
     const previous=new Map(state.movements.map(m=>[movementIdentity(m),m]));
     const next=new Map<string,Movement>();
-    for(const m of value.movements){
-      const key=movementIdentity(m), old=next.get(key) || previous.get(key);
+    for(const received of value.movements){
+      const key=movementIdentity(received), old=next.get(key) || previous.get(key);
+      // Legacy telemetry may omit the plan ID. Preserve a known binding only
+      // for the exact same movement, shipment and revision.
+      const m=old && received.plan_id==null && received.simulation_id===old.simulation_id
+        && received.shipment_id===old.shipment_id && received.revision===old.revision
+        ? {...received,plan_id:old.plan_id} : received;
       const olderRevision=old && (old.revision || 0)>(m.revision || 0);
       const sameRevision=old && old.revision===m.revision && old.plan_id===m.plan_id;
       if(old && (olderRevision || (sameRevision && old.sequence!=null && m.sequence!=null && old.sequence>m.sequence))){next.set(key,old);continue;}
