@@ -5,9 +5,12 @@ import {useOperationsStore,movementMatches,movementIdentity,visibleAiMovement,ac
 import {useFedexStore} from '../../store/fedexStore';
 import {movementIcon} from './movementIcon';
 import {vehicleFollower} from '../../utils/vehicleFollow';
+import {useControlTowerStore} from '../../store/controlTowerStore';
 export function NetworkMovementsLayer(){
+ const towerRun=useControlTowerStore(s=>s.selected);
  const state=useOperationsStore();const current=useFedexStore(s=>s.telemetry?.simulation_id);const map=useMap();const fitted=useRef(state.fit);const selected=useRef<string|null>(null);
  const entities=state.movements.filter(m=>{
+  if(towerRun && m.simulation_id!==towerRun.movement_id)return false;
   if(m.stopped || m.status==='SCHEDULE_TEMPLATE') return false;
   if(state.viewMode!=='AI' && m.simulation_id===current) return false;
   if(m.latitude==null || m.longitude==null) return false;
@@ -69,7 +72,7 @@ export function NetworkMovementsLayer(){
    key={`route-${movementIdentity(m)}-${index}`}
    positions={m.route.slice(segment.start_index,segment.end_index+1)}
    pathOptions={{
-     color:m.simulation_id===state.selected?'#ff6600':segment.mode==='AIR'?'#7c3aed':segment.mode==='RAIL'?'#059669':'#3388ff',
+     color:towerRun?.status==='DELAYED'?'#b42318':towerRun?.critical?'#9a6700':m.simulation_id===state.selected?'#ff6600':segment.mode==='AIR'?'#7c3aed':segment.mode==='RAIL'?'#059669':'#3388ff',
      dashArray:segment.mode==='AIR'?'10 8':segment.mode==='RAIL'?'4 5':undefined,
      weight:m.simulation_id===state.selected?4:2,
      opacity:m.simulation_id===state.selected?1:0.45

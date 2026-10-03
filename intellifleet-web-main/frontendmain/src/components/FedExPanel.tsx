@@ -75,7 +75,7 @@ export function FedExPanel() {
     <div className="fedex-heading"><strong>Schedules / Live Operations</strong><span>SIMULATED TELEMETRY</span></div>
     <p className="fedex-note">All times IST · Surface follows map-derived roads. Air/Rail geometry remains approximate. Telemetry is simulated, not actual GPS.</p>
     <div className="fedex-controls">
-      <label>Schedule source<select value={source} disabled={busy || !!sid} onChange={e=>{setSummary(null);setEligibility(null);setError('');setSource(e.target.value);}}><option value="SYNTHETIC">Synthetic schedules</option><option value="FEDEX">FedEx source workbook</option></select></label>
+      <label>Schedule source<select value={source} disabled={busy || !!sid} onChange={e=>{setSummary(null);setEligibility(null);setError('');setSource(e.target.value);}}><option value="SYNTHETIC">Synthetic schedules</option><option value="FEDEX">FedEx Network Plan</option></select></label>
       <label>Origin Station<select value={origin} disabled={busy || !!sid} onChange={e => {setOrigin(e.target.value); setGateway(summary?.lanes.find(l => l.origin_station===e.target.value)?.gateway || '');}}>{origins.map(o => <option key={o}>{o}</option>)}</select></label>
       <label>Gateway<select value={gateway} disabled={busy || !!sid} onChange={e=>setGateway(e.target.value)}>{gateways.map(g=><option key={g}>{g}</option>)}</select></label>
       <label>Simulation Date<input type="date" value={date} disabled={busy || !!sid} onChange={e=>setDate(e.target.value)}/></label>

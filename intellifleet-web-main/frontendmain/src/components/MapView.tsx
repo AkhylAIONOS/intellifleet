@@ -1,4 +1,6 @@
 import { NetworkMovementsLayer } from './MapLayers/NetworkMovementsLayer';
+import {ControlTowerLayer} from './MapLayers/ControlTowerLayer';
+import {useControlTowerStore} from '../store/controlTowerStore';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';
@@ -180,9 +182,10 @@ export const MapView = () => {
   const zoom = 5;
   const mapViewMode = useAppStore(state => state.mapViewMode);
   const selectedPlan=useAppStore(s=>s.selectedPlan);
+  const towerSelection=useControlTowerStore(s=>s.selected);
   const selectedMovement=useOperationsStore(s=>s.selected);
   const live=useFedexStore(s=>s.telemetry);
-  const focused=!!selectedPlan||!!selectedMovement||!!live;
+  const focused=!!selectedPlan||!!selectedMovement||!!live||!!towerSelection;
 
   //india boundary kashmir logic
 
@@ -237,10 +240,10 @@ export const MapView = () => {
         )}
         {!focused&&<><WarehousesLayer /><RoutesLayer /><VehiclesLayer /><PlanesLayer /></>}
         <VehicleAssignmentZoomController />
-        <GuardedJourney />
+        {!towerSelection&&<GuardedJourney />}
         <WarehouseFocusLayer />
         <MapLegend />
-        <FedExLayer /><NetworkMovementsLayer />
+        {!towerSelection&&<FedExLayer />}<NetworkMovementsLayer /><ControlTowerLayer />
       </MapContainer>
     </div>
   );

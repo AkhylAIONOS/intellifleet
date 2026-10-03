@@ -272,7 +272,7 @@ export const DashboardPage = () => {
           <nav className="fedex-controls workspace-tabs" aria-label="Operations workspace">{['PLAN','SCHEDULES','LIVE OPERATIONS','NETWORK','AI CHAT'].map(tab=><button key={tab} aria-pressed={workspace===tab} onClick={()=>{setWorkspace(tab);if(tab==='SCHEDULES')setFedexLoaded(true);if(tab==='AI CHAT')document.querySelector<HTMLTextAreaElement>('.dashboard-left textarea')?.focus();}}>{tab}</button>)}</nav>
           <div hidden={workspace!=='PLAN'}><PlanningPanel /></div>
           {fedexLoaded && <div hidden={workspace!=='SCHEDULES'}><FedExPanel /></div>}
-          <div hidden={workspace!=='LIVE OPERATIONS'}><LiveOperations /></div>
+          <div hidden={workspace!=='LIVE OPERATIONS'}><LiveOperations active={workspace==='LIVE OPERATIONS'} /></div>
           {workspace==='NETWORK'&&<NetworkUpload />}
           <div className="workspace-context" role="note">{workspace==='SCHEDULES'?'Schedules: evaluate cutoffs and follow one shipment. Live Operations shows the wider fleet.':workspace==='LIVE OPERATIONS'?'Live Operations: simulated fleet movements. The selected planning route is a separate map layer.':workspace==='NETWORK'?'Network CSVs power planning. Schedule CSVs add timed services without replacing your fleet.':'Plan with the loaded network, or ask the AI assistant on the left.'}</div>
           <div className="map-workspace">

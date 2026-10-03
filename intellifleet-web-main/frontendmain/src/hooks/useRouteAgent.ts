@@ -1,4 +1,5 @@
 import { useOperationsStore } from '../store/operationsStore';
+import {useControlTowerStore} from '../store/controlTowerStore';
 import {ensurePlanMovement} from '../utils/planMovement';
 import {createSessionId} from '../utils/sessionId';
 import { useState, useRef } from 'react';
@@ -169,6 +170,16 @@ export const useRouteAgent = () => {
     const handleAction = async (action: ChatAction) => {
         //console.log('Executing Action:', action);
         switch (action.type) {
+            case 'focus_operational_run': {
+                const run=action.data;
+                useControlTowerStore.getState().select(run);
+                if(run.movement){
+                    const state=useOperationsStore.getState();
+                    state.patch({enabled:true,viewMode:'LIVE',filter:'FEDEX',selected:run.movement_id,
+                        movements:[...state.movements.filter(m=>m.simulation_id!==run.movement_id),run.movement],fit:state.fit+1});
+                }
+                break;
+            }
             case 'set_journey_display': {
                 const state=useOperationsStore.getState();
                 const ids=action.data.simulation_ids as string[];

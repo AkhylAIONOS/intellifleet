@@ -1,5 +1,6 @@
 import {useOperationsStore} from './operationsStore';
 import {useFedexStore} from './fedexStore';
+import {useControlTowerStore} from './controlTowerStore';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types/api';
@@ -37,6 +38,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('authToken');
         useOperationsStore.getState().patch({enabled:false,viewMode:'OFF',movements:[],selected:null,aiSimulationIds:[]});
         useFedexStore.getState().reset();
+        useControlTowerStore.getState().select(null);
         if(typeof sessionStorage!=='undefined')sessionStorage.removeItem('liveSimulationId');
         set({ user: null, token: null, isAuthenticated: false });
       },
