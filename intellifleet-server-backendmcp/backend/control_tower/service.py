@@ -199,9 +199,22 @@ class ControlTower:
             if str(request.simulation_date)!=row['service_date'] or request.origin_station!=json.loads(row['schedule_json'])['origin_station'] or request.gateway!=json.loads(row['schedule_json'])['gateway']:
                 raise ValueError('Simulation must use the operational run date and endpoints')
             schedule=Schedule(**json.loads(row['schedule_json']))
+            if getattr(request,'demo_playback',False):
+                # Explicit city-centre demo mapping, never FedEx facility/GPS coordinates.
+                from backend.operations.data import rows
+                import re
+                cities={r['NearestAirportIATA']:(float(r['Latitude']),float(r['Longitude'])) for r in rows('warehouse.csv') if r.get('NearestAirportIATA')}
+                airports=schedule.lane.split('-') if re.fullmatch(r'[A-Z]{3}-[A-Z]{3}',schedule.lane) else [schedule.origin_station,schedule.gateway]
+                origin=cities.get(airports[0])
+                destination=cities.get(airports[1])
+                schedule=schedule.model_copy(update={'origin_coordinates':schedule.origin_coordinates or origin,'destination_coordinates':schedule.destination_coordinates or destination})
             request=request.model_copy(update={'schedule_id':schedule.schedule_id,'shipment_id':'CT-DEMO-'+run_id})
             sim=runtime.create(owner,request,[schedule])
+            if getattr(request,'demo_playback',False):
+                sim.now=sim.selected['etd']
+                sim.last_wall=runtime.clock()
             conn.execute('UPDATE ct_runs SET movement_id=?,actual_source=?,carrier=? WHERE owner=? AND run_id=?',(sim.id,'SYNTHETIC_TELEMETRY',schedule.service,owner,run_id))
+        self.observe(owner)
         return self.detail(owner,run_id)
 
     def observe(self, owner):

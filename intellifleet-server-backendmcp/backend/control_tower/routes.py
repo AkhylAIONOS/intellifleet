@@ -19,6 +19,10 @@ class ImportInput(BaseModel):
     service_date: date
 
 
+class PlaybackInput(SimulationInput):
+    demo_playback: bool = False
+
+
 class CriticalInput(BaseModel):
     critical: bool
 
@@ -119,7 +123,7 @@ def event(run_id:str,request:ScanInput,user=Depends(get_current_user),x_fedex_in
 
 
 @router.post('/control-tower/runs/{run_id}/simulation')
-def simulation(run_id:str,request:SimulationInput,user=Depends(get_current_user)):
+def simulation(run_id:str,request:PlaybackInput,user=Depends(get_current_user)):
     return invoke(service.link_simulation,user['user_id'],run_id,request)
 
 

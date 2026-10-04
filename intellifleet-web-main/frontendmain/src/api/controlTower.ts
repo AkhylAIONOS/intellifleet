@@ -4,7 +4,7 @@ export interface TowerRun {
  run_id:string;lane_key:string;service_date:string;network_version:string;
  schedule:{origin_city:string;origin_station:string;gateway:string;lane:string;run:string;mode:string;
   service:string;vehicle_count:number|null;cutoff_minutes:number|null;etd_minutes:number|null;
-  eta_minutes:number|null;transit_minutes:number|null;source:Record<string,string>;warnings:string[];valid:boolean};
+  eta_minutes:number|null;transit_minutes:number|null;source:Record<string,string>;source_formulas?:Record<string,string>;source_value_provenance?:Record<string,string>;warnings:string[];valid:boolean};
  critical:boolean;status:string;planned_etd:string|null;planned_eta:string|null;current_eta:string|null;
  actual_departure_at:string|null;actual_arrival_at:string|null;actual_source:string|null;
  elapsed_hours:number|null;estimated_time_left_hours:number|null;actual_tt_hours:number|null;
@@ -28,5 +28,5 @@ export const controlTowerApi={
  con:async(number:string):Promise<{con:{con_number:string;source:string;event_at:string};run:TowerRun}>=>(await api.get(`/operations/cons/${encodeURIComponent(number)}`)).data,
  simulate:async(run:TowerRun)=>(await api.post(`/operations/control-tower/runs/${encodeURIComponent(run.run_id)}/simulation`,{
   origin_station:run.schedule.origin_station,gateway:run.schedule.gateway,simulation_date:run.service_date,
-  shipment_ready_datetime:`${run.service_date}T00:00:00+05:30`,speed:120})).data,
+  shipment_ready_datetime:`${run.service_date}T00:00:00+05:30`,speed:120,demo_playback:true})).data,
 };
