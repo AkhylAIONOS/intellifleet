@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+import {createServer} from 'vite';
+const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/'});
+for(const key of ['window','document','HTMLElement','Element','Node','navigator','localStorage','sessionStorage'])Object.defineProperty(globalThis,key,{value:dom.window[key],configurable:true});
+HTMLElement.prototype.scrollIntoView=()=>{};
+const React=await import('react');
+const {render,act,fireEvent,cleanup}=await import('@testing-library/react');
+const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
+try{
+  const {planningApi}=await server.ssrLoadModule('/src/api/planning.ts');
+  const {PlanningPanel}=await server.ssrLoadModule('/src/components/PlanningPanel.tsx');
+  const plan={plan_id:'baseline',mode:'road',operational_cost:100,duration_hours:2,risk_score:.1,reliability:.95,vehicle_utilization:0,vehicles:[],route_legs:[]};
+  const changed={...plan,plan_id:'scenario',operational_cost:120};
+  planningApi.createPlan=async()=>({recommended_plan:plan,recommended_plan_id:plan.plan_id,candidate_plans:[plan]});
+  planningApi.createScenario=async()=>({status:'draft',scenario_id:'draft',baseline:{recommended_plan:plan},scenario:{recommended_plan:changed}});
+  planningApi.scenarioAction=async()=>({status:'applied',approved_plan:changed});
+  const ui=render(React.createElement(PlanningPanel));
+  const change=(name,value)=>fireEvent.change(ui.getByLabelText(name),{target:{value}});
+  const click=async name=>act(async()=>fireEvent.click(ui.getByRole('button',{name})));
+  change('Source','Ahmedabad');change('Destination','Bengaluru');
+  await click('Calculate Plan');await click('Run What-if Scenario');await click('Apply Plan');
+  assert.ok(ui.getByText('Scenario applied'));
+  await click('View baseline and comparison');assert.ok(ui.getByLabelText('Plan comparison'));
+  change('Source','Mumbai');change('Destination','Chennai');
+  const next={...plan,plan_id:'new-shipment'};
+  planningApi.createPlan=async()=>({recommended_plan:next,recommended_plan_id:next.plan_id,candidate_plans:[next]});
+  await click('Calculate Plan');
+  assert.equal(ui.queryByText('Scenario applied'),null);
+  assert.equal(ui.queryByLabelText('Plan comparison'),null);
+  assert.equal(ui.queryByRole('button',{name:'View baseline and comparison'}),null);
+  await click('Run What-if Scenario');assert.ok(ui.getByText('Draft What-if Scenario'));
+  planningApi.createPlan=async()=>({recommended_plan:null,candidate_plans:[],reason:'No feasible plan'});
+  await click('Calculate Plan');assert.equal(ui.queryByText('Draft What-if Scenario'),null);
+  assert.match(ui.getByRole('alert').textContent,/No feasible plan/);
+  console.log('PASS: new successful and infeasible planning requests clear previous shipment scenario controls/comparison');
+}finally{cleanup();await server.close();dom.window.close();}

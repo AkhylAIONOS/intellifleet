@@ -36,7 +36,7 @@ export const PlanningPanel = () => {
   };
   const plan = async () => {
     setBusy(true); setError('');
-    try { const value=await planningApi.createPlan(input); setResult(value); setActivePlanId(value.recommended_plan_id); if(value.recommended_plan){showOnMap(value.recommended_plan); dispatchResultVisibility('show');}else{setError(value.reason || value.message || 'No feasible plan for these inputs. Try another mode, load or route.');} } catch(error){setError(describeError(error));} finally { setBusy(false); }
+    try { const value=await planningApi.createPlan(input); setScenario(undefined); setResult(value); setActivePlanId(value.recommended_plan_id); if(value.recommended_plan){showOnMap(value.recommended_plan); dispatchResultVisibility('show');}else{setError(value.reason || value.message || 'No feasible plan for these inputs. Try another mode, load or route.');} } catch(error){setError(describeError(error));} finally { setBusy(false); }
   };
   const simulate = async () => {
     setBusy(true); setError('');
