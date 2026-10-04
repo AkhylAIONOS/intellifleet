@@ -27,6 +27,8 @@ try{
  await waitFor(()=>assert.ok(ui.getByRole('button',{name:'Provided lane'})));
  assert.equal(tower.getState().selected,null,'loading schedules must not select an unlinked movement');
  assert.equal(ui.container.querySelectorAll('tbody tr').length,1);
+ assert.equal(ui.container.querySelectorAll('thead th').length,19);
+ for(const name of ['Origin City','Origin Station','Transit Hub / GTW','Lane','Run','Mode','Details','No. of Vehicles','Handover at Origin','ETD','ETA','TT (hours)','Status','Elapsed Time (hours)','Estimated Time Left (hours)','Actual Departure Time','Actual Arrival Time','Actual TT (hours)'])assert.ok(ui.getByRole('columnheader',{name}));
  assert.ok(ui.getByText('SURFACE'));
  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'AIR LINEHAUL'})));
  await waitFor(()=>assert.equal(ui.getAllByText('AIR').length,2));

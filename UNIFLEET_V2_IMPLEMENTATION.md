@@ -1,5 +1,7 @@
 # UniFleet V2 implementation record
 
+Session 2 verification and targeted fixes are recorded in [UNIFLEET_V2_SESSION2_QA.md](UNIFLEET_V2_SESSION2_QA.md). The Session 1 results below remain the historical checkpoint; the newer report contains current test/bundle results and outstanding visual QA.
+
 ## Recovery and baseline
 
 - Original branch: feature/fedex-simulation
