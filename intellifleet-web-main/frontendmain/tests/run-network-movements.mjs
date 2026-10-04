@@ -9,10 +9,12 @@ const React=await import('react');const {render,act,cleanup}=await import('@test
 const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
 try{
  const {NetworkMovementsLayer}=await server.ssrLoadModule('/src/components/MapLayers/NetworkMovementsLayer.tsx');
+ const {ControlTowerLayer}=await server.ssrLoadModule('/src/components/MapLayers/ControlTowerLayer.tsx');
+ const {useControlTowerStore:tower}=await server.ssrLoadModule('/src/store/controlTowerStore.ts');
  const {useOperationsStore,movementMatches}=await server.ssrLoadModule('/src/store/operationsStore.ts');
  const {useFedexStore}=await server.ssrLoadModule('/src/store/fedexStore.ts');
  let map,fits=0;const original=L.Map.prototype.fitBounds;L.Map.prototype.fitBounds=function(...args){fits++;return original.apply(this,args);};
- render(React.createElement(MapContainer,{center:[24,74],zoom:5,ref:m=>{if(m)map=m;}},React.createElement(NetworkMovementsLayer)));
+ render(React.createElement(MapContainer,{center:[24,74],zoom:5,ref:m=>{if(m)map=m;}},React.createElement(NetworkMovementsLayer),React.createElement(ControlTowerLayer)));
  const movements=Array.from({length:100},(_,i)=>({simulation_id:`m${i}`,shipment_id:`SHIP-${i}`,mode:['SURFACE','AIR','RAIL'][i%3],origin_station:'Kochi',gateway:'Chennai',route:[[10,76],[11,77],[13,80]],latitude:10+i*.1,longitude:76,heading:30,progress:.3,status:'IN_TRANSIT',data_source:i%2?'FEDEX_SOURCE':'SYNTHETIC_NETWORK',location_source:'DEMO_SIMULATION',scheduled_etd:'2026-09-29T18:00',current_eta:'2026-09-30T08:00',delay_minutes:30}));
  const paths=()=>{const result=[];map.eachLayer(l=>{if(l instanceof L.Polyline)result.push(l);});return result;};
  const markers=()=>{const result=[];map.eachLayer(l=>{if(l instanceof L.Marker)result.push(l);});return result;};
@@ -89,5 +91,30 @@ try{
  await act(async()=>useOperationsStore.getState().patch({enabled:true,viewMode:'LIVE',movements,aiSimulationIds:[]}));
  await act(async()=>useFedexStore.getState().begin({...movements[0],sequence:1}));assert.equal(markers().length,99);
  await act(async()=>useOperationsStore.getState().patch({enabled:false}));assert.equal(markers().length,0);
+ await act(async()=>useFedexStore.getState().reset());
+ await act(async()=>useOperationsStore.getState().patch({enabled:true,viewMode:'LIVE',filter:'ALL',selected:'m1',movements}));
+ const run={run_id:'tower-air',movement_id:'m1',critical:true,status:'DELAYED',schedule:{mode:'AIR',lane:'Test lane',service:'Test carrier'},latest_location:null,location_source:'SYNTHETIC_TELEMETRY'};
+ await act(async()=>tower.getState().select(run));
+ assert.equal(markers().length,1,'one selected operational aircraft');assert.equal(paths().length,1);
+ assert.equal(paths()[0].options.color,'#b42318','delayed route emphasis');
+ await act(async()=>tower.getState().select({...run,status:'ON TIME'}));
+ assert.equal(paths()[0].options.color,'#9a6700','critical route emphasis');
+ map.panTo([18,73],{animate:false});const towerCenter=map.getCenter(),towerFits=fits;
+ await act(async()=>useOperationsStore.getState().patch({movements:movements.map(m=>({...m,latitude:m.latitude+.01}))}));
+ assert.ok(map.getCenter().equals(towerCenter));assert.equal(fits,towerFits);
+ await act(async()=>tower.getState().select({...run,run_id:'unlinked',movement_id:null}));
+ assert.equal(markers().length,0,'unlinked run hides unrelated aircraft');
+ const location={...run,run_id:'scan-test',movement_id:null,latest_location:{latitude:12,longitude:72},current_eta:'2030-01-01T12:00:00Z',last_update_at:'2030-01-01T10:00:00Z'};
+ await act(async()=>tower.getState().select(location));
+ assert.equal(markers().length,1,'one labelled test location marker');
+ assert.equal(paths().length,0,'location facts never invent geometry');
+ await act(async()=>markers()[0].openTooltip());
+ assert.ok(document.body.textContent.includes('SYNTHETIC_TELEMETRY'));
+ map.panTo([16,75],{animate:false});const scanCenter=map.getCenter();
+ await act(async()=>tower.getState().select({...location,latest_location:{latitude:12.1,longitude:72}}));
+ assert.ok(map.getCenter().equals(scanCenter),'location updates preserve manual pan');
+ await act(async()=>controls.getByRole('button',{name:'HIDE ALL MOVEMENTS'}).click());
+ await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
+ assert.equal(tower.getState().selected,null);assert.equal(markers().length,100,'Show All clears operational focus without duplication');
  console.log('PASS: 100 Leaflet entities; truck/plane/train icons; hover fields; filters; batched movement; pan preserved; arbitrary 3-node path; selected run deduplication; show-all off');
 }finally{cleanup();await server.close();dom.window.close();}
