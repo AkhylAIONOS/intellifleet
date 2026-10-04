@@ -13,22 +13,29 @@ export function ControlTower(){
  const [search,setSearch]=useState(''),[query,setQuery]=useState(''),[page,setPage]=useState(0),[sort,setSort]=useState('lane');
  const [runs,setRuns]=useState<TowerRun[]>([]),[total,setTotal]=useState(0),[summary,setSummary]=useState<TowerSummary|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const [loading,setLoading]=useState(true);
  const [con,setCon]=useState(''),[emails,setEmails]=useState(''),[alerts,setAlerts]=useState<Awaited<ReturnType<typeof controlTowerApi.alerts>>|null>(null);
  const selected=useControlTowerStore(s=>s.selected),select=useControlTowerStore(s=>s.select);
  const movement=useOperationsStore(s=>s.selected);
  const requestEpoch=useRef(0);
+ const lastMapSelection=useRef<string|null>(null);
  const refresh=useCallback(async()=>{
   const epoch=requestEpoch.current;
+  setLoading(true);
+  try{
   const [data,kpis]=await Promise.all([controlTowerApi.runs({service_date:date,mode,status:status||undefined,critical:critical||undefined,search:query,sort,offset:page*25,limit:25}),controlTowerApi.summary(date)]);
-  if(epoch===requestEpoch.current){setRuns(data.runs);setTotal(data.total);setSummary(kpis);}
+  if(epoch===requestEpoch.current){setRuns(data.runs);setTotal(data.total);setSummary(kpis);setError('');}
+  }finally{if(epoch===requestEpoch.current)setLoading(false);}
  },[date,mode,status,critical,query,page,sort]);
  useEffect(()=>{const timer=setTimeout(()=>{setQuery(search);setPage(0);},250);return()=>clearTimeout(timer);},[search]);
  useEffect(()=>{
   requestEpoch.current++;
+  setLoading(true);
   let cancelled=false;
   void Promise.all([controlTowerApi.runs({service_date:date,mode,status:status||undefined,critical:critical||undefined,search:query,sort,offset:page*25,limit:25}),controlTowerApi.summary(date)])
    .then(([data,kpis])=>{if(!cancelled){setRuns(data.runs);setTotal(data.total);setSummary(kpis);setError('');}})
-   .catch(()=>{if(!cancelled)setError('Control Tower unavailable. Check the backend connection.');});
+   .catch(()=>{if(!cancelled)setError('Control Tower unavailable. Check the backend connection.');})
+   .finally(()=>{if(!cancelled)setLoading(false);});
   return()=>{cancelled=true;requestEpoch.current++;};
  },[date,mode,status,critical,query,page,sort]);
  useEffect(()=>{let cancelled=false;void controlTowerApi.recipients().then(r=>{if(!cancelled)setEmails(r.emails.join(', '));}).catch(()=>{});return()=>{cancelled=true;};},[]);
@@ -42,7 +49,10 @@ export function ControlTower(){
   timer=setTimeout(poll,10000);return()=>{cancelled=true;clearTimeout(timer);};
  },[refresh,select]);
  useEffect(()=>{
+  if(!movement){lastMapSelection.current=null;return;}
+  if(movement===lastMapSelection.current)return;
   const run=runs.find(r=>r.movement_id===movement);
+  if(run)lastMapSelection.current=movement;
   if(run && run.run_id!==selected?.run_id)select(run);
  },[movement,runs,selected?.run_id,select]);
  const perform=async(fn:()=>Promise<void>)=>{setBusy(true);setError('');setNotice('');try{await fn();}catch(e:any){const d=e.response?.data?.detail;setError(e.response?.status>=500?'The operation could not be completed. Existing data retained.':typeof d==='string'?d:'Check the request and backend connection.');}finally{setBusy(false);}};
@@ -51,7 +61,7 @@ export function ControlTower(){
   const state=useOperationsStore.getState();
   if(run.movement){state.patch({enabled:true,viewMode:'LIVE',filter:'FEDEX',selected:run.movement_id,
    movements:[...state.movements.filter(m=>m.simulation_id!==run.movement_id),run.movement],fit:state.fit+1});}
-  else setNotice('No live movement is linked to this run. Schedule and scan facts remain available.');
+  else {state.patch({selected:null});setNotice('No live movement is linked to this run. Schedule and scan facts remain available.');}
  };
  const ordered=useMemo(()=>[...runs].sort((a,b)=>sort==='status'?a.status.localeCompare(b.status):sort==='eta'?String(a.current_eta).localeCompare(String(b.current_eta)):a.schedule.lane.localeCompare(b.schedule.lane)),[runs,sort]);
  const cards=summary?[
@@ -69,16 +79,17 @@ export function ControlTower(){
    <label>Operational status<select value={status} onChange={e=>{setStatus(e.target.value);setPage(0);}}>{['','SCHEDULED','ON TIME','EXPECTED DELAY','DELAYED','ARRIVED'].map(s=><option key={s} value={s}>{s||'ALL'}</option>)}</select></label>
    <label className="ct-check"><input type="checkbox" checked={critical} onChange={e=>{setCritical(e.target.checked);setPage(0);}}/>Critical lanes only</label>
    <label>Sort runs<select value={sort} onChange={e=>setSort(e.target.value)}><option value="lane">Lane</option><option value="status">Status</option><option value="eta">Current ETA</option></select></label></div>
-  {error&&<p role="alert" className="ct-error">{error}</p>}{notice&&<p role="status">{notice}</p>}
-  <div className="ct-table-wrap"><table><caption>{mode==='AIR'?'Air':'Surface'} linehaul · {total} matching runs · source cells preserved</caption><thead><tr>
+ {error&&<p role="alert" className="ct-error">{error}</p>}{notice&&<p role="status">{notice}</p>}
+  {loading&&<p role="status">Loading operational runs…</p>}
+  <div className="ct-table-wrap" aria-busy={loading}><table><caption>{mode==='AIR'?'Air':'Surface'} linehaul · {total} matching runs · source cells preserved</caption><thead><tr>
    {['Origin City','Origin Station','Transit Hub / GTW','Lane','Run','Mode','Details','No. of Vehicles','Handover at Origin','ETD','ETA','TT (hours)','Status','Elapsed Time (hours)','Estimated Time Left (hours)','Actual Departure Time','Actual Arrival Time','Actual TT (hours)','Critical'].map(h=><th key={h}>{h}</th>)}
   </tr></thead><tbody>{ordered.map(run=>{const s=run.schedule;return <tr key={run.run_id} className={selected?.run_id===run.run_id?'ct-selected':''}>
    <td>{s.source['Origin City']??s.origin_city}</td><td>{s.source['Origin Station']??s.origin_station}</td><td>{s.source['Transit Hub/GTW']??s.source['Transit GTW']??s.gateway}</td><td><button disabled={busy} onClick={()=>perform(async()=>focus(await controlTowerApi.detail(run.run_id)))}>{s.lane||'Unnamed lane'}</button></td><td>{s.source.Run??s.run}</td><td>{s.source.Mode??s.mode}</td><td>{s.source.Details??s.source.Flight??s.service}</td><td>{s.source['No of Vechiles']??s.vehicle_count??'—'}</td>
    <td>{clock(s.cutoff_minutes)}</td><td>{clock(s.etd_minutes)}</td><td>{clock(s.eta_minutes)}</td><td>{s.transit_minutes==null?'—':hours(s.transit_minutes/60)}</td><td><span className={`ct-status ct-${run.status.toLowerCase().replaceAll(' ','-')}`}>{run.status}</span>{!s.valid&&<small>Source validation required</small>}</td>
    <td>{hours(run.elapsed_hours)}</td><td>{hours(run.estimated_time_left_hours)}</td><td>{run.actual_departure_at?operationalTime(run.actual_departure_at):'—'}</td><td>{run.actual_arrival_at?operationalTime(run.actual_arrival_at):'—'}</td><td>{hours(run.actual_tt_hours)}</td>
-   <td><button aria-label={`${run.critical?'Unmark':'Mark'} critical ${s.lane} ${s.mode}`} aria-pressed={run.critical} disabled={busy} onClick={()=>perform(async()=>{const updated=await controlTowerApi.critical(run.run_id,!run.critical);if(selected?.lane_key===run.lane_key)select(updated);await refresh();})}>{run.critical?'★ Critical':'☆ Mark'}</button></td>
+   <td><button aria-label={`${run.critical?'Unmark':'Mark'} critical ${s.lane} ${s.mode}`} aria-pressed={run.critical} disabled={busy} onClick={()=>perform(async()=>{const updated=await controlTowerApi.critical(run.run_id,!run.critical);if(selected?.run_id===run.run_id)select(updated);else if(selected?.lane_key===run.lane_key)select({...selected,critical:updated.critical});await refresh();})}>{run.critical?'★ Critical':'☆ Mark'}</button></td>
   </tr>;})}</tbody></table></div>
-  {!runs.length&&<p className="ct-empty">No matching operational runs. Load the provided workbook for this date or adjust filters.</p>}
+  {!loading&&!error&&!runs.length&&<p className="ct-empty">No matching operational runs. Load the provided workbook for this date or adjust filters.</p>}
   <div className="ct-toolbar"><button disabled={page===0} onClick={()=>setPage(p=>p-1)}>Previous</button><span>Page {page+1} · 25 rows per page</span><button disabled={(page+1)*25>=total} onClick={()=>setPage(p=>p+1)}>Next</button></div>
   <form className="ct-toolbar" onSubmit={e=>{e.preventDefault();void perform(async()=>{const r=await controlTowerApi.con(con.trim());focus(r.run);setNotice(`${r.con.con_number} · ${r.con.source} · updated ${operationalTime(r.con.event_at)}`);});}}><label>Search CON<input value={con} onChange={e=>setCon(e.target.value)} placeholder="FedEx CON or labelled synthetic CON"/></label><button disabled={busy||!con.trim()}>Locate package</button></form>
   {selected&&<aside className="ct-details" aria-label="Lane details"><header><h3>{selected.schedule.lane} · Run {selected.schedule.run}</h3><button onClick={()=>select(null)}>Close details</button></header>
