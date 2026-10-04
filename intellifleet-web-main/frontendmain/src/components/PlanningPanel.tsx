@@ -17,6 +17,7 @@ export const PlanningPanel = () => {
   const [resultVisible,dispatchResultVisibility]=useReducer(planResultPanelReducer,false);
   const [activePlanId,setActivePlanId]=useState<string>();
   const [scenario, setScenario] = useState<any>();
+  const [scenarioExpanded,setScenarioExpanded]=useState(true);
   const [fuelIncrease,setFuelIncrease]=useState(20); const [blockedRoute,setBlockedRoute]=useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +42,7 @@ export const PlanningPanel = () => {
     setBusy(true); setError('');
     const changes:any={fuel_cost_multiplier:1+fuelIncrease/100};
     if(blockedRoute.includes('→')) changes.blocked_routes=[blockedRoute.split('→').map(x=>x.trim())];
-    try { const value=await planningApi.createScenario(input, changes); setScenario(value); applyPlanningMapPlan(value); } catch(error){setError(describeError(error));} finally { setBusy(false); }
+    try { const value=await planningApi.createScenario(input, changes); setScenario(value);setScenarioExpanded(true); applyPlanningMapPlan(value); } catch(error){setError(describeError(error));} finally { setBusy(false); }
   };
   const act = async (action: 'apply' | 'discard') => { setBusy(true);setError('');try{const value=await planningApi.scenarioAction(scenario.scenario_id, action); setScenario({ ...scenario, ...value }); applyPlanningMapPlan(value);
     if(action==='apply' && value.approved_plan){
@@ -63,6 +64,7 @@ export const PlanningPanel = () => {
       setResult({...scenario.scenario,recommended_plan:applied,recommended_plan_id:applied.plan_id,candidate_plans:[applied]});
       setActivePlanId(applied.plan_id);dispatchResultVisibility('show');
       await ensurePlanMovement(applied);
+      setScenarioExpanded(false);
     }
   }catch(error){setError(describeError(error));}finally{setBusy(false);} };
   const recommended = result?.candidate_plans?.find((x:any)=>x.plan_id===activePlanId) || result?.recommended_plan;
@@ -96,6 +98,7 @@ export const PlanningPanel = () => {
       <label>Blocked route<input aria-label="Blocked route" placeholder="Delhi → Mumbai" value={blockedRoute} onChange={e=>setBlockedRoute(e.target.value)}/></label>
       <button disabled={busy || !recommended} onClick={simulate}>Run What-if Scenario</button>
     </div></details>
+    <div className="planning-results">
     {recommended && resultVisible && <div className="planner-result" role="dialog" aria-label="Recommended Plan">
       <div className="planner-result-heading"><h3>Recommended Plan</h3><button type="button" className="planner-result-close" aria-label="Close recommended plan" onClick={()=>dispatchResultVisibility('close')}>×</button></div>
       <PlanSnapshot plan={recommended} />
@@ -109,9 +112,12 @@ export const PlanningPanel = () => {
       <div className="plan-options">{result.candidate_plans.map((plan:any,index:number)=><button key={plan.plan_id} className={plan.plan_id===activePlanId?'selected':''} onClick={()=>{setActivePlanId(plan.plan_id);showOnMap(plan)}}>Plan {String.fromCharCode(65+index)} · {plan.mode}</button>)}</div>
       <details><summary>Alternative plan details</summary><pre>{JSON.stringify(result.candidate_plans, null, 2)}</pre></details>
     </div>}
-    {scenarioPlan && <div className="scenario-card"><h3>Draft What-if Scenario</h3>
+    {scenarioPlan && <div className="scenario-card"><h3>{scenario.status==='applied'?'Scenario applied':scenario.status==='discarded'?'Scenario discarded':'Draft What-if Scenario'}</h3>
+      {scenario.status!=='draft'&&<button onClick={()=>setScenarioExpanded(value=>!value)}>{scenarioExpanded?'Collapse comparison':'View baseline and comparison'}</button>}
+      {scenarioExpanded&&<>
       {scenario.baseline?.recommended_plan && <PlanDelta comparison={{before:scenario.baseline.recommended_plan,after:scenarioPlan,beforeLabel:'Baseline',afterLabel:'Scenario',differences:scenario.comparison}} />}
-      <p>Status: {scenario.status}</p>{scenario.status === 'draft' && <><button onClick={() => act('apply')}>Apply Plan</button><button onClick={() => act('discard')}>Discard</button></>}
+      <p>Status: {scenario.status}</p></>}{scenario.status === 'draft' && <div className="scenario-actions"><button disabled={busy} onClick={() => act('apply')}>Apply Plan</button><button disabled={busy} onClick={() => act('discard')}>Discard</button></div>}
     </div>}
+    </div>
   </section>;
 };

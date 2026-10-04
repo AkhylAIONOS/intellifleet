@@ -32,7 +32,11 @@ try {
   fireEvent.keyDown(window,{key:'Escape'});assert.equal(ui.queryByRole('dialog'),null);assert.equal(useAppStore.getState().selectedPlan,plan);
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Run What-if Scenario'})));
   assert.equal(useAppStore.getState().selectedPlan,plan);assert.ok(ui.getByLabelText('Plan comparison'));
+  assert.ok(ui.container.querySelector('.planning-results .scenario-card'),'scenario occupies dedicated result space');
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Apply Plan'})));assert.equal(useAppStore.getState().selectedPlan,scenarioPlan);
+  assert.ok(ui.getByText('Scenario applied'));assert.equal(ui.queryByLabelText('Plan comparison'),null);
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'View baseline and comparison'})));
+  assert.ok(ui.getByLabelText('Plan comparison'),'historical baseline remains accessible');
   cleanup();
   let saved,uploaded;
   routesApi.updateRoute=async(id,updates)=>{saved={id,updates};return {is_active:updates.is_active};};
