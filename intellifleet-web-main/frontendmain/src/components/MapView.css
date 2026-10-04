@@ -2,10 +2,11 @@
   width: 100%;
   height: 100%;
   position: relative;
+  /* Contain Leaflet's high-z-index controls beneath surrounding form popups. */
+  isolation: isolate;
 }
 
 .map-view .leaflet-container {
   height: 100%;
   width: 100%;
 }
-
