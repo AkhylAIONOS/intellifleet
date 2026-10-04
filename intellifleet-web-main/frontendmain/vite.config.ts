@@ -4,6 +4,16 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep component mounting unchanged; separate stable dependencies for caching.
+        manualChunks(id) {
+          if (id.includes('/node_modules/')) return 'vendor';
+        }
+      }
+    }
+  },
   server: {
     allowedHosts: [
       "unprecipitate-liquidly-randal.ngrok-free.dev",
