@@ -43,7 +43,7 @@ def time_minutes(value):
     return round(fraction * 1440) % 1440
 
 
-def normalize_row(sheet, row_number, raw, duration_is_time=True):
+def normalize_row(sheet, row_number, raw, duration_is_time=True, formulas=None, provenance=None):
     source = {clean(k): str(v) for k, v in raw.items()}
     row = {k: clean(v) for k, v in source.items()}
     warnings = []
@@ -103,11 +103,21 @@ def normalize_row(sheet, row_number, raw, duration_is_time=True):
         valid = False
         warnings.append('MISSING_STATION_OR_GATEWAY')
     warnings.append('CALENDAR_UNKNOWN: schedule template only; operating days not verified')
+    lane=row.get('Lane','')
+    if lane=='UNSUPPORTED_FORMULA' or lane.startswith('='):
+        formula=(formulas or {}).get('Lane',lane)
+        if re.fullmatch(r'=?_xlfn\.CONCAT\(B\d+,"-",C\d+\)',formula,re.I) and origin and gateway:
+            lane=f'{origin}-{gateway}'
+            warnings.append('Lane derived from source station/gateway; original formula retained')
+            provenance={**(provenance or {}),'Lane':'DERIVED_FROM_SOURCE_FIELDS'}
+        else:
+            lane='Lane unavailable'
+            warnings.append('Lane formula has no usable cached value; inspect original workbook')
     return Schedule(schedule_id=f'{sheet.lower()}-{row_number}', source_sheet=sheet, source_row=row_number,
                     origin_city=row.get('Origin City', ''), origin_station=origin, gateway=gateway,
-                    lane=row.get('Lane', ''), run=row.get('Run', ''), mode=mode, source_mode=row.get('Mode', ''),
+                    lane=lane, run=row.get('Run', ''), mode=mode, source_mode=row.get('Mode', ''),
                     service=row.get('Flight' if sheet == 'Air' else 'Details', ''), transit_minutes=transit,
-                    vehicle_count=count, source=source, warnings=warnings, valid=valid, **times)
+                    vehicle_count=count, source=source, source_formulas=formulas or {},source_value_provenance=provenance or {},warnings=warnings, valid=valid, **times)
 
 
 def load_schedules(path=None):
@@ -134,6 +144,7 @@ def load_schedules(path=None):
             headers = None
             for row in ET.fromstring(book.read(target)).findall('m:sheetData/m:row', NS):
                 cells, time_columns = {}, set()
+                formulas,provenance={},{}
                 for cell in row.findall('m:c', NS):
                     col = re.sub(r'\d', '', cell.attrib['r'])
                     value = cell.find('m:v', NS)
@@ -141,7 +152,10 @@ def load_schedules(path=None):
                     if cell.attrib.get('t') == 's':
                         text = strings[int(text)]
                     if cell.find('m:f', NS) is not None:
-                        text = 'UNSUPPORTED_FORMULA'
+                        formula=cell.find('m:f',NS)
+                        formulas[col]='='+formula.text if formula.text else 'Shared formula '+formula.attrib.get('si','')
+                        provenance[col]='WORKBOOK_CACHED_VALUE' if text else 'FORMULA_WITHOUT_CACHE'
+                        if not text:text=formulas[col]
                     cells[col] = text or ''
                     fmt = xfs[int(cell.attrib.get('s', 0))]
                     if fmt in {18, 19, 20, 21, 22, 45, 46, 47} or re.search('[hHsS]', formats.get(fmt, '')):
@@ -158,5 +172,7 @@ def load_schedules(path=None):
                 if not clean(raw.get('Origin Station')) and not clean(raw.get('Mode')):
                     continue
                 duration_is_time = any(headers.get(c) == 'TT (hours)' for c in time_columns)
-                schedules.append(normalize_row(name, int(row.attrib['r']), raw, duration_is_time))
+                schedules.append(normalize_row(name,int(row.attrib['r']),raw,duration_is_time,
+                    {headers[c]:v for c,v in formulas.items() if c in headers},
+                    {headers[c]:v for c,v in provenance.items() if c in headers}))
     return schedules

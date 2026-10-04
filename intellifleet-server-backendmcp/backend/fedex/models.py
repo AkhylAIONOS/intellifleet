@@ -31,6 +31,8 @@ class Schedule(BaseModel):
     transit_minutes: float | None = Field(default=None, ge=0)
     vehicle_count: int | None = Field(default=None, ge=0)
     source: dict[str, str] = Field(default_factory=dict)
+    source_formulas: dict[str, str] = Field(default_factory=dict)
+    source_value_provenance: dict[str, str] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     valid: bool = True
 
