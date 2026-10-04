@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapView.css';
+import {MapResizeController} from './MapResizeController';
 import { WarehousesLayer } from './MapLayers/WarehousesLayer';
 import { RoutesLayer } from './MapLayers/RoutesLayer';
 import { VehiclesLayer } from './MapLayers/VehiclesLayer';
@@ -196,6 +197,7 @@ export const MapView = () => {
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         {/* Map Controller for auto-zoom */}
         <MapController />
+        <MapResizeController />
 
         {/* INDIA BOUNDARY OVERLAY */}
         <GeoJSON

@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+import {createServer} from 'vite';
+const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/',pretendToBeVisual:true});
+for(const key of ['window','document','HTMLElement','Element','SVGElement','Node','navigator'])Object.defineProperty(globalThis,key,{value:dom.window[key],configurable:true});
+let width=900,height=220,notify,disconnected=false;
+Object.defineProperty(HTMLElement.prototype,'clientWidth',{get:()=>width,configurable:true});
+Object.defineProperty(HTMLElement.prototype,'clientHeight',{get:()=>height,configurable:true});
+globalThis.ResizeObserver=class {constructor(cb){notify=cb;}observe(){}disconnect(){disconnected=true;}};
+const L=(await import('leaflet')).default;L.Browser.svg=true;
+const React=await import('react');const {render,act,cleanup}=await import('@testing-library/react');const {MapContainer}=await import('react-leaflet');
+const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
+try{
+  const {MapResizeController}=await server.ssrLoadModule('/src/components/MapResizeController.tsx');
+  let map,resizes=0;
+  render(React.createElement(MapContainer,{center:[20,75],zoom:6,ref:m=>{if(m)map=m;}},React.createElement(MapResizeController)));
+  map.on('resize',()=>resizes++);
+  map.panTo([19,74],{animate:false});const center=map.getCenter(),zoom=map.getZoom();
+  // Closing a result panel expands the map without a window resize event.
+  height=600;
+  await act(async()=>{notify();notify();notify();await new Promise(resolve=>setTimeout(resolve,30));});
+  assert.equal(map.getSize().y,600);assert.equal(resizes,1);
+  assert.equal(map.getZoom(),zoom);assert.ok(map.getCenter().equals(center));
+  await act(async()=>{notify();await new Promise(resolve=>setTimeout(resolve,30));});
+  assert.equal(resizes,1,'unchanged layout must not invalidate the camera');
+  width=0;height=0;
+  await act(async()=>{notify();await new Promise(resolve=>setTimeout(resolve,30));});
+  assert.equal(resizes,1,'hidden map waits for measurable layout');
+  width=600;height=400;
+  await act(async()=>{notify();await new Promise(resolve=>setTimeout(resolve,30));});
+  assert.equal(map.getSize().x,600);assert.equal(map.getSize().y,400);
+  assert.equal(map.getZoom(),zoom);assert.ok(map.getCenter().equals(center));
+  cleanup();assert.ok(disconnected);
+  delete globalThis.ResizeObserver;
+  render(React.createElement(MapContainer,{center:[20,75],zoom:6,ref:m=>{if(m)map=m;}},React.createElement(MapResizeController)));
+  height=500;
+  await act(async()=>{window.dispatchEvent(new window.Event('resize'));await new Promise(resolve=>setTimeout(resolve,30));});
+  assert.equal(map.getSize().y,500,'window resize remains supported without ResizeObserver');
+  console.log('PASS: container-only resize and hide/show repaint once, preserving pan/zoom and cleanup');
+}finally{cleanup();await server.close();dom.window.close();}
