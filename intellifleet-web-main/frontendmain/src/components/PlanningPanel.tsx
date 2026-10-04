@@ -6,6 +6,7 @@ import { useAppStore } from '../store/appStore';
 import { ensurePlanMovement } from '../utils/planMovement';
 import api from '../api/client';
 import {useOperationsStore} from '../store/operationsStore';
+import {LocationInput} from './LocationInput';
 
 export const planResultPanelReducer=(_visible:boolean,action:'show'|'close')=>action==='show';
 
@@ -76,8 +77,8 @@ export const PlanningPanel = () => {
   return <section className="planning-panel">
     <div className="planner-heading"><div><span>PLAN A SHIPMENT</span><h2>Supply-Chain Planner</h2></div></div>
     <div className="planning-form">
-      <label>Source<input placeholder="Delhi" value={input.source} onChange={e => update('source', e.target.value)} /></label>
-      <label>Destination<input placeholder="Mumbai" value={input.destination} onChange={e => update('destination', e.target.value)} /></label>
+      <label>Source<LocationInput placeholder="Delhi" value={input.source} onChange={value=>update('source',value)} /></label>
+      <label>Destination<LocationInput placeholder="Mumbai" value={input.destination} onChange={value=>update('destination',value)} /></label>
       <label>Weight (kg)<input aria-label="Weight kg" type="number" value={input.shipment.weight_kg} onChange={e => update('shipment', { ...input.shipment, weight_kg: Number(e.target.value) })} /></label>
       <label>Quantity<input aria-label="Quantity" type="number" value={input.shipment.quantity} onChange={e => update('shipment', { ...input.shipment, quantity: Number(e.target.value) })} /></label>
       <label>Objective<select value={input.objective} onChange={e => update('objective', e.target.value)}>

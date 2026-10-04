@@ -3,6 +3,7 @@ import { routesApi } from '../api/routes';
 import type { RouteUploadEntry } from '../api/routes';
 import { useAppStore } from '../store/appStore';
 import './RouteUploadTable.css';
+import {LocationInput} from './LocationInput';
 
 interface RouteRow {
     source: string;
@@ -357,18 +358,16 @@ export const RouteUploadTable = ({ isOpen, onClose }: RouteUploadTableProps) => 
                                     <tr key={idx}>
                                         <td className="row-num">{idx + 1}</td>
                                         <td>
-                                            <input
-                                                type="text"
+                                            <LocationInput
                                                 value={row.source}
-                                                onChange={e => updateRow(idx, 'source', e.target.value)}
+                                                onChange={value=>updateRow(idx,'source',value)}
                                                 placeholder="Source Warehouse Name"
                                             />
                                         </td>
                                         <td>
-                                            <input
-                                                type="text"
+                                            <LocationInput
                                                 value={row.destination}
-                                                onChange={e => updateRow(idx, 'destination', e.target.value)}
+                                                onChange={value=>updateRow(idx,'destination',value)}
                                                 placeholder="Destination Warehouse Name"
                                             />
                                         </td>

@@ -6,6 +6,7 @@ import api from '../api/client';
 import {pollMovements} from '../api/operations';
 import {movementMatches,visibleAiMovement,useOperationsStore,type Movement} from '../store/operationsStore';
 import {useControlTowerStore} from '../store/controlTowerStore';
+import {LocationInput} from './LocationInput';
 const ControlTower=lazy(()=>import('./ControlTower').then(module=>({default:module.ControlTower})));
 export function LiveOperations({active=true}:{active?:boolean}={}){
  const [view,setView]=useState('Movement Map');
@@ -75,7 +76,7 @@ export function LiveOperations({active=true}:{active?:boolean}={}){
   <label>Filter<select value={state.filter} onChange={e=>state.patch({filter:e.target.value})}>{['ALL','SURFACE','AIR','RAIL','FEDEX','SYNTHETIC'].map(f=><option key={f}>{f}</option>)}</select></label>
   <button onClick={()=>state.patch({fit:state.fit+1})}>Fit network</button>
   <details><summary>Advanced simulation testing</summary>{[10,50,100].map(n=><button disabled={busy} key={n} onClick={()=>demo(n)}>Simulate {n}</button>)}</details></div>
-  <div className="fedex-controls"><label>Origin<select value={origin} onChange={e=>setOrigin(e.target.value)}><option value="">Select</option>{warehouses.map(w=><option key={w.name}>{w.name}</option>)}</select></label><label>Destination<select value={destination} onChange={e=>setDestination(e.target.value)}><option value="">Select</option>{warehouses.map(w=><option key={w.name}>{w.name}</option>)}</select></label>
+  <div className="fedex-controls"><label>Origin<LocationInput value={origin} onChange={setOrigin} locations={warehouses.map(w=>w.name)} placeholder="Select loaded warehouse"/></label><label>Destination<LocationInput value={destination} onChange={setDestination} locations={warehouses.map(w=>w.name)} placeholder="Select loaded warehouse"/></label>
   <label>Shipment weight (kg)<input type="number" min="0.01" step="any" value={weight} onChange={e=>setWeight(e.target.value)}/></label>
   <button disabled={busy||!origin||!destination||origin===destination||!Number.isFinite(Number(weight))||Number(weight)<=0} onClick={async()=>{setBusy(true);try{const r=await api.post('/operations/route-simulation',{origin,destination,weight:Number(weight)});state.patch({enabled:true,viewMode:'LIVE',selected:r.data.simulation_id,fit:state.fit+1});setError('');}catch(e:any){setError(e.response?.data?.detail||'Route unavailable');}finally{setBusy(false);}}}>Plan & simulate</button></div>
   <p className="fedex-note">Python simulated telemetry · Schedule templates are not live vehicles. Network demo runs are hypothetical; they do not reserve fleet capacity.</p>
