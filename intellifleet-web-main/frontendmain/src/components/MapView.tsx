@@ -1,4 +1,5 @@
 import { NetworkMovementsLayer } from './MapLayers/NetworkMovementsLayer';
+import {PlanSelectionPreview} from './MapLayers/PlanSelectionPreview';
 import {ControlTowerLayer} from './MapLayers/ControlTowerLayer';
 import {useControlTowerStore} from '../store/controlTowerStore';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
@@ -240,7 +241,7 @@ export const MapView = () => {
         )}
         {!focused&&<><WarehousesLayer /><RoutesLayer /><VehiclesLayer /><PlanesLayer /></>}
         <VehicleAssignmentZoomController />
-        {!towerSelection&&<GuardedJourney />}
+        {!towerSelection&&<><GuardedJourney /><PlanSelectionPreview /></>}
         <WarehouseFocusLayer />
         <MapLegend />
         {!towerSelection&&<FedExLayer />}<NetworkMovementsLayer /><ControlTowerLayer />

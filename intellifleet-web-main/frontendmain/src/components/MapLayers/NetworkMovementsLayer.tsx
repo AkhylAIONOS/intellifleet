@@ -6,8 +6,10 @@ import {useFedexStore} from '../../store/fedexStore';
 import {movementIcon} from './movementIcon';
 import {vehicleFollower} from '../../utils/vehicleFollow';
 import {useControlTowerStore} from '../../store/controlTowerStore';
+import {useAppStore} from '../../store/appStore';
 export function NetworkMovementsLayer(){
  const towerRun=useControlTowerStore(s=>s.selected);
+ const selectedPlan=useAppStore(s=>s.selectedPlan);
  const state=useOperationsStore();const current=useFedexStore(s=>s.telemetry?.simulation_id);const map=useMap();const fitted=useRef(state.fit);const selected=useRef<string|null>(null);
  const entities=state.movements.filter(m=>{
   if(towerRun && m.simulation_id!==towerRun.movement_id)return false;
@@ -18,6 +20,7 @@ export function NetworkMovementsLayer(){
 
   // AI planning must NEVER expose the wider Live Operations fleet.
   if(state.viewMode==='AI'){
+    if(state.aiDisplayMode==='SINGLE_ROUTE' && state.pendingPlanId && selectedPlan?.plan_id===state.pendingPlanId && m.plan_id!==state.pendingPlanId)return false;
     return visibleAiMovement(m,state);
   }
 

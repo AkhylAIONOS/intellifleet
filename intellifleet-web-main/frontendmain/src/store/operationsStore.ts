@@ -84,6 +84,7 @@ interface OperationsState {
   aiSimulationIds:string[];
   aiSessionGeneration:number;
   aiDisplayMode:JourneyDisplayMode;
+  pendingPlanId?:string|null;
   aiVisibleSimulationIds:string[];
 
   patch:(value:Partial<Omit<OperationsState,'patch'>>) => void;
