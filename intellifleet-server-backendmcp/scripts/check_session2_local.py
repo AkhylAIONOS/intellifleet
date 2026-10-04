@@ -1,6 +1,7 @@
 """Read/write QA only against the isolated loopback launcher; no emails or real scans."""
 from pathlib import Path
 import json
+from uuid import uuid4
 import httpx
 
 
@@ -9,6 +10,7 @@ def main():
     with httpx.Client(base_url='http://127.0.0.1:4208',timeout=60) as client:
         auth=client.post('/auth/demo-access');auth.raise_for_status()
         client.headers['Authorization']='Bearer '+auth.json()['data']['token']
+        client.headers['X-UniFleet-Demo-Session-Id']=str(uuid4())
         alerts=client.get('/operations/alerts');alerts.raise_for_status()
         assert alerts.json()['delivery_enabled'] is False
         before=client.get('/operations/control-tower/runs',params={'limit':200});before.raise_for_status()

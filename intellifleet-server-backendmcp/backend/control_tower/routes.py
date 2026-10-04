@@ -2,6 +2,7 @@ from datetime import date, datetime
 from typing import Literal
 import asyncio
 import secrets
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from backend.routes.auth import get_current_user
@@ -28,7 +29,22 @@ class CriticalInput(BaseModel):
 
 
 class RecipientInput(BaseModel):
-    emails: list[EmailStr] = Field(max_length=50)
+    emails: list[EmailStr] = Field(max_length=1)
+
+
+def alert_identity(user=Depends(get_current_user), x_unifleet_demo_session_id: str | None=Header(default=None)):
+    # Account remains authenticated; the unguessable browser capability scopes demo alerts.
+    # Replace this dependency with authenticated_user_id when personal login is introduced.
+    if not x_unifleet_demo_session_id:
+        raise HTTPException(422, 'Browser session identity required')
+    try:
+        session=UUID(x_unifleet_demo_session_id)
+        if session.version != 4:
+            raise ValueError('Random session required')
+        identity=str(session)
+    except ValueError:
+        raise HTTPException(422, 'Invalid browser session identity')
+    return user['user_id'], identity
 
 
 class ScanInput(BaseModel):
@@ -128,18 +144,20 @@ def simulation(run_id:str,request:PlaybackInput,user=Depends(get_current_user)):
 
 
 @router.get('/alerts/recipients')
-def recipients(user=Depends(get_current_user)):
-    return {'emails':service.recipients(user['user_id'])}
+def recipients(scope=Depends(alert_identity)):
+    email=service.personal_email(*scope)
+    return {'emails':[email] if email else []}
 
 
 @router.put('/alerts/recipients')
-def set_recipients(request:RecipientInput,user=Depends(get_current_user)):
-    return {'emails':service.recipients(user['user_id'],[str(x) for x in request.emails])}
+def set_recipients(request:RecipientInput,scope=Depends(alert_identity)):
+    email=service.personal_email(*scope,str(request.emails[0]) if request.emails else None)
+    return {'emails':[email] if email else []}
 
 
 @router.get('/alerts')
-def alerts(user=Depends(get_current_user)):
-    return {'alerts':service.alerts(user['user_id']),
+def alerts(scope=Depends(alert_identity)):
+    return {'alerts':service.personal_alerts(*scope),
         'delivery_enabled':settings.FEDEX_ALERT_DELIVERY_ENABLED}
 
 

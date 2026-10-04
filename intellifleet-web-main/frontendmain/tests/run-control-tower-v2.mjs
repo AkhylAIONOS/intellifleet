@@ -6,7 +6,9 @@ for(const key of ['window','document','HTMLElement','Element','Node','navigator'
 const React=await import('react');const {render,act,fireEvent,waitFor,within,cleanup}=await import('@testing-library/react');
 const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
 try{
- const {controlTowerApi:api}=await server.ssrLoadModule('/src/api/controlTower.ts');
+ const {controlTowerApi:api,demoSessionId}=await server.ssrLoadModule('/src/api/controlTower.ts');
+ const firstIdentity=demoSessionId();assert.equal(demoSessionId(),firstIdentity);
+ localStorage.removeItem('unifleet_demo_session_id');assert.notEqual(demoSessionId(),firstIdentity);
  const {ControlTower}=await server.ssrLoadModule('/src/components/ControlTower.tsx');
  const {useControlTowerStore:tower}=await server.ssrLoadModule('/src/store/controlTowerStore.ts');
  const {useOperationsStore:ops}=await server.ssrLoadModule('/src/store/operationsStore.ts');
@@ -19,7 +21,7 @@ try{
  api.recipients=async()=>({emails:[]});api.importPlan=async()=>({runs:rows});
  api.detail=async id=>rows.find(r=>r.run_id===id);
  api.critical=async(id,critical)=>{const lane=rows.find(r=>r.run_id===id).lane_key;rows=rows.map(r=>r.lane_key===lane?{...r,critical}:r);return rows.find(r=>r.run_id===id);};
- let saved;api.saveRecipients=async emails=>{saved=emails;};
+ let saved;api.saveRecipients=async emails=>{saved=emails;return {emails};};
  api.alerts=async()=>({alerts:[{id:1,status:'NOT_CONFIGURED',attempts:0,created_at:'2030-01-01T00:00:00Z'}],delivery_enabled:false});
  const movement={simulation_id:'move',shipment_id:'CT-DEMO',mode:'AIR',origin_station:'A',gateway:'B',route:[[10,70],[20,80]],latitude:10,longitude:70,status:'IN_TRANSIT',progress:.1,data_source:'FEDEX_SOURCE',location_source:'SYNTHETIC_TELEMETRY'};
  let playbackCalls=0;api.simulate=async run=>{playbackCalls++;return {...run,movement_id:'move',movement,actual_source:'SYNTHETIC_TELEMETRY',location_source:'SYNTHETIC_TELEMETRY',latest_location:{latitude:10,longitude:70},last_update_at:'2030-01-01T00:00:00Z'};};
@@ -65,9 +67,20 @@ try{
  assert.ok(ui.getByText(/SYN-CON · SYNTHETIC_TELEMETRY/));
  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Close details'})));
  assert.equal(tower.getState().selected,null,'closing linked CON drill-down must stay closed');
- await act(async()=>fireEvent.change(ui.getByLabelText('Selected email recipients'),{target:{value:'ops@example.invalid'}}));
- await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Save recipients'})));assert.deepEqual(saved,['ops@example.invalid']);
- await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Load alert history'})));
- assert.ok(ui.getByText(/NOT_CONFIGURED/));
+ await act(async()=>fireEvent.change(ui.getByLabelText('Alert Email'),{target:{value:'ops@example.invalid'}}));
+ await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Save Alert Email'})));assert.deepEqual(saved,['ops@example.invalid']);
+ assert.ok(ui.getAllByText(/Alerts for this session will be sent to: ops@example.invalid/).length);
+ await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Change Email'})));
+ await act(async()=>fireEvent.change(ui.getByLabelText('Alert Email'),{target:{value:'new@example.com'}}));
+ await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Save Alert Email'})));
+ assert.deepEqual(saved,['new@example.com']);
+ cleanup();
+ api.recipients=async()=>({emails:saved});
+ const reloaded=render(React.createElement(ControlTower));
+ await waitFor(()=>assert.ok(reloaded.getByText(/Alerts for this session will be sent to: new@example.com/)));
+ await act(async()=>fireEvent.click(reloaded.getByRole('button',{name:'Disable Alerts'})));
+ assert.deepEqual(saved,[]);assert.ok(reloaded.getAllByText('Alerts disabled for this session.').length);
+ await act(async()=>fireEvent.click(reloaded.getByRole('button',{name:'Load alert history'})));
+ assert.ok(reloaded.getByText(/NOT_CONFIGURED/));
  console.log('PASS: Control Tower Air/Surface separation, original cells, scoped critical/status filters, lane selection, CON → movement focus, selected recipients and disabled SMTP history');
 }finally{cleanup();await server.close();dom.window.close();}

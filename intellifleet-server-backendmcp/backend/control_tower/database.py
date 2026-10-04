@@ -1,6 +1,11 @@
 """Additive SQLite migration; existing tables/columns are never changed."""
 def migrate(conn):
     conn.executescript('''
+    CREATE TABLE IF NOT EXISTS ct_personal_recipients (
+      owner INTEGER NOT NULL, identity TEXT NOT NULL, email TEXT NOT NULL,
+      PRIMARY KEY(owner,identity));
+    CREATE TABLE IF NOT EXISTS ct_personal_outbox (
+      outbox_id INTEGER PRIMARY KEY, owner INTEGER NOT NULL, identity TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS ct_runs (
       owner INTEGER NOT NULL, run_id TEXT NOT NULL, lane_key TEXT NOT NULL,
       schedule_id TEXT NOT NULL, service_date TEXT NOT NULL, network_version TEXT NOT NULL,

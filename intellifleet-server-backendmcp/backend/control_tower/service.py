@@ -117,12 +117,21 @@ class ControlTower:
             conn.execute('INSERT OR REPLACE INTO ct_critical_lanes VALUES(?,?,?,?)',(owner,row['lane_key'],int(critical),self.clock().isoformat()))
         return self.detail(owner,run_id)
 
-    def recipients(self, owner, emails=None):
+    def personal_email(self, owner, identity, email=...):
+        from pydantic import TypeAdapter, EmailStr
+        if email is not ... and email is not None:
+            email = str(TypeAdapter(EmailStr).validate_python(email))
         with self.db() as conn:
-            if emails is not None:
-                conn.execute('DELETE FROM ct_recipients WHERE owner=?',(owner,))
-                conn.executemany('INSERT INTO ct_recipients VALUES(?,?,1)',[(owner,e) for e in sorted(set(emails))])
-            return [r[0] for r in conn.execute('SELECT email FROM ct_recipients WHERE owner=? AND enabled=1 ORDER BY email',(owner,))]
+            if email is not ...:
+                conn.execute('DELETE FROM ct_personal_recipients WHERE owner=? AND identity=?', (owner, identity))
+                if email:
+                    conn.execute('INSERT INTO ct_personal_recipients VALUES(?,?,?)', (owner, identity, email))
+            row = conn.execute('SELECT email FROM ct_personal_recipients WHERE owner=? AND identity=?', (owner, identity)).fetchone()
+            return row[0] if row else None
+
+    def personal_alerts(self, owner, identity):
+        with self.db() as conn:
+            return [dict(r) for r in conn.execute('SELECT o.id,o.status,o.attempts,o.created_at,o.last_error FROM ct_outbox o JOIN ct_personal_outbox p ON p.outbox_id=o.id WHERE p.owner=? AND p.identity=? ORDER BY o.id DESC LIMIT 100', (owner, identity))]
 
     def _transition(self, conn, row, previous, event_key, reason, now):
         fields=operational_fields(row,now)
@@ -130,15 +139,20 @@ class ControlTower:
         conn.execute('UPDATE ct_runs SET status=? WHERE owner=? AND run_id=?',(new,row['owner'],row['run_id']))
         if previous==new or new not in {'EXPECTED DELAY','DELAYED'}:
             return
-        recipients=[r[0] for r in conn.execute('SELECT email FROM ct_recipients WHERE owner=? AND enabled=1',(row['owner'],))]
+        personal=list(conn.execute('SELECT identity,email FROM ct_personal_recipients WHERE owner=?',(row['owner'],)))
         decorated=self._decorate(conn,dict(row))
         payload={k:decorated.get(k) for k in ['run_id','lane_key','schedule','planned_etd','planned_eta','current_eta','critical','actual_source','last_update_at']}
         payload.update(fields,previous_status=previous,reason=reason,timestamp=now.isoformat())
-        # Independent recipient retries avoid resending successfully delivered mail.
-        for email in recipients or [None]:
-            conn.execute('''INSERT OR IGNORE INTO ct_outbox(owner,run_id,transition_key,payload_json,recipients_json,status,next_attempt_at,created_at)
-                VALUES(?,?,?,?,?,?,?,?)''',(row['owner'],row['run_id'],f'{row["run_id"]}:{event_key}:{new}:{email or "none"}',json.dumps(payload),json.dumps([email] if email else []),
-                    'PENDING' if email else 'NO_RECIPIENTS',now.isoformat(),now.isoformat()))
+        if not personal:
+            conn.execute('INSERT OR IGNORE INTO ct_outbox(owner,run_id,transition_key,payload_json,recipients_json,status,next_attempt_at,created_at) VALUES(?,?,?,?,?,?,?,?)',
+                (row['owner'],row['run_id'],f'{row["run_id"]}:{event_key}:{new}:none',json.dumps(payload),'[]','NO_RECIPIENTS',now.isoformat(),now.isoformat()))
+        # Each session gets an immutable snapshot and independent retry record.
+        for identity, email in personal:
+            key=f'{row["run_id"]}:{event_key}:{new}:personal:{identity}'
+            conn.execute('INSERT OR IGNORE INTO ct_outbox(owner,run_id,transition_key,payload_json,recipients_json,status,next_attempt_at,created_at) VALUES(?,?,?,?,?,?,?,?)',
+                (row['owner'],row['run_id'],key,json.dumps(payload),json.dumps([email]),'PENDING',now.isoformat(),now.isoformat()))
+            outbox_id=conn.execute('SELECT id FROM ct_outbox WHERE owner=? AND transition_key=?',(row['owner'],key)).fetchone()[0]
+            conn.execute('INSERT OR IGNORE INTO ct_personal_outbox VALUES(?,?,?)',(outbox_id,row['owner'],identity))
 
     def event(self, owner, run_id, event):
         event= dict(event)
@@ -284,7 +298,7 @@ class ControlTower:
         now=self.clock()
         with self.db() as conn:
             conn.execute('BEGIN IMMEDIATE')
-            rows=[dict(r) for r in conn.execute("SELECT * FROM ct_outbox WHERE status IN ('PENDING','RETRY','NOT_CONFIGURED','DELIVERY_DISABLED','PROCESSING') AND next_attempt_at<=? AND attempts<5",(now.isoformat(),))]
+            rows=[dict(r) for r in conn.execute("SELECT * FROM ct_outbox WHERE id IN (SELECT outbox_id FROM ct_personal_outbox) AND status IN ('PENDING','RETRY','NOT_CONFIGURED','DELIVERY_DISABLED','PROCESSING') AND next_attempt_at<=? AND attempts<5",(now.isoformat(),))]
             for r in rows:
                 status='PROCESSING' if enabled and (configured or sender) else 'NOT_CONFIGURED' if not configured else 'DELIVERY_DISABLED'
                 conn.execute('UPDATE ct_outbox SET status=?,next_attempt_at=? WHERE id=?',(status,(now+timedelta(minutes=5)).isoformat(),r['id']))

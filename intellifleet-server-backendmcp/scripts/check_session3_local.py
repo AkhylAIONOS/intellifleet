@@ -1,5 +1,6 @@
 """Session 3 loopback QA; run after the two existing local checks."""
 import json
+from uuid import uuid4
 import time
 import httpx
 
@@ -8,6 +9,7 @@ def main():
     with httpx.Client(base_url='http://127.0.0.1:4208',timeout=60) as client:
         auth=client.post('/auth/demo-access');auth.raise_for_status()
         client.headers['Authorization']='Bearer '+auth.json()['data']['token']
+        client.headers['X-UniFleet-Demo-Session-Id']=str(uuid4())
         assert client.get('/operations/alerts').json()['delivery_enabled'] is False
         response=client.get('/operations/control-tower/runs',params={'limit':200});response.raise_for_status()
         runs=response.json()['runs'];assert len(runs)==38

@@ -1,5 +1,6 @@
 """HTTP smoke for the isolated local launcher only; never sends email."""
 import json
+from uuid import uuid4
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import httpx
@@ -10,6 +11,7 @@ def main():
         assert client.get('/operations/control-tower/runs').status_code in (401,403)
         response=client.post('/auth/demo-access');response.raise_for_status()
         client.headers['Authorization']='Bearer '+response.json()['data']['token']
+        client.headers['X-UniFleet-Demo-Session-Id']=str(uuid4())
         # Refuse to run against a server with delivery enabled.
         alerts=client.get('/operations/alerts');alerts.raise_for_status()
         assert alerts.json()['delivery_enabled'] is False

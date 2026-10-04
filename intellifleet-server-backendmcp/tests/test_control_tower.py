@@ -107,7 +107,7 @@ def test_scan_order_and_provenance(tower):
 
 def test_alert_transition_dedupe_retry_disabled(tower):
     rid=load(tower)[0]['run_id']
-    tower.recipients(1,['operator@example.invalid'])
+    tower.personal_email(1,'session-test','operator@example.com')
     tower.event(1,rid,event(at=NOW-timedelta(hours=1)))
     tower.event(1,rid,event('ETA_UPDATE','delay',NOW,current_eta=(NOW+timedelta(hours=3)).isoformat()))
     tower.event(1,rid,event('ETA_UPDATE','delay',NOW,current_eta=(NOW+timedelta(hours=3)).isoformat()))

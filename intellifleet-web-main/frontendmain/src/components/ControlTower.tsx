@@ -15,6 +15,7 @@ export function ControlTower(){
  const [runs,setRuns]=useState<TowerRun[]>([]),[total,setTotal]=useState(0),[summary,setSummary]=useState<TowerSummary|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [loading,setLoading]=useState(true);
+ const [savedEmail,setSavedEmail]=useState(''),[editingEmail,setEditingEmail]=useState(true);
  const [con,setCon]=useState(''),[emails,setEmails]=useState(''),[alerts,setAlerts]=useState<Awaited<ReturnType<typeof controlTowerApi.alerts>>|null>(null);
  const selected=useControlTowerStore(s=>s.selected),select=useControlTowerStore(s=>s.select);
  const movement=useOperationsStore(s=>s.selected);
@@ -39,7 +40,7 @@ export function ControlTower(){
    .finally(()=>{if(!cancelled)setLoading(false);});
   return()=>{cancelled=true;requestEpoch.current++;};
  },[date,mode,status,critical,query,page,sort]);
- useEffect(()=>{let cancelled=false;void controlTowerApi.recipients().then(r=>{if(!cancelled)setEmails(r.emails.join(', '));}).catch(()=>{});return()=>{cancelled=true;};},[]);
+ useEffect(()=>{let cancelled=false;void controlTowerApi.recipients().then(r=>{if(!cancelled){const email=r.emails[0]||'';setEmails(email);setSavedEmail(email);setEditingEmail(!email);}}).catch(()=>{});return()=>{cancelled=true;};},[]);
  useEffect(()=>{
   let cancelled=false;let timer:ReturnType<typeof setTimeout>;
   const poll=async()=>{try{
@@ -102,9 +103,15 @@ export function ControlTower(){
    <details><summary>Events and packages</summary>{selected.events?.map(e=><p key={e.event_id}>{e.event_type} · {operationalTime(e.event_at)} · {e.source}</p>)}{selected.cons?.map(c=><p key={c.con_number}>{c.con_number} · {c.source}</p>)}</details>
    <details><summary>Original workbook cells and validation</summary><dl>{Object.entries(selected.schedule.source).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v==='UNSUPPORTED_FORMULA'?'Cached value unavailable; reload workbook':v||'—'}</dd></div>)}{Object.entries(selected.schedule.source_formulas||{}).map(([k,v])=><div key={'formula-'+k}><dt>{k} formula</dt><dd>{v} · {selected.schedule.source_value_provenance?.[k]}</dd></div>)}</dl>{selected.schedule.warnings.map(w=><p key={w}>{w}</p>)}</details>
   </aside>}
-  <details className="ct-details"><summary>Alert recipients and delivery history</summary><p>Email delivery requires server SMTP configuration and explicit delivery enablement. Alerts are queued on status transitions, never each telemetry tick.</p>
-   <label>Selected email recipients<input value={emails} onChange={e=>setEmails(e.target.value)} placeholder="Comma-separated email addresses"/></label>
-   <button disabled={busy} onClick={()=>perform(async()=>{await controlTowerApi.saveRecipients(emails.split(',').map(x=>x.trim()).filter(Boolean));setNotice('Alert recipients saved.');})}>Save recipients</button>
+  <details className="ct-details"><summary>Alert Email and delivery history</summary><p>Alerts are queued on status transitions. Delivery requires server configuration.</p>
+   {savedEmail&&<p>Alerts for this session will be sent to: {savedEmail}</p>}
+   {!savedEmail&&<p>Alerts disabled for this session.</p>}
+   {editingEmail&&<form onSubmit={e=>{e.preventDefault();void perform(async()=>{const r=await controlTowerApi.saveRecipients([emails.trim()]);const email=r.emails[0];setSavedEmail(email);setEmails(email);setEditingEmail(false);setNotice(`Alerts for this session will be sent to: ${email}`);});}}>
+    <label htmlFor="personal-alert-email">Alert Email<input id="personal-alert-email" name="alertEmail" type="email" required value={emails} onChange={e=>setEmails(e.target.value)} placeholder="user@example.com"/></label>
+    <button disabled={busy}>Save Alert Email</button>
+   </form>}
+   {savedEmail&&<><button disabled={busy} onClick={()=>setEditingEmail(true)}>Change Email</button>
+    <button disabled={busy} onClick={()=>perform(async()=>{await controlTowerApi.saveRecipients([]);setSavedEmail('');setEmails('');setEditingEmail(true);setNotice('Alerts disabled for this session.');})}>Disable Alerts</button></>}
    <button onClick={()=>perform(async()=>setAlerts(await controlTowerApi.alerts()))}>Load alert history</button>
    {alerts&&<><p>Delivery {alerts.delivery_enabled?'enabled':'disabled'} on server</p>{alerts.alerts.map(a=><p key={a.id}>#{a.id} · {a.status} · attempts {a.attempts} · {operationalTime(a.created_at)} {a.last_error}</p>)}</>}
   </details>

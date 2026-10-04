@@ -47,7 +47,7 @@ def test_critical_at_risk_and_owner_persistence(tower):
 
 def test_disabled_and_unconfigured_never_call_sender(tower,monkeypatch):
     rid=load(tower)[0]['run_id']
-    tower.recipients(1,['session2@example.invalid']);tower.recipients(2,['other@example.invalid'])
+    tower.personal_email(1,'session2','session2@example.com');tower.personal_email(2,'other','other@example.com')
     tower.event(1,rid,event(at=NOW-timedelta(hours=1)))
     tower.event(1,rid,event('ETA_UPDATE','delay',current_eta=(NOW+timedelta(hours=3)).isoformat()))
     async def forbidden(*args):raise AssertionError('sender must not run')
@@ -60,7 +60,7 @@ def test_disabled_and_unconfigured_never_call_sender(tower,monkeypatch):
     asyncio.run(tower.deliver(sender=forbidden,enabled=False))
     assert tower.alerts(1)[0]['status']=='DELIVERY_DISABLED'
     assert tower.alerts(1)[0]['attempts']==0
-    assert tower.alerts(2)==[] and tower.recipients(2)==['other@example.invalid']
+    assert tower.alerts(2)==[] and tower.personal_email(2,'other')=='other@example.com'
 
 
 def test_scan_and_con_api_need_both_credentials_and_owner(tower,monkeypatch):
