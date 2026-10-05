@@ -364,7 +364,7 @@ Return JSON with:
                 
                 tool_results.append({
                     "tool": tool_name,
-                    "result": {"error": str(e)},
+                    "result": {"error": "The requested data could not be read. Please retry shortly."},
                     "success": False,
                     "call_id": tool_call.get("id", f"call_{i}")
                 })
@@ -807,6 +807,6 @@ Return JSON with:
             
             return {
                 "success": False,
-                "response": f"Graph execution failed: {str(e)}",
+                "response": "The AI request could not be completed. Please retry shortly.",
                 "actions": []
             }

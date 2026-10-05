@@ -126,4 +126,4 @@ class FetchRoutesOutput(BaseModel):
     """Output schema for route fetching"""
     answer: str = Field(..., description="Natural language answer about routes")
     message: str = Field(..., description="Status message")
-    route_id: int = Field(..., description="ID of the route")
+    route_id: int | None = Field(None, description="ID of a single route, if applicable")

@@ -1,5 +1,7 @@
 #backend/agents/supervisor.py
 import time
+from pydantic import ValidationError
+from aioredis.exceptions import RedisError
 import json
 from typing import Dict, Any, List
 from langchain_core.prompts import ChatPromptTemplate
@@ -817,6 +819,7 @@ def _context_from_result(result: dict, previous: dict | None = None) -> dict:
             if shipment.get(key) is not None:
                 context["sku"] = shipment[key]
     if isinstance(plan, dict):
+        context["candidate_plans"] = result.get("candidate_plans") or [plan]
         context.update({
             "selected_plan": plan,
             "selected_mode": plan.get("mode"),
@@ -1717,6 +1720,15 @@ STRICT RULES:
                     )
                     return {"success": False, "response": error_msg, "actions": []}
 
+                except ValidationError:
+                    logger.exception("Tool output validation failed")
+                    error_msg = "The requested data could not be read. Please retry shortly."
+                    history = await self._append_and_save(user_id, history, "assistant", error_msg)
+                    return {"success": False, "response": error_msg, "actions": []}
+
+                except RedisError:
+                    raise
+
                 except (ValueError, KeyError) as exc:
                     error_msg = "Planning inputs need correction: " + str(exc)
                     history = await self._append_and_save(user_id, history, "assistant", error_msg)
@@ -1745,6 +1757,8 @@ STRICT RULES:
             logger.info(f"⏱️ Total: {time.time() - start_time:.2f}s")
             return result
 
+        except RedisError:
+            raise
         except Exception:
             error_msg = "The AI request could not be completed. Please retry shortly."
             logger.exception("AI request processing failed")

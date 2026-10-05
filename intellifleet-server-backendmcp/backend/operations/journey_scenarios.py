@@ -49,7 +49,7 @@ def changes_from_message(message,selected,network):
             known={str(r['route_id']) for r in network['routes']}
             if any(r not in known for r in routes):raise ValueError('A requested route ID is absent from the loaded network.')
             changes['blocked_route_ids']=[int(r) for r in routes]
-        elif re.search(r'(?:current|this|selected)\s+(?:road\s+|air\s+)?route',text):changes['blocked_route_ids']=selected.get('route_ids',[])
+        elif re.search(r'(?:current|this|that|selected)\s+(?:road\s+|air\s+)?route',text):changes['blocked_route_ids']=selected.get('route_ids',[])
         for resource,field,key in [('vehicles','label','unavailable_vehicles'),('warehouses','name','unavailable_warehouses')]:
             values=[r[field] for r in network[resource] if any(re.search(r'(?<!\w)'+re.escape(str(r.get(k) or '').casefold())+r'(?!\w)',text) for k in ((field,'city') if resource=='warehouses' else (field,)) if r.get(k))]
             if values:changes[key]=values

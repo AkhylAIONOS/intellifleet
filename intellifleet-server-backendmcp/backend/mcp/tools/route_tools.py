@@ -181,5 +181,5 @@ def register_route_tools(mcp: FastMCP):
         return FetchRoutesOutput(
             answer=result.get("answer", "No route information available"),
             message=result.get("message", "Routes fetched successfully"),
-            route_id=result.get("route_id", "Route id")
+            route_id=result.get("route_id") if str(result.get("route_id", "")).isdigit() else None
         )
