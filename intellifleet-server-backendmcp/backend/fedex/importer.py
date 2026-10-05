@@ -17,7 +17,10 @@ HEADERS = {
 
 
 def workbook_path():
-    return Path(os.environ.get('FEDEX_WORKBOOK_PATH', str(Path.home() / 'Downloads' / 'Sample Network plan - Air & Surface.xlsx')))
+    configured = os.environ.get('FEDEX_WORKBOOK_PATH')
+    if configured:
+        return Path(configured).expanduser()
+    return Path(__file__).resolve().parents[2] / 'data' / 'fedex-network-plan.xlsx'
 
 
 def clean(value):

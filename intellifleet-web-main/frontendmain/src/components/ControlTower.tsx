@@ -18,6 +18,7 @@ export function ControlTower(){
  const [savedEmail,setSavedEmail]=useState(''),[editingEmail,setEditingEmail]=useState(true);
  const [con,setCon]=useState(''),[emails,setEmails]=useState(''),[alerts,setAlerts]=useState<Awaited<ReturnType<typeof controlTowerApi.alerts>>|null>(null);
  const selected=useControlTowerStore(s=>s.selected),select=useControlTowerStore(s=>s.select);
+ useEffect(()=>{useControlTowerStore.getState().setServiceDate(date);},[date]);
  const movement=useOperationsStore(s=>s.selected);
  const requestEpoch=useRef(0);
  const lastMapSelection=useRef<string|null>(null);

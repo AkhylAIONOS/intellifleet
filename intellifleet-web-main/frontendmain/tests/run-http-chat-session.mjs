@@ -62,6 +62,20 @@ try {
  await act(async()=>hook.result.current.startNewSession());
  await act(async()=>{finish({success:true,actions:[{type:'supply_chain_planning_operation',data:{recommended_plan:{...plan,plan_id:'stale'}}}]});await pending;});
  assert.deepEqual(useOperationsStore.getState().aiSimulationIds,[],'Late response cannot leak into a new chat');
+ chatApi.sendMessage=async()=>{throw {response:{status:503,data:{detail:'AI chat storage is temporarily unavailable'}}};};
+ await act(async()=>hook.result.current.processMessage('Why did you choose this option?'));
+ assert.equal(useAppStore.getState().chatHistory.at(-1).content,'AI chat storage is temporarily unavailable');
+ const {useControlTowerStore}=await server.ssrLoadModule('/src/store/controlTowerStore.ts');
+ useControlTowerStore.getState().setServiceDate('2030-01-01');
+ useControlTowerStore.getState().select({run_id:'tower-run',service_date:'2030-01-01'});
+ let captured;
+ api.post=async(path,payload)=>{captured=payload;return {data:{success:true,response:'Operational result',actions:[]}};};
+ // Load a fresh API module instance so its real sendMessage is exercised.
+ const realChat=await server.ssrLoadModule('/src/api/chat.ts?operational-regression');
+ await realChat.chatApi.sendMessage('Which Air runs are currently delayed?');
+ assert.equal(captured.selected_operational_run_id,'tower-run');
+ assert.equal(captured.operational_service_date,'2030-01-01');
+ console.log('PASS: clean storage 503 message and separately scoped Control Tower request');
  console.log('PASS: four sequential HTTP planning requests, isolated New Chat, stale response ignored');
  console.log('PASS: native UUID, getRandomValues UUID, absent crypto fallback, HTTP Ground chat request/action/journey, session reuse/reset');
 }finally{cleanup();await server.close();dom.window.close();if(original)Object.defineProperty(globalThis,'crypto',original);else delete globalThis.crypto;}

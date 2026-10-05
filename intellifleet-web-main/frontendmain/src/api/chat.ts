@@ -1,6 +1,7 @@
 import {useOperationsStore} from '../store/operationsStore';
 import {useFedexStore} from '../store/fedexStore';
 import apiClient from './client';
+import {useControlTowerStore} from '../store/controlTowerStore';
 import type { ApiResponse, ChatResponse, ChatHistoryResponse } from '../types/api';
 
 export const chatApi = {
@@ -8,6 +9,8 @@ export const chatApi = {
   sendMessage: async (message: string, sessionId?: string): Promise<ChatResponse> => {
     const response = await apiClient.post<ChatResponse>('/mcp-agent', {
       message,
+      selected_operational_run_id: useControlTowerStore.getState().selected?.run_id,
+      operational_service_date: useControlTowerStore.getState().serviceDate || useControlTowerStore.getState().selected?.service_date,
       selected_simulation_id: useOperationsStore.getState().selected || useFedexStore.getState().telemetry?.simulation_id,
       session_id: sessionId
     });
