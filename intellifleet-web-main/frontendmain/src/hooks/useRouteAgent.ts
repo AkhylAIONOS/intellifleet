@@ -161,7 +161,10 @@ export const useRouteAgent = () => {
 
         } catch (error: any) {
             //console.error('Agent processing error:', error);
-            addChatMessage('assistant', `${error.message || 'Unknown error'}. Please try again.`);
+            const unavailableDetail = error.response?.status === 503 && error.response?.data?.detail;
+            addChatMessage('assistant', typeof unavailableDetail === 'string'
+                ? unavailableDetail
+                : `${error.message || 'Unknown error'}. Please try again.`);
         } finally {
             setIsProcessing(false);
         }

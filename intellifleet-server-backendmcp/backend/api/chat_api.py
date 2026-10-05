@@ -9,6 +9,7 @@ import logging
 from fastapi.responses import JSONResponse
 from backend.config.redis import *
 import re
+from aioredis.exceptions import RedisError
 
 # Basic configuration
 logging.basicConfig(
@@ -25,8 +26,27 @@ router = APIRouter(tags=["Agent Service"])
 class ChatRequest(BaseModel):
     message: str
     selected_simulation_id: str | None = None
+    selected_operational_run_id: str | None = None
+    operational_service_date: str | None = None
+
+async def guarded_chat(req, current_user):
+    try:
+        return await agent_chat(req, current_user)
+    except RedisError as exc:
+        logger.warning("AI chat storage unavailable")
+        raise HTTPException(503, "AI chat storage is temporarily unavailable. Please retry shortly.") from exc
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("AI chat request failed")
+        raise HTTPException(503, "AI chat is temporarily unavailable. Please retry shortly.") from exc
+
 
 @router.post("/mcp-agent")
+async def chat_endpoint(req: ChatRequest, current_user=Depends(get_current_user)):
+    return await guarded_chat(req, current_user)
+
+
 async def agent_chat(
     req: ChatRequest,
     current_user = Depends(get_current_user)
@@ -41,12 +61,21 @@ async def agent_chat(
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
 
     from backend.control_tower.chat import answer as control_tower_answer
-    tower_result=control_tower_answer(user_id,req.message)
+    tower_result=control_tower_answer(user_id,req.message,req.selected_operational_run_id,req.operational_service_date)
     if tower_result is not None:
         return tower_result
 
     from backend.operations.journey_chat import answer as journey_answer
-    context = await get_active_planning_context(user_id) or {}
+    try:
+        context = await get_active_planning_context(user_id) or {}
+    except RedisError as exc:
+        logger.warning('Chat context storage unavailable for user=%s', user_id)
+        raise HTTPException(503, 'AI chat storage is temporarily unavailable. Please retry shortly.') from exc
+
+    from backend.operations.planner_followups import answer as followup_answer
+    followup_result = followup_answer(user_id, req.message, context, req.selected_simulation_id)
+    if followup_result is not None:
+        return followup_result
 
     from backend.operations.batch_planning import answer as batch_answer
     batch_result = await batch_answer(user_id, req.message, context)
