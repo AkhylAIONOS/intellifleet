@@ -1,6 +1,8 @@
 # auth.py
 
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from fastapi import Depends
 from contextlib import closing
 import secrets
 import jwt
@@ -18,26 +20,64 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 security = HTTPBearer()    
 
 
+class DemoIdentityInput(BaseModel):
+    name: str = Field(default='', max_length=120)
+    email: EmailStr
+
+    @field_validator('email', mode='before')
+    @classmethod
+    def normalize_email(cls, value):
+        return value.strip().lower() if isinstance(value,str) else value
+
+
+def ensure_login_fields(conn):
+    columns={row[1] for row in conn.execute('PRAGMA table_info(users)')}
+    for name,kind in [('name','TEXT'),('created_at','TEXT'),('first_login_at','TEXT'),('last_login_at','TEXT'),('login_count','INTEGER NOT NULL DEFAULT 0')]:
+        if name not in columns:
+            conn.execute(f'ALTER TABLE users ADD COLUMN {name} {kind}')
+    conn.execute("UPDATE users SET name=trim(first_name || ' ' || last_name) WHERE name IS NULL")
+    conn.execute("UPDATE users SET created_at=CURRENT_TIMESTAMP WHERE created_at IS NULL")
+
+
 @router.post("/demo-access")
-async def demo_access():
+async def demo_access(identity: DemoIdentityInput):
+    """Temporary email-identity demo login; not production-secure authentication."""
     if not settings.DEMO_ACCESS_ENABLED:
         raise HTTPException(status_code=403, detail="Demo access is disabled")
-
-    # The canonical user schema requires a password column. Use an unknowable
-    # random password hash; visitors never supply credentials or receive it.
+    email=str(identity.email).lower()
+    now=datetime.now(timezone.utc).isoformat()
     with closing(get_db_connection()) as conn, conn:
-        user = conn.execute("SELECT * FROM users WHERE email=?", ("demo@unifleet.local",)).fetchone()
+        conn.execute('BEGIN IMMEDIATE')
+        ensure_login_fields(conn)
+        user=conn.execute('SELECT * FROM users WHERE lower(email)=? ORDER BY id LIMIT 1',(email,)).fetchone()
         if user is None:
-            conn.execute(
-                "INSERT OR IGNORE INTO users(first_name,last_name,email,password,verified) VALUES(?,?,?,?,1)",
-                ("UniFleet", "Demo", "demo@unifleet.local", get_password_hash(secrets.token_urlsafe(32))),
-            )
-            user = conn.execute("SELECT * FROM users WHERE email=?", ("demo@unifleet.local",)).fetchone()
-        public_user = {key: user[key] for key in ("id", "first_name", "last_name", "email")}
+            name=identity.name.strip()
+            if not name:
+                raise HTTPException(400,'Name is required for a new account')
+            first,_,last=name.partition(' ')
+            # Existing schema requires a password hash; this is an unknowable
+            # compatibility value, never a user password or login mechanism.
+            conn.execute('INSERT INTO users(first_name,last_name,name,email,password,verified,created_at,first_login_at,last_login_at,login_count) VALUES(?,?,?,?,?,1,?,?,?,1)',
+                (first,last,name,email,get_password_hash(secrets.token_urlsafe(32)),now,now,now))
+        else:
+            conn.execute('UPDATE users SET first_login_at=COALESCE(first_login_at,?),last_login_at=?,login_count=login_count+1 WHERE id=?',(now,now,user['id']))
+        user=conn.execute('SELECT * FROM users WHERE lower(email)=? ORDER BY id LIMIT 1',(email,)).fetchone()
+        public_user={key:user[key] for key in ('id','name','first_name','last_name','email')}
+        public_user['email']=email
+    token=create_access_token({'user_id':public_user['id'],**{key:value for key,value in public_user.items() if key!='id'}})
+    return {'success':True,'data':{'token':token,'user':public_user}}
 
-    token = create_access_token({"user_id": public_user["id"],
-                                 **{key: value for key, value in public_user.items() if key != "id"}})
-    return {"success": True, "data": {"token": token, "user": public_user}}
+
+@router.get('/users')
+def logged_in_users(current_user=Depends(get_current_user)):
+    allowed={email.strip().lower() for email in settings.UNIFLEET_ADMIN_EMAILS.split(',') if email.strip()}
+    with closing(get_db_connection()) as conn,conn:
+        user=conn.execute('SELECT email FROM users WHERE id=?',(current_user.get('user_id'),)).fetchone()
+        if not user or user['email'].strip().lower() not in allowed:
+            raise HTTPException(403,'Unauthorized')
+        ensure_login_fields(conn)
+        rows=conn.execute('SELECT name,email,first_login_at,last_login_at,login_count FROM users WHERE first_login_at IS NOT NULL ORDER BY last_login_at DESC,id DESC').fetchall()
+    return {'users':[dict(row) for row in rows]}
 
 # ======================
 # ✅ SIGNUP

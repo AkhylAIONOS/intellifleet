@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardPage } from './pages/DashboardPage';
 import { DemoLandingPage } from './pages/DemoLandingPage';
 import './App.css';
+import {AdminUsersPage} from './pages/AdminUsersPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/internal/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/" element={<DemoLandingPage />} />
         </Routes>
       </BrowserRouter>

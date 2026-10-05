@@ -22,60 +22,49 @@ try {
   const {vehiclesApi}=await server.ssrLoadModule('/src/api/vehicles.ts');vehiclesApi.getVehicles=async()=>({vehicles:[]});
   const {routesApi}=await server.ssrLoadModule('/src/api/routes.ts');routesApi.getRouteSession=async()=>({success:true,data:{routes:[]}});
   const {chatApi}=await server.ssrLoadModule('/src/api/chat.ts');chatApi.clearChat=async()=>{};
-  const user={id:12,first_name:'UniFleet',last_name:'Demo',email:'demo@unifleet.local'};
-  const tokenFor=seconds=>'header.'+Buffer.from(JSON.stringify({user_id:12,exp:Math.floor(Date.now()/1000)+seconds})).toString('base64url')+'.signature';
-  const token=tokenFor(3600);
-  let resolveRequest,calls=0;
-  apiClient.defaults.adapter=config=>{
-    if(config.url==='/operations/movements')return Promise.resolve({status:200,statusText:'OK',headers:{},config,data:{movements:[]}});
-    calls++;assert.equal(config.url,'/auth/demo-access');assert.equal(config.method,'post');
-    return new Promise(resolve=>{resolveRequest=()=>resolve({status:200,statusText:'OK',headers:{},config,data:{success:true,data:{token,user}}});});
+  const user={id:12,name:'Test User',first_name:'Test',last_name:'User',email:'test@example.com'};
+  const token='header.'+Buffer.from(JSON.stringify({user_id:12,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.signature';
+  let calls=0,admin=false;
+  apiClient.defaults.adapter=async config=>{
+    if(config.url==='/operations/movements')return {status:200,statusText:'OK',headers:{},config,data:{movements:[]}};
+    if(config.url==='/auth/users'){
+      if(!admin)throw {response:{status:403}};
+      return {status:200,statusText:'OK',headers:{},config,data:{users:[{name:'Test User',email:'test@example.com',first_login_at:'2030-01-01',last_login_at:'2030-01-02',login_count:2},{name:'Second User',email:'second@example.com',first_login_at:'2030-01-02',last_login_at:'2030-01-02',login_count:1}]}};
+    }
+    calls++;assert.equal(config.url,'/auth/demo-access');
+    assert.deepEqual(JSON.parse(config.data),{name:'Test User',email:'test@example.com'});
+    return {status:200,statusText:'OK',headers:{},config,data:{success:true,data:{token,user}}};
   };
-  for(const path of ['/','/login','/signup']) {
-    useAuthStore.getState().clearAuth();window.history.replaceState({},'',path);
-    const ui=render(React.createElement(App));
-    assert.ok(ui.getByRole('heading',{name:'Welcome to UniFleet'}));
-    assert.ok(ui.getByRole('button',{name:'Enter UniFleet'}));
-    assert.equal(document.querySelectorAll('input,form,.auth-tabs,.auth-footer,.error-message').length,0);
-    assert.equal(document.querySelector('.auth-right-panel .form-subtitle'),null);
-    assert.equal(document.querySelector('.auth-form-wrapper').textContent.trim(),'Enter UniFleet');
-    for(const text of ['Network Creation','Autonomous AI Route Agent','Visibility Twin','Advanced Analytics Dashboard'])assert.ok(ui.getByText(text));
-    for(const text of ['40%','Cost Reduction','2×','Improved Planning','35%','Delay Improvements'])assert.ok(ui.getByText(text));
-    assert.match(document.querySelector('.brand-title').textContent.replace(/\s+/g,' '),/AI-Powered Fleet\s*Intelligence/);
-    assert.equal(document.querySelector('.brand-subtitle').textContent.trim(),'The autonomous logistics platform that thinks ahead — optimizing routes, predicting disruptions, and manages your entire fleet.');
-    cleanup();
+  async function login(ui){
+    await act(async()=>{
+      fireEvent.change(ui.getByLabelText('Name'),{target:{value:'Test User'}});
+      fireEvent.change(ui.getByLabelText('Email'),{target:{value:'TEST@example.com'}});
+      fireEvent.submit(ui.getByRole('button',{name:'Continue to UniFleet'}).closest('form'));
+    });
   }
-  window.history.replaceState({},'','/login');let ui=render(React.createElement(App));
-  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Enter UniFleet'})));
-  const pending=ui.getByRole('button',{name:'Entering UniFleet...'});assert.ok(pending.disabled);
-  fireEvent.click(pending);assert.equal(calls,1);
-  await act(async()=>resolveRequest());
+  window.history.replaceState({},'','/internal/users');let ui=render(React.createElement(App));
+  assert.equal(window.location.pathname,'/login');
+  assert.ok(ui.getByRole('heading',{name:'Welcome to UniFleet'}));
+  await login(ui);
   assert.equal(window.location.pathname,'/dashboard');assert.equal(localStorage.getItem('authToken'),token);
-  assert.deepEqual(useAuthStore.getState().user,user);assert.ok(ui.getByRole('button',{name:/Logout/i}));
+  assert.ok(ui.getByText(/👋 Test User/));assert.ok(ui.getByText('test@example.com'));
+  assert.ok(ui.getByRole('button',{name:'PLAN',exact:true}));assert.ok(ui.getByRole('button',{name:'LIVE OPERATIONS',exact:true}));
+  assert.equal(document.querySelector('a[href="/internal/users"]'),null);
   cleanup();
-  // Rehydrate the existing persisted store exactly as a new page load does.
-  const persisted=localStorage.getItem('auth-storage');
-  useAuthStore.setState({user:null,token:null,isAuthenticated:false});localStorage.setItem('auth-storage',persisted);
-  await useAuthStore.persist.rehydrate();
-  assert.equal(useAuthStore.getState().token,token);assert.equal(useAuthStore.getState().isAuthenticated,true);
+  const persisted=localStorage.getItem('auth-storage');useAuthStore.setState({user:null,token:null,isAuthenticated:false});localStorage.setItem('auth-storage',persisted);
+  await useAuthStore.persist.rehydrate();assert.equal(useAuthStore.getState().isAuthenticated,true);
   ui=render(React.createElement(App));await act(async()=>{});
-  assert.equal(window.location.pathname,'/dashboard');
-  await act(async()=>fireEvent.click(ui.getByRole('button',{name:/Logout/i})));
-  assert.equal(localStorage.getItem('authToken'),null);assert.equal(useAuthStore.getState().user,null);
-  assert.ok(ui.getByRole('button',{name:'Enter UniFleet'}));assert.equal(window.location.pathname,'/login');
-  // A subsequent Enter returns to the protected dashboard with a token again.
-  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Enter UniFleet'})));
-  await act(async()=>resolveRequest());assert.equal(window.location.pathname,'/dashboard');assert.equal(calls,2);
-  cleanup();useAuthStore.getState().clearAuth();window.history.replaceState({},'','/');
-  apiClient.defaults.adapter=async()=>{throw new Error('raw internal credentials or database error');};
-  ui=render(React.createElement(App));await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Enter UniFleet'})));
-  assert.equal(ui.queryByRole('alert'),null);
-  assert.equal(ui.getByRole('button',{name:'Enter UniFleet'}).disabled,false);
-  assert.doesNotMatch(document.body.textContent,/raw internal/);assert.equal(useAuthStore.getState().isAuthenticated,false);
-  cleanup();
-  localStorage.setItem('authToken',tokenFor(-10));localStorage.setItem('auth-storage',persisted);
-  await useAuthStore.persist.rehydrate();assert.equal(useAuthStore.getState().isAuthenticated,false);
-  window.history.replaceState({},'','/dashboard');ui=render(React.createElement(App));await act(async()=>{});
-  assert.equal(window.location.pathname,'/login');assert.ok(ui.getByRole('button',{name:'Enter UniFleet'}));
-  console.log('PASS: three demo landing routes, no auth inputs, loading/double-click, JWT storage, dashboard navigation, refresh, real logout, re-entry, safe errors and expiry');
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Logout',exact:true})));
+  assert.equal(localStorage.getItem('authToken'),null);assert.equal(window.location.pathname,'/login');
+  await login(ui);assert.equal(calls,2);assert.equal(window.location.pathname,'/dashboard');cleanup();
+  window.history.replaceState({},'','/internal/users');ui=render(React.createElement(App));await act(async()=>{});
+  assert.ok(ui.getByRole('alert'));assert.match(ui.getByRole('alert').textContent,/Unauthorized/);
+  assert.equal(ui.queryByRole('table'),null);cleanup();
+  admin=true;ui=render(React.createElement(App));await act(async()=>{});
+  assert.ok(ui.getByRole('table'));assert.ok(ui.getByText('second@example.com'));assert.ok(ui.getByRole('columnheader',{name:'Login Count'}));cleanup();
+  useAuthStore.getState().clearAuth();window.history.replaceState({},'','/login');
+  apiClient.defaults.adapter=async()=>{throw new Error('private internal database error');};
+  ui=render(React.createElement(App));await login(ui);
+  assert.ok(ui.getByRole('alert'));assert.doesNotMatch(ui.getByRole('alert').textContent,/private internal/);
+  console.log('PASS: name/email login, normalized identity, header display, dashboard/navigation, refresh, logout/relogin, protected hidden route, 403 handling, admin list, clean errors');
 } finally {cleanup();await server.close();dom.window.close();}

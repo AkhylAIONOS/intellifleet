@@ -256,8 +256,8 @@ export const DashboardPage = () => {
             + Add Route
           </button>
           <div className="user-profile-pill">
-            <span className="user-name">👋 {user?.first_name || 'User'}</span>
-            <span className="user-plan">Premium</span>
+            <span className="user-name">👋 {user?.name || [user?.first_name,user?.last_name].filter(Boolean).join(' ') || 'User'}</span>
+            <span className="user-plan">{user?.email}</span>
           </div>
           <button onClick={handleLogout} className="logout-button">
             Logout

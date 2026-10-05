@@ -6,6 +6,7 @@ import { isTokenUnexpired, useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 
 export function DemoLandingPage() {
+  const [name,setName]=useState(''),[email,setEmail]=useState(''),[error,setError]=useState('');
   const [loading, setLoading] = useState(false);
   const pending = useRef(false);
   const navigate = useNavigate();
@@ -18,9 +19,9 @@ export function DemoLandingPage() {
   const enter = async () => {
     if (pending.current) return;
     pending.current = true;
-    setLoading(true);
+    setLoading(true);setError('');
     try {
-      const response = await authApi.demoAccess();
+      const response = await authApi.demoAccess({name:name.trim(),email:email.trim().toLowerCase()});
       if (!response.success || !response.data?.user || !response.data?.token) {
         throw new Error('Demo entry failed');
       }
@@ -28,8 +29,9 @@ export function DemoLandingPage() {
       useAppStore.getState().resetStore();
       setAuth(response.data.user, response.data.token);
       navigate('/dashboard', {replace: true});
-    } catch {
-      // Stay on the welcome page and allow retry without showing auth errors.
+    } catch (err: any) {
+      const detail=err.response?.data?.detail;
+      setError(typeof detail==='string'?detail:'Enter a valid email and a name for a new account.');
     } finally {
       pending.current = false;
       setLoading(false);
@@ -37,8 +39,12 @@ export function DemoLandingPage() {
   };
 
   return <AuthLayout type="demo">
-    <button type="button" className="auth-submit-btn" disabled={loading} onClick={enter}>
-      {loading ? 'Entering UniFleet...' : 'Enter UniFleet'}
-    </button>
+    <form onSubmit={e=>{e.preventDefault();void enter();}}>
+      <div className="form-group"><label htmlFor="demo-name">Name</label><input id="demo-name" name="name" autoComplete="name" maxLength={120} value={name} onChange={e=>setName(e.target.value)}/></div>
+      <div className="form-group"><label htmlFor="demo-email">Email</label><input id="demo-email" name="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div>
+      {error&&<p role="alert">{error}</p>}
+      <button type="submit" className="auth-submit-btn" disabled={loading}>{loading?'Entering UniFleet...':'Continue to UniFleet'}</button>
+      <p>Temporary demo login using email identity; not production-secure authentication.</p>
+    </form>
   </AuthLayout>;
 }

@@ -19,6 +19,7 @@ export interface ApiResponse<T = any> {
 
 // Auth Types
 export interface User {
+  name?: string;
   id: number;
   first_name: string;
   last_name: string;

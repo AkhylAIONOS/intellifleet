@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     
     FRONTEND_URL: Optional[str] = None
     DEMO_ACCESS_ENABLED: bool = False
+    UNIFLEET_ADMIN_EMAILS: str = ""
     BACKEND_URL: Optional[str] = None
 
     REDIS_URL: Optional[str] = None

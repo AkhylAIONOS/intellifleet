@@ -2,10 +2,11 @@ import apiClient from './client';
 import type { ApiResponse, LoginRequest, SignupRequest, AuthResponse, User } from '../types/api';
 
 export const authApi = {
-  demoAccess: async (): Promise<ApiResponse<AuthResponse & { user: User }>> => {
-    const response = await apiClient.post<ApiResponse<AuthResponse & { user: User }>>('/auth/demo-access');
+  demoAccess: async (identity: {name:string;email:string}): Promise<ApiResponse<AuthResponse & { user: User }>> => {
+    const response = await apiClient.post<ApiResponse<AuthResponse & { user: User }>>('/auth/demo-access', identity);
     return response.data;
   },
+  users: async (): Promise<{users:Array<{name:string;email:string;first_login_at:string;last_login_at:string;login_count:number}>}> => (await apiClient.get('/auth/users')).data,
   // Sign in
   signin: async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
     const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/signin', credentials);
