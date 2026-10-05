@@ -25,6 +25,7 @@ router = APIRouter(tags=["Agent Service"])
 
 class ChatRequest(BaseModel):
     message: str
+    session_id: str | None = None
     selected_simulation_id: str | None = None
     selected_operational_run_id: str | None = None
     operational_service_date: str | None = None
@@ -61,7 +62,7 @@ async def agent_chat(
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
 
     from backend.control_tower.chat import answer as control_tower_answer
-    tower_result=control_tower_answer(user_id,req.message,req.selected_operational_run_id,req.operational_service_date)
+    tower_result=control_tower_answer(user_id,req.message,req.selected_operational_run_id,req.operational_service_date,req.session_id)
     if tower_result is not None:
         return tower_result
 

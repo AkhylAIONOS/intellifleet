@@ -6,6 +6,9 @@ def migrate(conn):
       PRIMARY KEY(owner,identity));
     CREATE TABLE IF NOT EXISTS ct_personal_outbox (
       outbox_id INTEGER PRIMARY KEY, owner INTEGER NOT NULL, identity TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS ct_chat_context (
+      owner INTEGER NOT NULL, service_date TEXT NOT NULL, session_id TEXT NOT NULL, run_ids_json TEXT NOT NULL,
+      PRIMARY KEY(owner,service_date,session_id));
     CREATE TABLE IF NOT EXISTS ct_runs (
       owner INTEGER NOT NULL, run_id TEXT NOT NULL, lane_key TEXT NOT NULL,
       schedule_id TEXT NOT NULL, service_date TEXT NOT NULL, network_version TEXT NOT NULL,

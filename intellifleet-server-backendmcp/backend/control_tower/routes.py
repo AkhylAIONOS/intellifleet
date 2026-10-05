@@ -24,6 +24,10 @@ class PlaybackInput(SimulationInput):
     demo_playback: bool = False
 
 
+class SyntheticActionInput(BaseModel):
+    action: Literal['delay10','delay30','arrive']
+
+
 class CriticalInput(BaseModel):
     critical: bool
 
@@ -141,6 +145,11 @@ def event(run_id:str,request:ScanInput,user=Depends(get_current_user),x_fedex_in
 @router.post('/control-tower/runs/{run_id}/simulation')
 def simulation(run_id:str,request:PlaybackInput,user=Depends(get_current_user)):
     return invoke(service.link_simulation,user['user_id'],run_id,request)
+
+
+@router.post('/control-tower/runs/{run_id}/synthetic-action')
+def synthetic_action(run_id:str,request:SyntheticActionInput,user=Depends(get_current_user)):
+    return invoke(service.synthetic_action,user['user_id'],run_id,request.action)
 
 
 @router.get('/alerts/recipients')

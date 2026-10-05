@@ -227,9 +227,55 @@ class ControlTower:
             if getattr(request,'demo_playback',False):
                 sim.now=sim.selected['etd']
                 sim.last_wall=runtime.clock()
+                # Explicit demo departure advances the existing playback by one second.
+                sim.advance(sim.last_wall+1/sim.speed)
+                sim.last_wall=runtime.clock()
+                sim.paused=True
             conn.execute('UPDATE ct_runs SET movement_id=?,actual_source=?,carrier=? WHERE owner=? AND run_id=?',(sim.id,'SYNTHETIC_TELEMETRY',schedule.service,owner,run_id))
         self.observe(owner)
+        if getattr(request,'demo_playback',False):
+            self.con_event(owner,dict(con_number='CT-SYNTHETIC-'+run_id,run_id=run_id,
+                event_id='demo-con:'+run_id,source='SYNTHETIC_TELEMETRY',event_at=sim.now.isoformat()))
         return self.detail(owner,run_id)
+
+    def synthetic_action(self, owner, run_id, action):
+        from backend.fedex.telemetry import runtime
+        from backend.fedex.disruptions import inject
+        from backend.fedex.models import DisruptionInput
+        row=self.detail(owner,run_id)
+        if row['actual_source']!='SYNTHETIC_TELEMETRY' or not row['movement_id']:
+            raise ValueError('Start labelled synthetic playback for this run first')
+        sim=runtime.get(owner,row['movement_id'])
+        if not getattr(sim.request,'demo_playback',False):
+            raise ValueError('Quick controls require explicit demo playback')
+        if sim.progress>=1 or sim.stopped:
+            raise ValueError('The synthetic run has completed or stopped')
+        if action not in {'delay10','delay30','arrive'}:
+            raise ValueError('Unsupported synthetic action')
+        sim.paused=False
+        try:
+            if action in {'delay10','delay30'}:
+                inject(sim,DisruptionInput(event_type='SLOWDOWN',expected_delay_minutes=10 if action=='delay10' else 30,
+                    reason='Operator requested labelled synthetic delay'))
+                if action=='delay30':
+                    # Fast-forward the playback clock beyond the overdue threshold.
+                    target=timestamp(row['planned_eta'])+timedelta(minutes=6)
+                    if target>sim.now:
+                        sim.advance(sim.last_wall+(target-sim.now).total_seconds()/sim.speed)
+            else:
+                sim.advance(sim.last_wall+max(0,(sim.current_eta-sim.now).total_seconds())/sim.speed+1)
+        finally:
+            sim.last_wall=runtime.clock()
+            sim.paused=True
+        self.observe(owner)
+        return self.detail(owner,run_id)
+
+    def chat_context(self, owner, service_date, run_ids=None, session_id=None):
+        with self.db() as conn:
+            if run_ids is not None:
+                conn.execute('INSERT OR REPLACE INTO ct_chat_context VALUES(?,?,?,?)',(owner,str(service_date),session_id or '',json.dumps(run_ids)))
+            row=conn.execute('SELECT run_ids_json FROM ct_chat_context WHERE owner=? AND service_date=? AND session_id=?',(owner,str(service_date),session_id or '')).fetchone()
+            return json.loads(row[0]) if row else None
 
     def observe(self, owner):
         """Persist labelled simulation milestones and time-based transitions."""
@@ -245,7 +291,7 @@ class ControlTower:
                 events=[]
                 if snapshot['progress']>0 and not row['actual_departure_at']:
                     events.append(dict(event_type='DEPARTURE',event_at=snapshot['scheduled_etd'],event_id='sim-departure:'+row['movement_id']))
-                if snapshot['current_eta']!=row['current_eta']:
+                if timestamp(snapshot['current_eta'])!=timestamp(row['current_eta']):
                     events.append(dict(event_type='ETA_UPDATE',event_at=snapshot['simulation_timestamp'],current_eta=snapshot['current_eta'],event_id=f'sim-eta:{row["movement_id"]}:{snapshot["current_eta"]}'))
                 if snapshot['progress']>=1 and not row['actual_arrival_at']:
                     events.append(dict(event_type='ARRIVAL',event_at=snapshot['current_eta'],event_id='sim-arrival:'+row['movement_id']))

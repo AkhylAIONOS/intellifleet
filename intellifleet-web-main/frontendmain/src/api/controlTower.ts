@@ -33,6 +33,7 @@ export const controlTowerApi={
  saveRecipients:async(emails:string[])=>(await api.put('/operations/alerts/recipients',{emails},alertConfig())).data,
  alerts:async():Promise<{alerts:Array<{id:number;status:string;attempts:number;created_at:string;last_error:string|null}>;delivery_enabled:boolean}>=>(await api.get('/operations/alerts',alertConfig())).data,
  con:async(number:string):Promise<{con:{con_number:string;source:string;event_at:string};run:TowerRun}>=>(await api.get(`/operations/cons/${encodeURIComponent(number)}`)).data,
+ syntheticAction:async(id:string,action:'delay10'|'delay30'|'arrive'):Promise<TowerRun>=>(await api.post(`/operations/control-tower/runs/${encodeURIComponent(id)}/synthetic-action`,{action})).data,
  simulate:async(run:TowerRun)=>(await api.post(`/operations/control-tower/runs/${encodeURIComponent(run.run_id)}/simulation`,{
   origin_station:run.schedule.origin_station,gateway:run.schedule.gateway,simulation_date:run.service_date,
   shipment_ready_datetime:`${run.service_date}T00:00:00+05:30`,speed:120,demo_playback:true})).data,

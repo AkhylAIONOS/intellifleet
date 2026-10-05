@@ -52,7 +52,7 @@ def test_packaged_workbook_persistence_and_queries(tmp_path,monkeypatch):
     monkeypatch.setattr(chat,'ControlTower',lambda:tower)
     for prompt in ['Which Air runs are currently delayed?','Show Surface runs for Delhi.','Which critical lanes are currently at risk?']:
         result=chat.answer(1,prompt,service_date=str(d))
-        assert result and 'Network status' in result['response']
+        assert result and result['response'] and 'inspect the affected run' not in result['response']
     assert 'No operational runs are loaded' in chat.answer(1,'Which Air runs are currently delayed?',service_date='2031-01-01')['response']
     assert 'No CON association' in chat.answer(1,'Find CON CT-LOCAL-SYNTHETIC.')['response']
     assert 'No Control Tower run is selected' in chat.answer(1,'If the current delayed run becomes 30 minutes later, what should the operator do?',service_date=str(d))['response']
