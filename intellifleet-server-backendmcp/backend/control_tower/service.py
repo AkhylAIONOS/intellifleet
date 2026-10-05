@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 from .database import migrate
 from .status import operational_fields, timestamp
+from .search import matches_search
 
 
 class ControlTower:
@@ -93,9 +94,10 @@ class ControlTower:
             else:
                 query+=' AND network_version=(SELECT network_version FROM ct_network_imports i WHERE i.owner=ct_runs.owner AND i.service_date=ct_runs.service_date)'
             rows=[self._decorate(conn,dict(r)) for r in conn.execute(query,params)]
+        search=(search or '').strip()
         return [r for r in rows if (not mode or r['schedule']['mode']==mode or (mode=='SURFACE' and r['schedule']['source_sheet']=='Surface'))
             and (not status or r['status']==status) and (critical is None or r['critical']==critical)
-            and (not search or search.casefold() in json.dumps(r['schedule']).casefold())]
+            and (not search or matches_search(r,search))]
 
     def detail(self, owner, run_id):
         with self.db() as conn:

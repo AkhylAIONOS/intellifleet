@@ -3,6 +3,7 @@ import re
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from .service import ControlTower
+from .search import location_matches
 
 
 def reply(text, actions=None):
@@ -15,15 +16,6 @@ def run_text(run):
             f"Scheduled ETA {run['planned_eta'] or 'Not supplied'} · Current ETA {run['current_eta'] or 'Not supplied'} · "
             f"Delay {round(run['delay_hours']*60,2) if run.get('delay_hours') is not None else 'Not supplied'} min · "
             f"Critical {'yes' if run['critical'] else 'no'} · {run['actual_source'] or 'FEDEX_SOURCE schedule; no execution feed'}")
-
-
-def location_matches(run, query):
-    s=run['schedule']
-    fields=[s.get(k,'') for k in ('origin_city','origin_station','gateway','lane')]
-    fields.extend(str(v) for k,v in s.get('source',{}).items() if any(w in k.casefold() for w in ('city','station','hub','gtw','lane')))
-    aliases={'delhi':('delhi','delgw','ndls','del','dli')}
-    words=aliases.get(query.casefold(),(query.casefold(),))
-    return any(re.search(r'(?<![a-z0-9])'+re.escape(word)+r'(?![a-z0-9])',str(field).casefold()) for field in fields for word in words)
 
 
 def answer(owner,message,selected_run_id=None,service_date=None,session_id=None):

@@ -61,7 +61,7 @@ OBJECTIVE_ALIASES = {
     "cheapest": ("cost", "cheap", "minimum-cost", "lowest-cost", "minimize-cost", "save-money", "economical"),
     "fastest": ("fast", "quick", "earliest", "minimum-eta", "time", "speed", "soon-as-possible"),
     "lowest-risk": ("risk", "safe", "safest", "reliable", "reliability"),
-    "balanced": ("balance", "best-overall", "best-tradeoff", "tradeoff"),
+    "balanced": ("balance", "best-overall", "best-available", "best-tradeoff", "tradeoff"),
 }
 from backend.planning.models import MODE_ALIASES, normalize_modes
 
@@ -640,7 +640,7 @@ def _objective_from_message(message: str) -> str | None:
         return "lowest-risk"
     if any(x in text for x in ("recommend the fastest", "fastest feasible", "minimum eta", "quickest", "earliest", "fastest", "as fast as possible", "as quickly as possible")):
         return "fastest"
-    if any(x in text for x in ("best overall", "best tradeoff", "balanced", "balance cost", "balance of cost", "cost-efficient", "cost efficient", "economical while reasonably fast")):
+    if any(x in text for x in ("best overall", "best available", "best tradeoff", "balanced", "balance cost", "balance of cost", "cost-efficient", "cost efficient", "economical while reasonably fast")):
         return "balanced"
     return None
 
