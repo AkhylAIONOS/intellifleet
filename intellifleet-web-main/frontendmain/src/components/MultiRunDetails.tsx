@@ -1,0 +1,10 @@
+import {selectedRouteColor} from '../utils/routePalette';
+import type {TowerRun} from '../api/controlTower';
+import {TransportVisual} from './TransportVisual';
+import {operationalTime} from '../utils/operationalTime';
+import {locationLabel} from '../utils/locationLabels';
+import {useAppStore} from '../store/appStore';
+export function MultiRunDetails({runs,onRemove,onClear}:{runs:TowerRun[];onRemove:(run:TowerRun)=>void;onClear:()=>void}){
+ const warehouses=useAppStore(s=>s.warehouses);
+ return <section className="multi-run-details" aria-label="Selected route comparison" data-count={runs.length}><header><div><strong>Selected Routes ({runs.length})</strong><p>The map shows this selection only.</p></div><button onClick={onClear}>Show all routes</button></header><div className="multi-run-grid">{runs.map((run,index)=><article className="multi-run-card" key={run.run_id} data-run-id={run.run_id} style={{borderTop:`3px solid ${selectedRouteColor(index)}`}}><TransportVisual mode={run.schedule.mode}/><h3>{run.schedule.lane}</h3><p>{run.schedule.mode==='AIR'?'Air':run.schedule.mode==='RAIL'?'Train':'Surface'} · {run.schedule.service} · Run {run.schedule.run}</p><p>{locationLabel(run.schedule.origin_station,warehouses)} → {locationLabel(run.schedule.gateway,warehouses)}</p><span className="status-chip">{run.status}</span><dl><div><dt>ETD</dt><dd>{operationalTime(run.planned_etd)}</dd></div><div><dt>Current ETA</dt><dd>{operationalTime(run.current_eta)}</dd></div></dl>{run.movement&&<p>Simulated progress: {((run.movement.progress||0)*100).toFixed(1)}%</p>}<details><summary>Resource & timing details</summary><p>Source ETA: {operationalTime(run.planned_eta)}</p>{run.resources?.map(v=><p key={v.id}>{v.label}: {v.available_capacity_kg.toLocaleString()} / {v.capacity.toLocaleString()} kg available · {v.utilization_percentage}% baseline utilization (simulated).</p>)}</details><button aria-label={`Remove route ${run.schedule.lane} ${run.schedule.service}`} onClick={()=>onRemove(run)}>Remove from selection</button></article>)}</div></section>;
+}

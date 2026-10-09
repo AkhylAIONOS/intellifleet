@@ -31,7 +31,7 @@ export function DemoLandingPage() {
       navigate('/dashboard', {replace: true});
     } catch (err: any) {
       const detail=err.response?.data?.detail;
-      setError(typeof detail==='string'?detail:'Enter a valid email and a name for a new account.');
+      setError(typeof detail==='string'?detail:'Unable to sign in. Check your details and try again.');
     } finally {
       pending.current = false;
       setLoading(false);
@@ -44,7 +44,6 @@ export function DemoLandingPage() {
       <div className="form-group"><label htmlFor="demo-email">Email</label><input id="demo-email" name="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div>
       {error&&<p role="alert">{error}</p>}
       <button type="submit" className="auth-submit-btn" disabled={loading}>{loading?'Entering UniFleet...':'Continue to UniFleet'}</button>
-      <p>Temporary demo login using email identity; not production-secure authentication.</p>
     </form>
   </AuthLayout>;
 }

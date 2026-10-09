@@ -134,3 +134,61 @@ def test_playback_authentication():
 def test_operational_lookup_resolves_explicit_flight_over_stale_selection(environment):
     result=chat('What is the status of flight 6E 5355?',environment[2],'operational')
     assert '6E 5355' in result['response'] and 'Current ETA' in result['response'] and 'UDRPU' not in result['response']
+
+
+@pytest.mark.parametrize('message',['Compare Air and Surface.','Air vs Surface: which arrives first?','Air aur Surface compare karo.','Air और Surface में कौन पहले पहुंचेगा?'])
+def test_compare_multiple_modes_keeps_both(environment,message):
+    stale=environment[2];chat(MESSAGES[0],stale)
+    result=chat(message,stale)
+    assert {r['mode'] for r in result['services']}=={'AIR','SURFACE'}
+
+
+def test_explicit_planning_mode_and_numeric_capacity_priority(environment):
+    stale=environment[2]
+    result=chat('Plan 2000 kg from CJBMB to BLRGW by Air.',stale)
+    assert {p['mode'] for p in result['planning_result']['candidate_plans']}=={'air'}
+    result=chat('Can the Surface option carry 4000 kg?',stale)
+    assert result['capacity_results'][0]['required_weight_kg']==4000
+    assert result['capacity_results'][0]['feasible'] is False
+    result=chat('Which option can carry it?',stale)
+    assert all(r['required_weight_kg']==4000 for r in result['capacity_results'])
+
+
+def test_selected_multi_run_comparison_and_antecedent(environment):
+    _,rows,stale=environment
+    chosen=[r for r in rows if r['schedule_id'] in {'air-11','surface-25','air-2'}]
+    assert len(chosen)>=2
+    req=ChatInput(message='Compare selected routes.',session_id='multi',operational_service_date='2026-10-09',selected_operational_run_ids=[r['run_id'] for r in chosen],selected_operational_run_id=stale['run_id'])
+    result=answer(702,req)
+    assert {r['schedule_id'] for r in result['services']}=={r['schedule_id'] for r in chosen}
+    result=answer(702,req.model_copy(update={'message':'Which arrives first?'}))
+    assert {r['schedule_id'] for r in result['services']}=={r['schedule_id'] for r in chosen}
+    result=answer(702,req.model_copy(update={'message':'What is ETA of flight 6E 5355?'}))
+    assert len(result['services'])==1 and result['services'][0]['service']=='6E 5355'
+
+
+def test_invalid_numeric_input_returns_validation_response(monkeypatch):
+    from backend.client_api import router
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    app=FastAPI();app.include_router(router);app.dependency_overrides[get_current_user]=lambda:{'user_id':702}
+    response=TestClient(app).post('/mcp-agent',json={'message':'Plan 0 kg from CJBMB to BLRGW.'})
+    assert response.status_code==422
+
+
+@pytest.mark.parametrize('message',['What is ETA of flight ZZ 1234?','What is ETA of CJBMB-UNKNOWN?'])
+def test_unknown_entities_never_reuse_previous_pair(environment,message):
+    chat(MESSAGES[0],environment[2],'unknown')
+    result=chat(message,environment[2],'unknown')
+    assert 'not present' in result['response'] and '6E 5355' not in result['response']
+
+
+@pytest.mark.parametrize('message',['What is the revised ETA?','What is the updated ETA?'])
+def test_revised_eta_followup_uses_active_service_delay(environment,message):
+    stale=environment[2];chat(MESSAGES[0],stale,'delay-followup')
+    chat('Delay the CJBMB-BLRGW Surface run by 30 minutes.',stale,'delay-followup')
+    result=chat(message,stale,'delay-followup')
+    assert result['scenario']['service_id']=='surface-25'
+    assert result['scenario']['delay_minutes']==30 and '06:30 IST' in result['response']
+    explicit=chat('What is ETA of flight 6E 5355?',stale,'delay-followup')
+    assert '22:40 IST' in explicit['response'] and '06:30 IST' not in explicit['response']

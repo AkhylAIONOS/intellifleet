@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import copy
 import re
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from backend.routes.auth import get_current_user
 from backend.client_network import network, summary
 from backend.planning.models import PlanningRequest
@@ -71,6 +71,7 @@ class ChatInput(BaseModel):
     message: str
     session_id: str | None=None
     selected_operational_run_id: str | None=None
+    selected_operational_run_ids: list[str]=Field(default_factory=list,max_length=38)
     operational_service_date: str | None=None
     workspace: str | None=None
 
@@ -81,8 +82,8 @@ from backend.client_chat import answer, contexts, plan_reply
 @router.post('/mcp-agent')
 async def chat(req:ChatInput,user=Depends(get_current_user)):
     from backend.chat_normalization import normalize
-    normalized,source=await normalize(req.message)
     try:
+        normalized,source=await normalize(req.message)
         result=answer(user['user_id'],req,normalized)
         result['normalization_source']=source
         return result

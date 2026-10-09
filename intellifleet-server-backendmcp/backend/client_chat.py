@@ -79,12 +79,16 @@ def _scope(message,normalized,ctx,model,req):
     if normalized.identifier and _mentioned(normalized.identifier,message) and not identifiers:
         identifiers={r['route_id'] for r in rows if normalized.identifier.casefold() in {r['route_id'].casefold(),r['schedule']['service'].casefold(),r['schedule']['lane'].casefold()}}
     # Unknown explicit identifiers must not inherit a stale conversational/UI entity.
+    named_flight=re.search(r'(?:\bflight\b|उड़ान)\s+([A-Z0-9]{2,3}\s*\d{2,5})(?![A-Za-z0-9])',message,re.I)
     flight=re.search(r'(?<![A-Za-z0-9])(?:6E|AI|UK|SG|IX|I5)\s*\d{2,5}(?![A-Za-z0-9])',message,re.I)
+    flight_id=named_flight[1] if named_flight else flight[0] if flight else None
     resource=re.search(r'\b(?:SUR|AIR|RAIL)-[A-Za-z0-9-]+',message,re.I)
-    if flight and not any(_compact(flight[0])==_compact(r['schedule']['service']) for r in rows if r['schedule']['mode']=='AIR'):
+    if flight_id and not any(_compact(flight_id)==_compact(r['schedule']['service']) for r in rows if r['schedule']['mode']=='AIR'):
         return [],'That flight number is not present in the supplied network.',True
     if resource and not any(resource[0].casefold()==v['id'].casefold() for v in model['vehicles']):
         return [],'That resource ID is not present in the simulation enrichment.',True
+    unknown_lanes=[lane for lane in re.findall(r'\b[A-Z0-9]{3,}-[A-Z0-9]{3,}\b',message) if not any(r['schedule']['lane'].upper()==lane for r in rows)]
+    if unknown_lanes and not identifiers:return [],'That lane is not present in the supplied network.',True
     explicit=bool(identifiers)
     pair=None
     if identifiers:
@@ -101,6 +105,16 @@ def _scope(message,normalized,ctx,model,req):
         explicit=True;pair=resolve_pair(normalized.origin,normalized.destination,model)
         if pair is None:return [],'The location pair is unknown or ambiguous. Choose its station/gateway codes from Network.',True
         scope=[r for r in rows if (r['from_location'],r['to_location'])==pair]
+    elif re.search(r'\bselected\b|चुने|चयनित',message,re.I) and (req.selected_operational_run_ids or req.selected_operational_run_id):
+        from backend.control_tower.service import ControlTower
+        from backend.control_tower.routes import current_source_run
+        chosen=set(req.selected_operational_run_ids or [req.selected_operational_run_id])
+        selected=[r for r in ControlTower().runs(req_owner(ctx),_date(req,ctx)) if r['run_id'] in chosen and current_source_run(r)]
+        ids={r['schedule_id'] for r in selected};scope=[r for r in rows if r['route_id'] in ids]
+        if not scope:return [],'The selected runs are unavailable for this service date. Select current supplied runs.',True
+        explicit=True;ctx['comparison_services']=sorted(ids);ctx.update(resource_id=None,selected_service_id=None)
+        pairs={(r['from_location'],r['to_location']) for r in scope}
+        pair=next(iter(pairs)) if len(pairs)==1 else None
     else:
         # Canonical codes mentioned without "from/to" (including Hindi/Hinglish).
         mentioned=sorted([c for c in mapping if _mentioned(c,message)],key=lambda c:message.casefold().find(c.casefold()))
@@ -112,7 +126,9 @@ def _scope(message,normalized,ctx,model,req):
             pair=next(iter(pairs)) if len(pairs)==1 else None
         if pair:scope=[r for r in rows if (r['from_location'],r['to_location'])==pair]
         elif len(mentioned)!=1:
-            if ctx.get('origin') and ctx.get('destination'):
+            if ctx.get('comparison_services') and normalized.intent in {'COMPARE_SERVICES','RESOURCE_LOOKUP','CAPACITY_LOOKUP','SCHEDULE_LOOKUP','FOLLOW_UP_REFERENCE'}:
+                scope=[r for r in rows if r['route_id'] in ctx['comparison_services']]
+            elif ctx.get('origin') and ctx.get('destination'):
                 pair=(ctx['origin'],ctx['destination']);scope=[r for r in rows if (r['from_location'],r['to_location'])==pair]
             elif normalized.intent in {'NETWORK_LOOKUP','SERVICE_SEARCH'}:scope=rows
             elif req.selected_operational_run_id:
@@ -124,10 +140,12 @@ def _scope(message,normalized,ctx,model,req):
                 scope=[r for r in rows if r['route_id']==ui['schedule_id']]
                 if scope:pair=(scope[0]['from_location'],scope[0]['to_location'])
             else:return [],'Specify a service, flight, resource ID or station/gateway pair.',False
+    if explicit and not re.search(r'\bselected\b|चुने|चयनित',message,re.I):ctx.pop('comparison_services',None)
     if pair:
         if pair!=(ctx.get('origin'),ctx.get('destination')):
             ctx.update(request=None,result=None,changes={},resource_id=None,selected_service_id=None)
         ctx.update(origin=pair[0],destination=pair[1])
+    if not explicit and ctx.get('comparison_services') and len(scope)>1 and not normalized.mode and re.search(r'\bits?\b|उसकी|उसका',message,re.I) and normalized.intent!='COMPARE_SERVICES':return [],'Multiple routes are in the current comparison. Specify which service or resource you mean.',False
     if normalized.mode:scope=[r for r in scope if r['schedule']['mode']==normalized.mode]
     run=re.search(r'\brun\s+(\d+|primary\s*\d+)',message,re.I)
     if run:scope=[r for r in scope if _compact(r['schedule']['run'])==_compact(run[1])]
@@ -203,6 +221,13 @@ def answer(owner,req,normalized=None):
     scope,error,explicit=_scope(req.message,normalized,ctx,model,req)
     if error:return _reply(error,intent)
     mapping=labels(model['schedules']);text=req.message.casefold()
+    if normalized.weight_kg and intent in {'CAPACITY_LOOKUP','COST_COMPARISON','RISK_COMPARISON'} and ctx.get('origin') and ctx.get('destination'):
+        if ctx.get('request'):
+            ctx['request']=ctx['request'].model_copy(update={'shipment':ctx['request'].shipment.model_copy(update={'weight_kg':normalized.weight_kg})})
+        else:
+            ctx['request']=PlanningRequest(source=ctx['origin'],destination=ctx['destination'],shipment={'weight_kg':normalized.weight_kg},shipment_ready_datetime=datetime.now(IST))
+        _planning(owner,ctx,model)
+
     missing=re.search(r'driver|registration|actual gps|exact gps|maintenance|photo|चालक',text)
     if missing:return _reply(f"{missing[0].capitalize()} information is not supplied in the schedule or simulation data.",intent)
     if re.search(r'\b(?:status|position|location|progress|elapsed|remaining|critical|events|why.*delay)\b',text) and intent not in {'PLAN_SHIPMENT','CHANGE_SHIPMENT_WEIGHT','BREAKDOWN_SCENARIO','BLOCK_SERVICE','CAPACITY_LOOKUP'} and not normalized.delay_minutes:
@@ -238,6 +263,7 @@ def answer(owner,req,normalized=None):
             request=ctx['request'].model_copy(update={'shipment':ctx['request'].shipment.model_copy(update={'weight_kg':weight})})
         else:
             request=PlanningRequest(source=ctx['origin'],destination=ctx['destination'],shipment={'weight_kg':weight},shipment_ready_datetime=datetime.now(IST))
+        if normalized.mode:request=request.model_copy(update={'allowed_modes':[{'AIR':'air','SURFACE':'road','RAIL':'rail'}[normalized.mode]]})
         ctx['request']=request
         result=_planning(owner,ctx,model)
         reply=plan_reply(result,'Shipment weight updated.\n' if intent=='CHANGE_SHIPMENT_WEIGHT' else '')
@@ -278,6 +304,13 @@ def answer(owner,req,normalized=None):
             alternatives=[r for r in model['routes'] if r['route_id']!=target['route_id'] and (r['from_location'],r['to_location'])==(target['from_location'],target['to_location'])]
             response+='\nOther supplied services: '+(', '.join(r['schedule']['service'] for r in alternatives) or 'none')+'. Shipment weight is needed to confirm recovery capacity.';actions=[]
         return _reply(response,intent,recovery=recovery,actions=actions)
+    if intent=='SCHEDULE_LOOKUP' and re.search(r'revised|scenario|updated|संशोधित|नई',text) and len(scope)==1:
+        row=scope[0];minutes=ctx.get('changes',{}).get('service_delays',{}).get(row['route_id'])
+        if minutes is not None:
+            d=_dates(row,req,ctx)
+            if d['eta'] is None:return _reply('The source ETA is unavailable; a revised ETA cannot be calculated.',intent)
+            revised=d['eta']+timedelta(minutes=minutes)
+            return _reply(f"{row['schedule']['service']} / {row['schedule']['run']}\nBaseline ETA: {local_time(d['eta'])}\nScenario ETA: {local_time(revised)}\nDifference: +{minutes:g} min. Source ETD/ETA remain unchanged.",intent,scenario={'service_id':row['route_id'],'baseline_eta':d['eta'].isoformat(),'scenario_eta':revised.isoformat(),'delay_minutes':minutes,'provenance':'SCENARIO'})
     if intent=='DELAY_SCENARIO':
         if len(scope)!=1:return _reply('Specify one supplied service/run to delay.',intent)
         minutes=normalized.delay_minutes

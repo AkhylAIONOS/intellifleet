@@ -11,6 +11,7 @@ export const chatApi = {
       message,
       workspace: useControlTowerStore.getState().workspace,
       selected_operational_run_id: useControlTowerStore.getState().workspace==='LIVE OPERATIONS'?useControlTowerStore.getState().selected?.run_id:undefined,
+      selected_operational_run_ids: useControlTowerStore.getState().workspace==='LIVE OPERATIONS'?useControlTowerStore.getState().selectedRuns.map(run=>run.run_id):undefined,
       operational_service_date: useControlTowerStore.getState().serviceDate || useControlTowerStore.getState().selected?.service_date,
       selected_simulation_id: useControlTowerStore.getState().workspace==='LIVE OPERATIONS'?undefined:useOperationsStore.getState().selected || useFedexStore.getState().telemetry?.simulation_id,
       session_id: sessionId

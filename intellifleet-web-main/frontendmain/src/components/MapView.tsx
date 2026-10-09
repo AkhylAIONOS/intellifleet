@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapView.css';
+import {MapFitController} from './MapFitController';
 import {MapResizeController} from './MapResizeController';
 import { WarehousesLayer } from './MapLayers/WarehousesLayer';
 import { RoutesLayer } from './MapLayers/RoutesLayer';
@@ -183,6 +184,8 @@ export const MapView = () => {
   const zoom = 5;
   const mapViewMode = useAppStore(state => state.mapViewMode);
   const selectedPlan=useAppStore(s=>s.selectedPlan);
+  const warehouses=useAppStore(s=>s.warehouses);
+  const fitPoints:[number,number][]=selectedPlan?selectedPlan.route_legs.flatMap(leg=>[leg.source_coords,leg.destination_coords].flatMap(p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lng)?[[p.lat,p.lng] as [number,number]]:[])):warehouses.filter(w=>Number.isFinite(w.latitude)&&Number.isFinite(w.longitude)).map(w=>[w.latitude,w.longitude]);
   const towerSelection=null;
   const selectedMovement=useOperationsStore(s=>s.selected);
   const live=useFedexStore(s=>s.telemetry);
@@ -197,6 +200,7 @@ export const MapView = () => {
         {/* Map Controller for auto-zoom */}
         <MapController />
         <MapResizeController />
+        <MapFitController points={fitPoints}/>
         <PlanningMovementsController />
 
         {/* INDIA BOUNDARY OVERLAY */}
