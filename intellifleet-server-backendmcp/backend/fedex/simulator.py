@@ -12,7 +12,7 @@ from .eligibility import evaluate, local_datetime
 from .models import SimulationInput
 
 # Approximate CITY centres, deliberately not asserted to be FedEx facilities.
-DEMO_LOCATIONS = {'UDRPU': (24.5854, 73.7125), 'DELGW': (28.6139, 77.2090)}
+DEMO_LOCATIONS = {}  # No built-in network fallback; supplied schedules carry optional coordinates.
 
 
 def distance_km(a, b):
@@ -40,7 +40,7 @@ class Simulation:
         self.origin = origin
         self.destination = destination
         self.road_route = None
-        if selected['mode'] == 'SURFACE':
+        if selected['mode'] == 'SURFACE' and not request.schedule_based_geometry:
             points = road_waypoints or [origin, destination]
             parts = [road_routing_engine.get_route(*a, *b, optimization=request.road_optimization)
                      for a,b in zip(points, points[1:])]

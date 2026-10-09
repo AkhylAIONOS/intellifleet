@@ -17,132 +17,16 @@ router=APIRouter(prefix='/operations',tags=['UniFleet Operations'])
 custom_schedules={}
 
 
-def _balanced_builtin_synthetic_schedules():
-    """
-    Balanced built-in Synthetic Udaipur -> Delhi schedule.
-
-    AIR closes at 16:30.
-    SURFACE remains available until 21:30.
-
-    Selection itself is still performed by the normal
-    earliest-arrival-among-eligible-services engine.
-    """
-
-    schedules = list(synthetic_schedules())
-
-    origin = 'SYN-UDR-STN'
-    gateway = 'SYN-DEL-GTW'
-
-    air_number = 0
-    surface_number = 0
-    balanced = []
-
-    for schedule in schedules:
-
-        is_demo_lane = (
-            schedule.origin_station == origin
-            and schedule.gateway == gateway
-        )
-
-        if not is_demo_lane:
-            balanced.append(schedule)
-            continue
-
-        mode = str(schedule.mode).upper()
-
-
-        # ====================================================
-        # AIR
-        # All AIR services close at 16:30.
-        #
-        # This prevents AIR Run 2 from remaining eligible at
-        # 18:00 and incorrectly defeating Surface.
-        # ====================================================
-
-        if mode == 'AIR':
-            air_number += 1
-
-            updates = {
-                'cutoff_minutes': 16 * 60 + 30,
-            }
-
-            # Canonical first AIR service
-            if air_number == 1:
-                updates.update({
-                    'etd_minutes': 20 * 60,
-                    'eta_minutes': 21 * 60 + 20,
-                    'eta_day_offset': 0,
-                    'transit_minutes': 80,
-                })
-
-            schedule = schedule.model_copy(update=updates)
-
-
-        # ====================================================
-        # SURFACE
-        # Surface remains eligible after AIR closes.
-        # ====================================================
-
-        elif mode in {'SURFACE', 'ROAD', 'GROUND'}:
-            surface_number += 1
-
-            updates = {
-                'cutoff_minutes': 21 * 60 + 30,
-            }
-
-            # Canonical first Surface service
-            if surface_number == 1:
-                updates.update({
-                    'etd_minutes': 22 * 60,
-                    'eta_minutes': 12 * 60,
-                    'eta_day_offset': 1,
-                    'transit_minutes': 14 * 60,
-                })
-
-            schedule = schedule.model_copy(update=updates)
-
-        balanced.append(schedule)
-
-    return balanced
-
-
-def schedules_for(owner,source='SYNTHETIC'):
-
-    # --------------------------------------------------------
-    # FEDEX SOURCE
-    #
-    # Keep the actual FedEx workbook authoritative.
-    # Do not fabricate or overwrite FedEx cutoff/ETD/ETA.
-    # --------------------------------------------------------
-
-    if source == 'FEDEX':
-        from backend.fedex.routes import schedules
-        return schedules()
-
-
-    # --------------------------------------------------------
-    # USER-UPLOADED SYNTHETIC SCHEDULE
-    #
-    # User data remains authoritative too.
-    # --------------------------------------------------------
-
-    custom = custom_schedules.get(owner)
-
-    if custom:
-        return custom
-
-
-    # --------------------------------------------------------
-    # BUILT-IN SYNTHETIC DEMO
-    # --------------------------------------------------------
-
-    return _balanced_builtin_synthetic_schedules()
+def schedules_for(owner, source='FEDEX'):
+    from backend.fedex.routes import schedules
+    return schedules()
 
 
 @router.get('/schedules')
 def summary(source: Literal['SYNTHETIC','FEDEX']='SYNTHETIC', user=Depends(get_current_user)):
     ss=schedules_for(user['user_id'],source)
-    return {'schedules':ss,'schedule_notice':TEMPLATE_NOTICE,'lanes':[
+    from backend.fedex.models import DEFAULT_PLAYBACK_SPEED
+    return {'playback_speed':DEFAULT_PLAYBACK_SPEED,'schedules':ss,'schedule_notice':TEMPLATE_NOTICE,'lanes':[
         {'origin_station':a,'gateway':b,'simulation_supported':any(s.origin_coordinates or (a in DEMO_LOCATIONS and b in DEMO_LOCATIONS) for s in ss if s.origin_station==a and s.gateway==b)}
         for a,b in sorted({(s.origin_station,s.gateway) for s in ss})]}
 
@@ -189,13 +73,12 @@ class DemoInput(BaseModel):
 
 @router.post('/movements/initialize')
 def initialize_movements(user=Depends(get_current_user)):
-    from .fleet import initialize
-    try: return initialize(user['user_id'])
-    except (ValueError, KeyError) as exc: raise HTTPException(422,str(exc)) from exc
+    raise HTTPException(410, 'Generic fleet initialization is disabled; use client workbook runs')
 
 
 @router.post('/demo')
 def demo(request: DemoInput,user=Depends(get_current_user)):
+    raise HTTPException(410, 'Generic demo network is disabled; use client workbook runs')
     try: return start_demo(user['user_id'],request.count,request.seed,request.reuse_existing)
     except RoadRoutingError as exc: raise HTTPException(503 if exc.code=='ROAD_ROUTE_UNAVAILABLE' else 422,str(exc)) from exc
     except (ValueError,KeyError) as exc: raise HTTPException(422,str(exc)) from exc
@@ -239,6 +122,7 @@ def plan_journey(plan_id: str,user=Depends(get_current_user)):
 
 @router.post('/route-simulation',status_code=201)
 def route_simulation(request: RouteInput,user=Depends(get_current_user)):
+    raise HTTPException(410, 'Use schedule-specific simulations or calculated client plans')
     from .service import start_route
     try: return start_route(user['user_id'],request.origin,request.destination,request.weight)
     except RoadRoutingError as exc: raise HTTPException(503 if exc.code=='ROAD_ROUTE_UNAVAILABLE' else 422,str(exc)) from exc

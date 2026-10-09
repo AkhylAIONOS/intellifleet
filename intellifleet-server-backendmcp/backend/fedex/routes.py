@@ -23,7 +23,9 @@ router = APIRouter(prefix='/fedex', tags=['FedEx Simulation'])
 @lru_cache(maxsize=1)
 def schedules():
     try:
-        return load_schedules()
+        from backend.client_network import CITY_CENTRES
+        return [s.model_copy(update={'origin_coordinates':CITY_CENTRES.get(s.origin_station[:3]),
+                                    'destination_coordinates':CITY_CENTRES.get(s.gateway[:3])}) for s in load_schedules()]
     except (OSError, ValueError, KeyError, zipfile.BadZipFile, ParseError, IndexError) as exc:
         raise HTTPException(503, 'FedEx workbook unavailable or invalid; configure FEDEX_WORKBOOK_PATH and restart') from exc
 
@@ -39,10 +41,11 @@ def owned(user, simulation_id):
 async def summary(user=Depends(get_current_user)):
     ss = schedules()
     lanes = sorted({(s.origin_station, s.gateway) for s in ss})
-    return {'schedules': ss, 'schedule_notice': TEMPLATE_NOTICE,
-            'lanes': [{'origin_station':a, 'gateway':b, 'simulation_supported':a in DEMO_LOCATIONS and b in DEMO_LOCATIONS} for a,b in lanes],
+    from .models import DEFAULT_PLAYBACK_SPEED
+    return {'playback_speed':DEFAULT_PLAYBACK_SPEED,'schedules': ss, 'schedule_notice': TEMPLATE_NOTICE,
+            'lanes': [{'origin_station':a, 'gateway':b, 'simulation_supported':any(s.origin_station==a and s.gateway==b and s.origin_coordinates and s.destination_coordinates for s in ss)} for a,b in lanes],
             'runtime': 'Single-process ephemeral demo; reset on restart; six-hour retention',
-            'synthetic_location_mapping': DEMO_LOCATIONS}
+            'synthetic_location_mapping': {}}
 
 
 @router.get('/eligible-services')

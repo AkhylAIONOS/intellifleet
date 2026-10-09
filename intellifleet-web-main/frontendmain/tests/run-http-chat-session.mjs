@@ -66,6 +66,7 @@ try {
  await act(async()=>hook.result.current.processMessage('Why did you choose this option?'));
  assert.equal(useAppStore.getState().chatHistory.at(-1).content,'AI chat storage is temporarily unavailable');
  const {useControlTowerStore}=await server.ssrLoadModule('/src/store/controlTowerStore.ts');
+ useControlTowerStore.getState().setWorkspace('LIVE OPERATIONS');
  useControlTowerStore.getState().setServiceDate('2030-01-01');
  useControlTowerStore.getState().select({run_id:'tower-run',service_date:'2030-01-01'});
  let captured;
@@ -75,6 +76,10 @@ try {
  await realChat.chatApi.sendMessage('Which Air runs are currently delayed?');
  assert.equal(captured.selected_operational_run_id,'tower-run');
  assert.equal(captured.operational_service_date,'2030-01-01');
+ assert.equal(captured.selected_simulation_id,undefined,'Operational workspace must not send a generic movement ID');
+ useControlTowerStore.getState().setWorkspace('PLANNING');
+ await realChat.chatApi.sendMessage('What is the selected plan ETA?');
+ assert.equal(captured.selected_operational_run_id,undefined,'Planning workspace must not send an operational run ID');
  console.log('PASS: clean storage 503 message and separately scoped Control Tower request');
  console.log('PASS: four sequential HTTP planning requests, isolated New Chat, stale response ignored');
  console.log('PASS: native UUID, getRandomValues UUID, absent crypto fallback, HTTP Ground chat request/action/journey, session reuse/reset');

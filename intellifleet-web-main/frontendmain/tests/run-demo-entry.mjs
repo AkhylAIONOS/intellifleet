@@ -26,11 +26,13 @@ try {
   const token='header.'+Buffer.from(JSON.stringify({user_id:12,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.signature';
   let calls=0,admin=false;
   apiClient.defaults.adapter=async config=>{
+    if(config.url==='/operations/control-tower/runs')return {status:200,statusText:'OK',headers:{},config,data:{runs:[],total:0}};
     if(config.url==='/operations/movements')return {status:200,statusText:'OK',headers:{},config,data:{movements:[]}};
     if(config.url==='/auth/users'){
       if(!admin)throw {response:{status:403}};
       return {status:200,statusText:'OK',headers:{},config,data:{users:[{name:'Test User',email:'test@example.com',first_login_at:'2030-01-01',last_login_at:'2030-01-02',login_count:2},{name:'Second User',email:'second@example.com',first_login_at:'2030-01-02',last_login_at:'2030-01-02',login_count:1}]}};
     }
+    if(config.url==='/client-network')return {status:200,statusText:'OK',headers:{},config,data:{summary:{client_services:38,client_nodes:34,generated_resources:40,simulated_shipments:320},routes:[],vehicles:[]}};
     calls++;assert.equal(config.url,'/auth/demo-access');
     assert.deepEqual(JSON.parse(config.data),{name:'Test User',email:'test@example.com'});
     return {status:200,statusText:'OK',headers:{},config,data:{success:true,data:{token,user}}};
@@ -47,8 +49,8 @@ try {
   assert.ok(ui.getByRole('heading',{name:'Welcome to UniFleet'}));
   await login(ui);
   assert.equal(window.location.pathname,'/dashboard');assert.equal(localStorage.getItem('authToken'),token);
-  assert.ok(ui.getByText(/👋 Test User/));assert.ok(ui.getByText('test@example.com'));
-  assert.ok(ui.getByRole('button',{name:'PLAN',exact:true}));assert.ok(ui.getByRole('button',{name:'LIVE OPERATIONS',exact:true}));
+  assert.ok(ui.getByText(/Test User/));assert.ok(ui.getByText('test@example.com'));
+  assert.ok(ui.getByRole('button',{name:'Planning',exact:true}));assert.ok(ui.getByRole('button',{name:'Live Operations',exact:true}));
   assert.equal(document.querySelector('a[href="/internal/users"]'),null);
   cleanup();
   const persisted=localStorage.getItem('auth-storage');useAuthStore.setState({user:null,token:null,isAuthenticated:false});localStorage.setItem('auth-storage',persisted);

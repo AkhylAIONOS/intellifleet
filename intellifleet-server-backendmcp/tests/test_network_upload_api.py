@@ -22,7 +22,7 @@ def api(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, 'DEMO_ACCESS_ENABLED', True)
     app = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'main.py'))['app']
     client = TestClient(app)
-    auth = client.post('/auth/demo-access')
+    auth = client.post('/auth/demo-access',json={'name':'Network QA','email':'network-qa@example.com'})
     assert auth.status_code == 200
     token = auth.json()['data']['token']
     client.headers.update({'Authorization': f'Bearer {token}',

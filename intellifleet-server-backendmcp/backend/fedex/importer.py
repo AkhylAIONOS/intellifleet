@@ -20,7 +20,7 @@ def workbook_path():
     configured = os.environ.get('FEDEX_WORKBOOK_PATH')
     if configured:
         return Path(configured).expanduser()
-    return Path(__file__).resolve().parents[2] / 'data' / 'fedex-network-plan.xlsx'
+    return Path(__file__).resolve().parents[2] / 'data' / 'client-network-plan.xlsx'
 
 
 def clean(value):

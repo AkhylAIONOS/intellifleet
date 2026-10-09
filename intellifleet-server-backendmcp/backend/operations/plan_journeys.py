@@ -102,7 +102,7 @@ def _start(owner, plan_id, *, planner_reroute=False):
     restart_replay = planner_reroute and path_changed
     if existing and existing.progress > 0 and path_changed and not planner_reroute:
         raise ValueError('Mid-route replacement requires a verified transfer/rejoin location; current movement retained.')
-    if not legs or any(x['route_type'].lower() not in {'road','surface','ground','air'} for x in legs):
+    if not legs or any(x['route_type'].lower() not in {'road','surface','ground','air','rail'} for x in legs):
         raise ValueError('Replay requires verified Ground/Air legs')
     surface = all(x['route_type'].lower() in {'road','surface','ground'} for x in legs)
     if not plan.get('vehicles'):
@@ -113,14 +113,13 @@ def _start(owner, plan_id, *, planner_reroute=False):
             if not isinstance(point,dict) or any(not isinstance(point.get(k),(int,float)) or not math.isfinite(point[k]) for k in ('lat','lng')):
                 raise ValueError('Valid coordinates are required for every planned road leg')
     origin, destination = legs[0]['source_coords'], legs[-1]['destination_coords']
-    eta = datetime.fromisoformat(plan['eta']).astimezone(IST)
-    duration = float(plan['duration_hours'])*3600
-    etd = eta-timedelta(seconds=duration)
-    schedule = Schedule(schedule_id='PLAN-'+identity, source_sheet='Authoritative planning result',source_row=0,
-        origin_city=legs[0]['from_location'],origin_station=legs[0]['from_location'],gateway=legs[-1]['to_location'],
-        lane='Plan replay',run='DEMO',mode='SURFACE' if surface else 'AIR',source_mode=plan['mode'],service=' / '.join(str(v.get('label') or v['id']) for v in plan['vehicles']),
-        cutoff_minutes=0,etd_minutes=1,eta_minutes=2,eta_day_offset=0,data_source='SYNTHETIC_NETWORK',
-        origin_coordinates=(origin['lat'],origin['lng']),destination_coordinates=(destination['lat'],destination['lng']))
+    eta = datetime.fromisoformat(plan.get('scheduled_eta') or plan['eta']).astimezone(IST)
+    etd = datetime.fromisoformat(plan['scheduled_etd']).astimezone(IST)
+    duration = (eta-etd).total_seconds()
+    if len(legs)==1:
+        schedule=Schedule(**legs[0]['schedule']).model_copy(update={'origin_coordinates':(origin['lat'],origin['lng']), 'destination_coordinates':(destination['lat'],destination['lng'])})
+    else:
+        raise ValueError('Multi-hop planning is supported; replay requires selecting each supplied service separately')
     if not surface:
         from backend.operations.road_routing_engine import road_routing_engine
         geometry = []
@@ -134,12 +133,12 @@ def _start(owner, plan_id, *, planner_reroute=False):
             hours = float(assignment.get('duration_hours') or travel)*share
             a = (leg['source_coords']['lat'], leg['source_coords']['lng'])
             b = (leg['destination_coords']['lat'], leg['destination_coords']['lng'])
-            road = leg['route_type'].lower() != 'air'
+            road = leg['route_type'].lower() == 'road'
             points = road_routing_engine.get_route(*a, *b).geometry if road else [a, b]
             start_index = max(0, len(geometry)-1)
             geometry.extend(points if not geometry else points[1:])
             segments.append({'start_index': start_index, 'end_index': len(geometry)-1,
-                             'mode': 'SURFACE' if road else 'AIR', 'route_id': leg.get('route_id'),
+                             'mode': leg['schedule']['mode'], 'route_id': leg.get('route_id'),
                              'from_location':leg['from_location'], 'to_location':leg['to_location'],
                              'vehicles':deepcopy(assignment['vehicles']), 'duration_hours':hours,
                              'start_hours':elapsed, 'end_hours':elapsed+hours})

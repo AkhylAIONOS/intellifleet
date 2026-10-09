@@ -60,9 +60,10 @@ const formatRouteResponse = (data: any): string => {
 
 export const useRouteAgent = () => {
     const [isProcessing, setIsProcessing] = useState(false);
-    const sessionIdRef = useRef<string | undefined>(undefined);
+    const sessionIdRef = useRef<string | undefined>(useControlTowerStore.getState().chatSessionId || undefined);
     const startNewSession = () => {
         sessionIdRef.current = createSessionId();
+        useControlTowerStore.getState().setChatSessionId(sessionIdRef.current);
         const state=useOperationsStore.getState();
         state.patch({aiSessionGeneration:state.aiSessionGeneration+1,aiSimulationIds:[],selected:null,
             enabled:false,viewMode:'AI',filter:'ALL'});
@@ -90,14 +91,18 @@ export const useRouteAgent = () => {
 
         try {
             // Call /agent endpoint
-            if (!sessionIdRef.current) startNewSession();
+            if (!sessionIdRef.current) {
+                sessionIdRef.current=createSessionId();
+                useControlTowerStore.getState().setChatSessionId(sessionIdRef.current);
+            }
             const session=sessionIdRef.current;
             const response = await chatApi.sendMessage(message, sessionIdRef.current);
-            if(session!==sessionIdRef.current)return;
+            if(session!==sessionIdRef.current || session!==useControlTowerStore.getState().chatSessionId)return;
 
             // Update session ID
             if (response.session_id) {
                 sessionIdRef.current = response.session_id;
+                useControlTowerStore.getState().setChatSessionId(response.session_id);
             }
 
             // Add Assistant Response (old code — commented out)
@@ -176,11 +181,6 @@ export const useRouteAgent = () => {
             case 'focus_operational_run': {
                 const run=action.data;
                 useControlTowerStore.getState().select(run);
-                if(run.movement){
-                    const state=useOperationsStore.getState();
-                    state.patch({enabled:true,viewMode:'LIVE',filter:'FEDEX',selected:run.movement_id,
-                        movements:[...state.movements.filter(m=>m.simulation_id!==run.movement_id),run.movement],fit:state.fit+1});
-                }
                 break;
             }
             case 'set_journey_display': {

@@ -7,7 +7,7 @@ const React=await import('react');const {render,fireEvent,waitFor,cleanup}=await
 const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false},appType:'custom'});
 try {
  const {operationalTime}=await server.ssrLoadModule('/src/utils/operationalTime.ts');
- assert.match(operationalTime('2026-09-29T23:30:00Z'),/30 Sept?, 05:00 IST/);
+ assert.match(operationalTime('2026-09-29T23:30:00Z'),/30 Sept? 2026, 05:00 IST/);
  assert.match(operationalTime('2026-09-30T12:30:00+05:30'),/12:30 IST/);
  assert.equal(operationalTime('12:00 (+1d)'),'12:00 (+1d)');
  const {planningApi}=await server.ssrLoadModule('/src/api/planning.ts');

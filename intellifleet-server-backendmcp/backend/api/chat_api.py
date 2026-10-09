@@ -29,6 +29,7 @@ class ChatRequest(BaseModel):
     selected_simulation_id: str | None = None
     selected_operational_run_id: str | None = None
     operational_service_date: str | None = None
+    workspace: str | None = None
 
 async def guarded_chat(req, current_user):
     try:
@@ -62,7 +63,7 @@ async def agent_chat(
         raise HTTPException(status_code=401, detail="Invalid token: user_id not found")
 
     from backend.control_tower.chat import answer as control_tower_answer
-    tower_result=control_tower_answer(user_id,req.message,req.selected_operational_run_id,req.operational_service_date,req.session_id)
+    tower_result=control_tower_answer(user_id,req.message,req.selected_operational_run_id,req.operational_service_date,req.session_id,workspace=req.workspace)
     if tower_result is not None:
         return tower_result
 

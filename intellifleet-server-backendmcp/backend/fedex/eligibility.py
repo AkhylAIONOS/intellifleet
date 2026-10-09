@@ -35,7 +35,7 @@ def candidate(schedule: Schedule, request: EligibilityInput):
     elif cutoff is None:
         reason = f'{label} eligibility is unknown: origin handover/cutoff unavailable.'
     elif ready > cutoff:
-        reason = f'{label} is not eligible because shipment ready time {ready.isoformat()} is after handover cutoff {cutoff.isoformat()}.'
+        reason = f'{label} is not eligible because shipment ready time {ready.strftime("%d %b %Y, %H:%M IST")} is after handover cutoff {cutoff.strftime("%d %b %Y, %H:%M IST")}.'
     elif etd is None or eta is None or eta <= etd:
         reason = f'{label} is not eligible: invalid or ambiguous departure/arrival timing.'
     elif ready > etd:
@@ -53,6 +53,12 @@ def evaluate(schedules, request: EligibilityInput):
     candidates = [candidate(s, request) for s in schedules
                   if s.origin_station.casefold() == request.origin_station.casefold() and s.gateway.casefold() == request.gateway.casefold()]
     feasible = sorted((c for c in candidates if c['eligible']), key=lambda c: (c['eta'], c['etd'], c['schedule_id']))
-    return {'candidates': candidates, 'selected': feasible[0] if feasible else None,
+    next_eligible=None
+    if not feasible and candidates:
+        next_day=max(request.simulation_date+timedelta(days=1),local_datetime(request.shipment_ready_datetime).date())
+        future=request.model_copy(update={'simulation_date':next_day})
+        future_candidates=[candidate(s,future) for s in schedules if s.origin_station.casefold()==request.origin_station.casefold() and s.gateway.casefold()==request.gateway.casefold()]
+        next_eligible=next(iter(sorted((c for c in future_candidates if c['eligible']),key=lambda c:(c['eta'],c['etd'],c['schedule_id']))),None)
+    return {'next_eligible':next_eligible,'candidates': candidates, 'selected': feasible[0] if feasible else None,
             'selection_reason': 'Earliest scheduled arrival among eligible provided services; no mode priority.' if feasible else 'No confirmed eligible service in the selected schedule template.',
             'schedule_notice': TEMPLATE_NOTICE, 'timezone': 'Asia/Kolkata'}

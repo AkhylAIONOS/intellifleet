@@ -1,3 +1,4 @@
+import {movementIcon} from './movementIcon';
 import {RoadPlanJourney} from './RoadPlanJourney';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
@@ -8,7 +9,7 @@ import { normalizeVisualPlan, validPoint, continuousJourney, legPoints, type Ass
 import { playJourney } from '../../utils/journeyPlayback';
 import '../PlanVisuals.css';
 
-const icon = (air: boolean, count = 1) => L.divIcon({className:'journey-vehicle', html:`${air ? '✈' : '🚚'}${count > 1 ? `<small>${count}</small>` : ''}`, iconSize:[34,34],iconAnchor:[17,17]});
+const icon = (air: boolean, count = 1) => {const base=movementIcon(air?'AIR':'SURFACE');return L.divIcon({...base.options,className:'journey-vehicle',html:`${base.options.html}${count>1?`<small>${count}</small>`:''}`});};
 const groundIcon = icon(false), airIcon = icon(true);
 const isAir = (mode?: string) => ['air','plane','aircraft'].includes(String(mode).toLowerCase());
 function vehiclePopup(vehicles: Assignment[], mode: string) {

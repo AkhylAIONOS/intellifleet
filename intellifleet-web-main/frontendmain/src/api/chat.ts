@@ -9,9 +9,10 @@ export const chatApi = {
   sendMessage: async (message: string, sessionId?: string): Promise<ChatResponse> => {
     const response = await apiClient.post<ChatResponse>('/mcp-agent', {
       message,
-      selected_operational_run_id: useControlTowerStore.getState().selected?.run_id,
+      workspace: useControlTowerStore.getState().workspace,
+      selected_operational_run_id: useControlTowerStore.getState().workspace==='LIVE OPERATIONS'?useControlTowerStore.getState().selected?.run_id:undefined,
       operational_service_date: useControlTowerStore.getState().serviceDate || useControlTowerStore.getState().selected?.service_date,
-      selected_simulation_id: useOperationsStore.getState().selected || useFedexStore.getState().telemetry?.simulation_id,
+      selected_simulation_id: useControlTowerStore.getState().workspace==='LIVE OPERATIONS'?undefined:useOperationsStore.getState().selected || useFedexStore.getState().telemetry?.simulation_id,
       session_id: sessionId
     });
     return response.data;

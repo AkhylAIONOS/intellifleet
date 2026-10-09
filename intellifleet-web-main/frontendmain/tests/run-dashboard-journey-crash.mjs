@@ -29,6 +29,7 @@ try {
   globalThis.sessionStorage=window.sessionStorage;HTMLElement.prototype.scrollIntoView=()=>{};
   const {within}=await import('@testing-library/react');
   const {useAppStore}=await server.ssrLoadModule('/src/store/appStore.ts');
+  const {MemoryRouter}=await import('react-router-dom');
   const {DashboardPage}=await server.ssrLoadModule('/src/pages/DashboardPage.tsx');
   const start={lat:28.5355,lng:77.271},end={lat:19.1136,lng:72.8697};
   const warehouses=Array.from({length:30},(_,i)=>({warehouse_id:i+1,name:`Hub ${i}`,latitude:20+i/10,longitude:70+i/10}));
@@ -55,10 +56,11 @@ try {
   const a={id:1,label:'TRK-001',type:'Truck',capacity:12000,assigned_load_kg:11368.42,utilization_percentage:94.74};
   const b={id:2,label:'TRK-002',type:'Truck',capacity:7000,assigned_load_kg:6631.58,utilization_percentage:94.74};
   const base={plan_id:'two',mode:'road',operational_cost:1003345,duration_hours:21.17,risk_score:.1745,reliability:.94,route_legs:[{from_location:'Delhi',to_location:'Mumbai',route_type:'road',source_coords:start,destination_coords:end}],vehicles:[a,b]};
-  const ui=render(React.createElement(React.StrictMode,null,React.createElement(DashboardPage)));await act(async()=>{});
+  const ui=render(React.createElement(React.StrictMode,null,React.createElement(MemoryRouter,{initialEntries:['/planning?chat=open']},React.createElement(DashboardPage))));await act(async()=>{});
+  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'AI Chat',exact:true})));
   const assign=async plan=>{await act(async()=>store.applyPlanningMapPlan({recommended_plan:plan}));};
   const count=n=>assert.equal(within(ui.getByLabelText('Network metrics')).getByRole('button',{name:/Assigned Vehicles/}).textContent,`Assigned Vehicles${n}`);
-  const alive=()=>{assert.ok(ui.getByRole('button',{name:'+ Add Route'}));assert.ok(ui.getByRole('button',{name:'Calculate Plan'}));assert.match(document.body.textContent,/Network Ready/);};
+  const alive=()=>{assert.ok(ui.getByRole('button',{name:'Network'}));assert.ok(ui.getByRole('button',{name:'Calculate Plan'}));assert.match(document.body.textContent,/Network Ready/);};
   const advance=async t=>{time=t;await act(async()=>{const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn(t));});};
   await assign({...base,plan_id:'zero',vehicles:[]});count(0);alive();assert.equal(starts,0);
   await assign({...base,plan_id:'one',vehicles:[b]});count(1);assert.equal(starts,1);assert.equal(frames.size,0);

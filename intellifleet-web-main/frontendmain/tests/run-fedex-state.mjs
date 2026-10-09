@@ -28,18 +28,13 @@ try {
   assert.ok(ui.getByText('SIMULATED TELEMETRY'));
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
   assert.ok(ui.getByText('Ready before cutoff'));
-  assert.equal(sources.at(-1),'SYNTHETIC');
+  assert.equal(sources.at(-1),'FEDEX');
   for(const ready of ['16:30','21:30','00:00','23:00']){
     await act(async()=>fireEvent.change(ui.getByLabelText('Shipment Ready Time'),{target:{value:ready}}));
     assert.equal(ui.queryByText('Ready before cutoff'),null);
     await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
   }
-  for(const source of ['FEDEX','SYNTHETIC','FEDEX']){
-    await act(async()=>fireEvent.change(ui.getByLabelText('Schedule source'),{target:{value:source}}));
-    assert.equal(ui.queryByText('Ready before cutoff'),null);
-    await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Evaluate Cutoffs'})));
-    assert.equal(sources.at(-1),source);
-  }
+  assert.deepEqual([...ui.getByLabelText('Schedule source').options].map(o=>o.value),['FEDEX']);
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start Simulation'})));
   assert.equal(created.schedule_id,'surface-16');assert.equal(created.speed,120);
   await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Inject Delay'})));

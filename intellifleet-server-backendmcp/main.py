@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
-from backend.routes.api import router as chat
+
 from backend.routes.auth import router as auth
-from backend.routes.upload.uploadCSV import router as upload
-from backend.routes.vehicles.vehicle_api import router as vehicle_api
 # from backend.routes.route_map.testAIR import router as air_route
 # from backend.routes.clearAll import router as clearall
 # from backend.routes.googleRoute import router as routes
@@ -13,15 +11,10 @@ from backend.routes.session import router as session
 # from backend.routes.warehouse import router as warehouse_router
 import sqlite3
 from contextlib import asynccontextmanager
-from backend.routes.route_map.route_query import router as route_query
-from backend.api.chat_api import router as chat_router
-from backend.routes.upload.route_upload2 import router as route_upload_json
-from backend.routes.agent_routes import router as history
-from backend.routes.vehicles.partial_vehicle import router as partial_vehicle
-from backend.routes.disruption.disruption import disruption_router
+
+
 from backend.config.config import settings
 from backend.planning.routes import router as planning_router
-from backend.routes.upload.network_upload import router as network_upload_router
 from backend.fedex.routes import router as fedex_router
 from backend.fedex.telemetry import runtime as fedex_runtime
 from backend.control_tower.routes import router as control_tower_router, monitor as control_tower_monitor
@@ -41,9 +34,9 @@ async def lifespan(app: FastAPI):
     conn.row_factory = sqlite3.Row
     app.state.db = conn
 
-    # 🔥 Initialize supervisor HERE
-    from backend.agents.supervisor import supervisor
-    await supervisor.initialize()
+    # Fail closed if the authoritative workbook is unavailable.
+    from backend.client_network import network
+    network()
 
     fedex_task = asyncio.create_task(fedex_runtime.run())
     control_tower_task = asyncio.create_task(control_tower_monitor())
@@ -83,26 +76,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(chat)
+from backend.client_api import router as client_network_router
+app.include_router(client_network_router)
+# Legacy topology-generating routers are intentionally not registered.
 app.include_router(auth)
-app.include_router(upload)
+
 # app.include_router(routes)
-app.include_router(vehicle_api)
+
 # app.include_router(agent_router)
 # app.include_router(air_route)
 # app.include_router(clearall)
 app.include_router(session)
 # app.include_router(mvehicle)
 # app.include_router(warehouse_router)
-app.include_router(route_query)
+
 # app.include_router(langraph_agent)
-app.include_router(chat_router) 
-app.include_router(route_upload_json)
-app.include_router(history)
-app.include_router(partial_vehicle)
-app.include_router(disruption_router)
+
+
+
+
+
 app.include_router(planning_router)
-app.include_router(network_upload_router)
+
 app.include_router(fedex_router)
 app.include_router(control_tower_router)
 
@@ -110,7 +105,7 @@ app.include_router(control_tower_router)
 @app.get("/health")
 async def health_check():
     return {
-        "status": "healthy", 
+        "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 

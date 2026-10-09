@@ -295,13 +295,13 @@ export const ChatPanel = ({workspace='PLAN'}: {workspace?: string}) => {
     <div className="chat-panel">
       <div className="chat-header">
         <div className="assistant-mark">✦</div>
-        <div><h3>UniFleet AI Assistant</h3><span>Powered by deterministic planning</span></div>
+        <div><h3>UniFleet AI Assistant</h3><span>Planning & operations assistant</span></div>
         <button className="new-chat-btn" type="button" onClick={handleNewChat} disabled={isProcessing} title="Start a new chat" aria-label="Start a new chat">↻ <span>New Chat</span></button>
       </div>
       <div className={`network-status ${networkReady ? 'ready' : 'empty'}`} role="status">
         {networkReady
           ? <><strong>Network Ready</strong><span>{warehouses.length} Warehouses • {vehicles.length} Vehicles • {persistedRouteCount} Routes</span></>
-          : <><strong>Network data has not been uploaded yet.</strong><span>Upload Warehouse, Vehicle and Routes CSVs to start planning.</span></>}
+          : <><strong>Network is loading.</strong><span>The supplied Air & Surface workbook provides the network.</span></>}
       </div>
       <CurrentPlanVisuals liveWorkspace={workspace==='SCHEDULES'||workspace==='LIVE OPERATIONS'} />
       <div className="chat-messages">
@@ -314,7 +314,7 @@ export const ChatPanel = ({workspace='PLAN'}: {workspace?: string}) => {
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`message-row ${msg.role}`}>
             <div className="message-avatar">
-              {msg.role === 'user' ? '👤' : '🤖'}
+              {msg.role === 'user' ? 'U' : 'AI'}
             </div>
             <div className="message-bubble">
               <div className="message-sender">{msg.role === 'user' ? 'You' : 'AI Assistant'}</div>
@@ -328,7 +328,7 @@ export const ChatPanel = ({workspace='PLAN'}: {workspace?: string}) => {
         ))}
         {isProcessing && (
           <div className="message-row assistant">
-            <div className="message-avatar">🤖</div>
+            <div className="message-avatar">AI</div>
             <div className="message-bubble typing">
               <div className="typing-indicator">
                 <span></span>

@@ -7,8 +7,9 @@ import {movementIcon} from './movementIcon';
 import {vehicleFollower} from '../../utils/vehicleFollow';
 import {useControlTowerStore} from '../../store/controlTowerStore';
 import {useAppStore} from '../../store/appStore';
-export function NetworkMovementsLayer(){
- const towerRun=useControlTowerStore(s=>s.selected);
+export function NetworkMovementsLayer({planningOnly=false}:{planningOnly?:boolean}={}){
+ const operationalSelection=useControlTowerStore(s=>s.selected);
+ const towerRun=planningOnly?null:operationalSelection;
  const selectedPlan=useAppStore(s=>s.selectedPlan);
  const state=useOperationsStore();const current=useFedexStore(s=>s.telemetry?.simulation_id);const map=useMap();const fitted=useRef(state.fit);const selected=useRef<string|null>(null);
  const entities=state.movements.filter(m=>{
@@ -26,7 +27,7 @@ export function NetworkMovementsLayer(){
 
   // Live Operations deliberately exposes the wider operational fleet.
   if(state.viewMode==='LIVE'){
-    return true;
+    return !planningOnly || visibleAiMovement(m,state);
   }
 
   return false;

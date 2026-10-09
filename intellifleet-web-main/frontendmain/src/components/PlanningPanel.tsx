@@ -10,9 +10,10 @@ import {LocationInput} from './LocationInput';
 
 export const planResultPanelReducer=(_visible:boolean,action:'show'|'close')=>action==='show';
 
-export const PlanningPanel = () => {
+export const PlanningPanel = ({recovery}:{recovery?:{runId:string;origin:string;destination:string;unavailable:boolean}}={}) => {
   const applyPlanningMapPlan=useAppStore(s=>s.applyPlanningMapPlan);
   const [input, setInput] = useState<PlanningInput>({ source: '', destination: '', shipment: { weight_kg: 1000, quantity: 1 }, objective: 'balanced', allowed_modes: ['road', 'air', 'multimodal'], target_margin: .2 });
+  useEffect(()=>{if(recovery){setInput(current=>({...current,source:recovery.origin,destination:recovery.destination}));setBlockedRoute(recovery.unavailable?`${recovery.origin} → ${recovery.destination}`:'');}},[recovery?.runId,recovery?.unavailable]);
   const [result, setResult] = useState<any>();
   const [resultVisible,dispatchResultVisibility]=useReducer(planResultPanelReducer,false);
   const [activePlanId,setActivePlanId]=useState<string>();
@@ -78,6 +79,7 @@ export const PlanningPanel = () => {
 
   return <section className="planning-panel">
     <div className="planner-heading"><div><span>PLAN A SHIPMENT</span><h2>Supply-Chain Planner</h2></div></div>
+    {recovery&&<p className="recovery-note">Recovery analysis for imported run {recovery.runId}. Confirm locations, shipment weight and constraints before calculation. The operational source remains unchanged.</p>}
     <div className="planning-form">
       <label>Source<LocationInput placeholder="Delhi" value={input.source} onChange={value=>update('source',value)} /></label>
       <label>Destination<LocationInput placeholder="Mumbai" value={input.destination} onChange={value=>update('destination',value)} /></label>
@@ -95,7 +97,7 @@ export const PlanningPanel = () => {
     {error && <p role="alert" className="fedex-error">{error}</p>}
     <details className="scenario-controls"><summary>What-if scenario controls</summary><div>
       <label>Fuel increase (%)<input aria-label="Fuel increase percent" type="number" value={fuelIncrease} onChange={e=>setFuelIncrease(Number(e.target.value))}/></label>
-      <label>Blocked route<input aria-label="Blocked route" placeholder="Delhi → Mumbai" value={blockedRoute} onChange={e=>setBlockedRoute(e.target.value)}/></label>
+      <label>Blocked route<input aria-label="Blocked route" placeholder="CJBMB → BLRGW" value={blockedRoute} onChange={e=>setBlockedRoute(e.target.value)}/></label>
       <button disabled={busy || !recommended} onClick={simulate}>Run What-if Scenario</button>
     </div></details>
     <div className="planning-results">
@@ -106,6 +108,7 @@ export const PlanningPanel = () => {
         <span><b>Mode</b>{recommended.mode}</span><span><b>Cost</b>₹{recommended.operational_cost.toLocaleString()}</span>
         <span><b>ETA</b>{recommended.duration_hours} h</span><span><b>Risk</b>{(recommended.risk_score * 100).toFixed(1)}%</span>
         <span><b>SLA</b>{recommended.sla_met == null ? 'No deadline' : recommended.sla_met ? 'Met' : 'Missed'}</span>
+        <span><b>Simulated SLA</b>{recommended.simulated_sla_met == null ? 'Not evaluated' : recommended.simulated_sla_met ? 'Met' : 'Missed'}</span>
         <span><b>Vehicle utilization</b>{(recommended.vehicle_utilization * 100).toFixed(1)}%</span>
       </div><p>{result.reason}</p>
       <details><summary>Cost, route, vehicles and inventory</summary><pre>{JSON.stringify({cost_breakdown:recommended.cost_breakdown,route_legs:recommended.route_legs,vehicles:recommended.vehicles,inventory_allocation:recommended.inventory_allocation},null,2)}</pre></details>

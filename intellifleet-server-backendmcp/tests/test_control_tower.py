@@ -144,7 +144,8 @@ def test_api_authorization_and_validation(tower,monkeypatch):
     client=TestClient(app)
     assert client.get('/operations/control-tower/runs').status_code in {401,403}
     app.dependency_overrides[get_current_user]=lambda:{'user_id':1}
-    rid=load(tower)[0]['run_id']
+    from backend.fedex.importer import load_schedules
+    rid=tower.import_network(1,load_schedules(),date(2030,1,1))[0]['run_id']
     assert client.get('/operations/control-tower/runs?limit=201').status_code==422
     assert client.post(f'/operations/control-tower/runs/{rid}/events',json=event(at=datetime(2030,1,1))).status_code==422
     assert client.put('/operations/alerts/recipients',json={'emails':['bad']}).status_code==422

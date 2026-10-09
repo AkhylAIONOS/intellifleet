@@ -16,7 +16,7 @@ assert.match(chat, /navigator\.clipboard\.writeText\(content\)/, 'Copy must use 
 assert.match(chat, /copiedIndex === idx \? 'Copied' : 'Copy'/, 'Copy feedback is required');
 assert.match(chat, /!route\.routeData\?\.planning/, 'Network count must exclude plan overlays');
 assert.match(chat, /warehouses\.length > 0 && vehicles\.length > 0 && persistedRouteCount > 0/, 'Ready requires all network collections');
-assert.match(chat, /Network data has not been uploaded yet/, 'Empty-network notice is required');
+assert.match(chat, /Network is loading/, 'Network loading notice is required');
 assert.match(dashboard, /chatApi\.clearChat\(\)/, 'Reload/logout must clear server chat context');
 assert.doesNotMatch(dashboard, /chatApi\.getChatHistory\(\)/, 'Reload must not restore old chat');
 assert.match(signup, /Confirm Password/, 'Signup must confirm password');

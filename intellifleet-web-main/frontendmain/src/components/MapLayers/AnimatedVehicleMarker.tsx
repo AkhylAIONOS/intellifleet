@@ -1,3 +1,4 @@
+import {movementIcon} from './movementIcon';
 import { useEffect, useRef } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -10,7 +11,7 @@ import { useAppStore } from '../../store/appStore';
 
 interface AnimatedVehicleMarkerProps {
     vehicle: Vehicle;
-    iconFactory: (type: string, isMoving: boolean) => L.Icon | null;
+    iconFactory: (type: string, isMoving: boolean) => L.Icon | L.DivIcon | null;
 }
 
 export const AnimatedVehicleMarker = ({ vehicle, iconFactory }: AnimatedVehicleMarkerProps) => {
@@ -45,7 +46,7 @@ export const AnimatedVehicleMarker = ({ vehicle, iconFactory }: AnimatedVehicleM
             bearingRef.current = newBearing;
             const rotatedIcon = L.divIcon({
                 className: 'vehicle-marker-container',
-                html: `<img src="${icon.options.iconUrl}" style="transform: rotate(${newBearing}deg); width: 32px; height: 32px;" />`,
+                html: movementIcon('SURFACE',newBearing).options.html,
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
                 popupAnchor: [0, -16]
@@ -313,7 +314,7 @@ export const AnimatedVehicleMarker = ({ vehicle, iconFactory }: AnimatedVehicleM
     // Initial icon with default bearing
     const initialIcon = L.divIcon({
         className: 'vehicle-marker-container',
-        html: `<img src="${icon.options.iconUrl}" style="transform: rotate(0deg); width: 32px; height: 32px;" />`,
+        html: movementIcon('SURFACE').options.html,
         iconSize: [32, 32],
         iconAnchor: [16, 16],
         popupAnchor: [0, -16]

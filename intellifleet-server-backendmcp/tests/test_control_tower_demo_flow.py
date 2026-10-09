@@ -28,7 +28,7 @@ def ask(message,run_id=None):
     return chat.answer(1,message,run_id,str(DATE))['response']
 
 
-@pytest.mark.parametrize('mode,count',[('Air',10),('Surface',28)])
+@pytest.mark.parametrize('mode,count',[('Air',10),('Surface',21)])
 def test_scheduled_and_zero_delay(tower,mode,count):
     text=ask(f'Which {mode} runs are currently delayed?')
     assert f'No {mode} runs are currently delayed.' in text
@@ -41,13 +41,13 @@ def test_scheduled_and_zero_delay(tower,mode,count):
 def test_queries_and_scoped_followups(tower):
     assert 'No critical lanes are currently at risk. 38 operational runs' in ask('Which critical lanes are currently at risk?')
     for question in ['How many runs are there today?','How many Air runs?','How many Surface runs?']:
-        assert '38 operational runs are loaded: 10 Air and 28 Surface' in ask(question)
+        assert '38 operational runs are loaded: 10 Air and 21 Surface' in ask(question)
     for question,code in [('Show Surface runs for Delhi.','DELGW'),('Show Surface runs through DELGW.','DELGW'),('Show runs through NDLS.','NDLS')]:
         result=chat.answer(1,question,service_date=str(DATE))
         ids=tower.chat_context(1,DATE)
         assert ids and code in str([tower.detail(1,i)['schedule'] for i in ids])
     assert 'No Surface runs matching Atlantis' in ask('Show Surface runs for Atlantis.')
-    assert '28 Surface runs are currently loaded' in ask('Show Surface runs for Atlantis.')
+    assert '21 Surface runs are currently loaded' in ask('Show Surface runs for Atlantis.')
     ask('Show Surface runs for Delhi.')
     ids=tower.chat_context(1,DATE);tower.mark_critical(1,ids[0],True)
     text=ask('Which of those are critical?')
@@ -58,7 +58,7 @@ def test_queries_and_scoped_followups(tower):
     for question in ['What is the status of CJB-BLR?','What is the ETA of CJB-BLR?','Show run 1 for CJB-BLR.']:
         text=ask(question)
         assert 'CJB-BLR' in text and 'Scheduled ETA' in text
-    assert 'Load the FedEx Network Plan' in chat.answer(1,'Which runs have arrived?',service_date='2031-01-01')['response']
+    assert 'Import the client workbook' in chat.answer(1,'Which runs have arrived?',service_date='2031-01-01')['response']
     tower.chat_context(1,DATE,[])
     assert 'No Control Tower run is selected/referenced' in ask('What is the current ETA of the critical delayed run?')
 

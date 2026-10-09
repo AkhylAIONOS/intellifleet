@@ -7,6 +7,7 @@ export interface Candidate {
   eligible: boolean; reason: string; warnings: string[];
 }
 export interface Eligibility {
+  next_eligible?: Candidate|null;
   candidates: Candidate[]; selected: Candidate | null; selection_reason: string; schedule_notice: string;
 }
 export interface FedexInput {
@@ -27,6 +28,7 @@ export interface FedexTelemetry {
     eligible_alternatives: Candidate[]; alternatives_condition: string }>;
 }
 export interface ScheduleSummary {
+  playback_speed?: number;
   lanes: Array<{ origin_station: string; gateway: string; simulation_supported: boolean }>;
   schedule_notice: string;
 }

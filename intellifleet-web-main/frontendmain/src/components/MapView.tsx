@@ -1,7 +1,6 @@
+import {PlanningMovementsController} from './PlanningMovementsController';
 import { NetworkMovementsLayer } from './MapLayers/NetworkMovementsLayer';
 import {PlanSelectionPreview} from './MapLayers/PlanSelectionPreview';
-import {ControlTowerLayer} from './MapLayers/ControlTowerLayer';
-import {useControlTowerStore} from '../store/controlTowerStore';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';
@@ -184,7 +183,7 @@ export const MapView = () => {
   const zoom = 5;
   const mapViewMode = useAppStore(state => state.mapViewMode);
   const selectedPlan=useAppStore(s=>s.selectedPlan);
-  const towerSelection=useControlTowerStore(s=>s.selected);
+  const towerSelection=null;
   const selectedMovement=useOperationsStore(s=>s.selected);
   const live=useFedexStore(s=>s.telemetry);
   const focused=!!selectedPlan||!!selectedMovement||!!live||!!towerSelection;
@@ -198,6 +197,7 @@ export const MapView = () => {
         {/* Map Controller for auto-zoom */}
         <MapController />
         <MapResizeController />
+        <PlanningMovementsController />
 
         {/* INDIA BOUNDARY OVERLAY */}
         <GeoJSON
@@ -246,7 +246,7 @@ export const MapView = () => {
         {!towerSelection&&<><GuardedJourney /><PlanSelectionPreview /></>}
         <WarehouseFocusLayer />
         <MapLegend />
-        {!towerSelection&&<FedExLayer />}<NetworkMovementsLayer /><ControlTowerLayer />
+        {!towerSelection&&<FedExLayer />}<NetworkMovementsLayer planningOnly />
       </MapContainer>
     </div>
   );

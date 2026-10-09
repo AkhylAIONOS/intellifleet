@@ -44,7 +44,7 @@ try{
  assert.ok(within(ui.getByLabelText('Lane details')).getByText('UNCHANGED SOURCE'));
  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Start labelled synthetic playback'})));
  assert.equal(playbackCalls,1);assert.equal(ops.getState().selected,'move');assert.equal(tower.getState().selected.location_source,'SYNTHETIC_TELEMETRY');
- assert.ok(ui.getByText(/demo clock starts at scheduled ETD/));assert.equal(ui.getByRole('button',{name:'Start labelled synthetic playback'}).disabled,true);
+ assert.ok(ui.getByText(/demo departs at scheduled ETD/));assert.equal(ui.getByRole('button',{name:'Start labelled synthetic playback'}).disabled,true);
  assert.ok(within(ui.getByLabelText('Lane details')).getByText('UNCHANGED SOURCE'));
  await act(async()=>fireEvent.click(ui.getByRole('button',{name:'Mark critical Provided lane AIR'})));
  assert.equal(tower.getState().selected.critical,true);

@@ -65,7 +65,7 @@ class ControlTower:
                     row.update(latest_location={'latitude':payload['latitude'],'longitude':payload['longitude']},location_source='FEDEX_SCAN',location_updated_at=event['event_at'])
                     break
         now=self.clock()
-        if row.get('movement_id'):
+        if row.get('movement_id') and row.get('actual_source')!='FEDEX_SCAN':
             from backend.fedex.telemetry import runtime
             try:
                 snapshot=runtime.get(row['owner'],row['movement_id']).snapshot()
@@ -74,9 +74,18 @@ class ControlTower:
                 # Synthetic playback clock must not be compared with wall time.
                 if row.get('actual_source')=='SYNTHETIC_TELEMETRY':
                     now=timestamp(snapshot['simulation_timestamp'])
+                    row.update(current_eta=snapshot['current_eta'],actual_departure_at=snapshot['actual_departure_at'],actual_arrival_at=snapshot['actual_arrival_at'])
             except KeyError:
                 row['tracking_notice']='Synthetic movement expired; last operational facts retained'
+        from backend.client_network import network
+        model=network()
+        row['resources']=[v for v in model['vehicles'] if v['service_id']==schedule['schedule_id']]
+        row['simulated_shipments']=[v for v in model['shipments'] if v['service_id']==schedule['schedule_id']]
+        row['enrichment_source']='SYNTHETIC_ENRICHMENT'
         row.update(operational_fields(row,now))
+        from .visualization import visualization
+        reference=[json.loads(r[0]) for r in conn.execute('SELECT schedule_json FROM ct_runs WHERE owner=? AND network_version=?',(row['owner'],row['network_version']))]
+        row['visualization']=visualization(row,now,reference)
         return row
 
     def runs(self, owner, service_date=None, mode=None, status=None, critical=None, search='', version=None):
@@ -95,7 +104,7 @@ class ControlTower:
                 query+=' AND network_version=(SELECT network_version FROM ct_network_imports i WHERE i.owner=ct_runs.owner AND i.service_date=ct_runs.service_date)'
             rows=[self._decorate(conn,dict(r)) for r in conn.execute(query,params)]
         search=(search or '').strip()
-        return [r for r in rows if (not mode or r['schedule']['mode']==mode or (mode=='SURFACE' and r['schedule']['source_sheet']=='Surface'))
+        return [r for r in rows if (not mode or r['schedule']['mode']==mode)
             and (not status or r['status']==status) and (critical is None or r['critical']==critical)
             and (not search or matches_search(r,search))]
 
@@ -109,7 +118,7 @@ class ControlTower:
     def summary(self, rows):
         counts={s:sum(r['status']==s for r in rows) for s in ['SCHEDULED','ON TIME','EXPECTED DELAY','DELAYED','ARRIVED']}
         return dict(total_runs=len(rows),air_runs=sum(r['schedule']['mode']=='AIR' for r in rows),
-            surface_runs=sum(r['schedule']['mode']=='SURFACE' or r['schedule']['source_sheet']=='Surface' for r in rows),statuses=counts,
+            surface_runs=sum(r['schedule']['mode']=='SURFACE' for r in rows),train_runs=sum(r['schedule']['mode']=='RAIL' for r in rows),statuses=counts,
             critical_lanes=len({r['lane_key'] for r in rows if r['critical']}),
             critical_lanes_at_risk=len({r['lane_key'] for r in rows if r['critical'] and r['status'] in {'EXPECTED DELAY','DELAYED'}}))
 
@@ -211,19 +220,22 @@ class ControlTower:
             if row['actual_source']=='FEDEX_SCAN':
                 raise ValueError('A real execution run cannot be replaced with synthetic playback')
             if row['movement_id']:
-                return self._decorate(conn,row)
+                try:
+                    existing=runtime.get(owner,row['movement_id'])
+                    if getattr(request,'autoplay',False) and existing.paused and existing.progress<1:
+                        existing.control('resume',runtime.clock())
+                    return self._decorate(conn,row)
+                except KeyError:
+                    pass
+
             if str(request.simulation_date)!=row['service_date'] or request.origin_station!=json.loads(row['schedule_json'])['origin_station'] or request.gateway!=json.loads(row['schedule_json'])['gateway']:
                 raise ValueError('Simulation must use the operational run date and endpoints')
             schedule=Schedule(**json.loads(row['schedule_json']))
             if getattr(request,'demo_playback',False):
                 # Explicit city-centre demo mapping, never FedEx facility/GPS coordinates.
-                from backend.operations.data import rows
-                import re
-                cities={r['NearestAirportIATA']:(float(r['Latitude']),float(r['Longitude'])) for r in rows('warehouse.csv') if r.get('NearestAirportIATA')}
-                airports=schedule.lane.split('-') if re.fullmatch(r'[A-Z]{3}-[A-Z]{3}',schedule.lane) else [schedule.origin_station,schedule.gateway]
-                origin=cities.get(airports[0])
-                destination=cities.get(airports[1])
-                schedule=schedule.model_copy(update={'origin_coordinates':schedule.origin_coordinates or origin,'destination_coordinates':schedule.destination_coordinates or destination})
+                from backend.client_network import CITY_CENTRES
+                schedule=schedule.model_copy(update={'origin_coordinates':schedule.origin_coordinates or CITY_CENTRES.get(schedule.origin_station[:3]),
+                    'destination_coordinates':schedule.destination_coordinates or CITY_CENTRES.get(schedule.gateway[:3])})
             request=request.model_copy(update={'schedule_id':schedule.schedule_id,'shipment_id':'CT-DEMO-'+run_id})
             sim=runtime.create(owner,request,[schedule])
             if getattr(request,'demo_playback',False):
@@ -232,7 +244,7 @@ class ControlTower:
                 # Explicit demo departure advances the existing playback by one second.
                 sim.advance(sim.last_wall+1/sim.speed)
                 sim.last_wall=runtime.clock()
-                sim.paused=True
+                sim.paused=not getattr(request,'autoplay',False)
             conn.execute('UPDATE ct_runs SET movement_id=?,actual_source=?,carrier=? WHERE owner=? AND run_id=?',(sim.id,'SYNTHETIC_TELEMETRY',schedule.service,owner,run_id))
         self.observe(owner)
         if getattr(request,'demo_playback',False):
@@ -254,6 +266,7 @@ class ControlTower:
             raise ValueError('The synthetic run has completed or stopped')
         if action not in {'delay10','delay30','arrive'}:
             raise ValueError('Unsupported synthetic action')
+        previously_paused=sim.paused
         sim.paused=False
         try:
             if action in {'delay10','delay30'}:
@@ -268,7 +281,7 @@ class ControlTower:
                 sim.advance(sim.last_wall+max(0,(sim.current_eta-sim.now).total_seconds())/sim.speed+1)
         finally:
             sim.last_wall=runtime.clock()
-            sim.paused=True
+            sim.paused=previously_paused
         self.observe(owner)
         return self.detail(owner,run_id)
 
@@ -290,12 +303,13 @@ class ControlTower:
                 except KeyError:
                     continue
                 now=timestamp(snapshot['simulation_timestamp'])
+                with self.db() as conn:stored=self._row(conn,owner,row['run_id'])
                 events=[]
-                if snapshot['progress']>0 and not row['actual_departure_at']:
+                if snapshot['progress']>0 and not stored['actual_departure_at']:
                     events.append(dict(event_type='DEPARTURE',event_at=snapshot['scheduled_etd'],event_id='sim-departure:'+row['movement_id']))
-                if timestamp(snapshot['current_eta'])!=timestamp(row['current_eta']):
+                if timestamp(snapshot['current_eta'])!=timestamp(stored['current_eta']):
                     events.append(dict(event_type='ETA_UPDATE',event_at=snapshot['simulation_timestamp'],current_eta=snapshot['current_eta'],event_id=f'sim-eta:{row["movement_id"]}:{snapshot["current_eta"]}'))
-                if snapshot['progress']>=1 and not row['actual_arrival_at']:
+                if snapshot['progress']>=1 and not stored['actual_arrival_at']:
                     events.append(dict(event_type='ARRIVAL',event_at=snapshot['current_eta'],event_id='sim-arrival:'+row['movement_id']))
                 for event in events:
                     self.event(owner,row['run_id'],dict(event,source='SYNTHETIC_TELEMETRY',reason='Labelled simulation milestone'))

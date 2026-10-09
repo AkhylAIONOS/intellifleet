@@ -7,7 +7,9 @@ from test_fedex_eligibility import schedules
 def make_sim(schedules, **kwargs):
     request = SimulationInput(origin_station='UDRPU', gateway='DELGW', simulation_date=date(2026,9,29),
         shipment_ready_datetime=datetime(2026,9,29,18), speed=600, **kwargs)
-    return Simulation(request, schedules, 0)
+    from backend.client_network import CITY_CENTRES
+    mapped=[s.model_copy(update={'origin_coordinates':CITY_CENTRES[s.origin_station[:3]],'destination_coordinates':CITY_CENTRES[s.gateway[:3]]}) for s in schedules]
+    return Simulation(request, mapped, 0)
 
 
 def test_completes(schedules):

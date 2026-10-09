@@ -42,6 +42,7 @@ class PlanningService:
     """Pure calculations plus thin SQLite data access; the LLM is never used here."""
 
     _scenarios: dict[str, dict[str, Any]] = {}
+    _client_changes: dict[int, dict] = {}
 
     def __init__(self, db_path: str = "users.db"):
         self.db_path = db_path
@@ -54,56 +55,16 @@ class PlanningService:
         return conn
 
     def load_network(self, user_id: int) -> dict[str, list[dict[str, Any]]]:
-        with self._connect() as conn:
-            routes = [dict(r) for r in conn.execute(
-                """SELECT n.route_id, n.from_location, n.to_location, n.distance, n.duration, n.cost,
-                          COALESCE(n.route_type, 'road') route_type,
-                          COALESCE(rc.reliability,.9) reliability, COALESCE(rc.weather_risk,0) weather_risk,
-                          COALESCE(rc.operational_risk,0) operational_risk, COALESCE(rc.toll_cost,0) toll_cost,
-                          COALESCE(rc.handling_cost,0) handling_cost, COALESCE(rc.fuel_cost,0) fuel_cost,
-                          COALESCE(rc.air_cost,0) air_cost, COALESCE(rc.base_transport_cost,n.cost) base_transport_cost,
-                          rc.capacity_per_day_kg, rc.current_utilization_pct, rc.service_class, rc.express_eligible,
-                          rc.sla_hours, rc.carbon_kg, COALESCE(rc.status,'active') status
-                   FROM nodes n LEFT JOIN route_conditions rc ON rc.user_id=n.user_id AND rc.route_id=n.route_id
-                   WHERE n.user_id=?
-                   UNION ALL
-                   SELECT n.route_id, n.from_location, n.to_location, n.distance, n.duration, n.cost,
-                          COALESCE(n.route_type, 'air') route_type,
-                          COALESCE(rc.reliability,.94), COALESCE(rc.weather_risk,0), COALESCE(rc.operational_risk,0),
-                          COALESCE(rc.toll_cost,0), COALESCE(rc.handling_cost,0), COALESCE(rc.fuel_cost,0), COALESCE(rc.air_cost,0),
-                          COALESCE(rc.base_transport_cost,n.cost), rc.capacity_per_day_kg, rc.current_utilization_pct,
-                          rc.service_class, rc.express_eligible, rc.sla_hours, rc.carbon_kg, COALESCE(rc.status,'active')
-                   FROM nodes_air n LEFT JOIN route_conditions rc ON rc.user_id=n.user_id AND rc.route_id=n.route_id
-                   WHERE n.user_id=?""", (user_id, user_id)
-            )]
-            warehouses = [dict(r) for r in conn.execute(
-                """SELECT w.warehouse_id, w.name, w.city, w.latitude, w.longitude, w.is_active,
-                          COALESCE(i.inventory,0) inventory, COALESCE(i.reserved_inventory,0) reserved_inventory,
-                          COALESCE(i.storage_capacity,0) storage_capacity, COALESCE(i.handling_cost,0) handling_cost,
-                          COALESCE(i.fixed_operating_cost,0) fixed_operating_cost, COALESCE(i.reliability,.9) reliability,
-                          COALESCE(i.disruption_risk,0) disruption_risk, i.nearest_airport_iata, i.airport_distance_km,
-                          i.region, i.annual_demand_units, i.primary_sku, w.country, w.node_type
-                   FROM warehouses w LEFT JOIN warehouse_inventory i
-                     ON i.user_id=w.user_id AND i.warehouse_id=w.warehouse_id
-                   WHERE w.user_id=?""", (user_id,)
-            )]
-            vehicles = [dict(r) for r in conn.execute(
-                """SELECT id, warehouse_id, type, label, capacity, current_location,
-                          is_available, status, is_active, vehicle_details, cost_per_km, reliability, compatible_modes,
-                          cost_per_hour, fixed_dispatch_cost, avg_speed_kmph, breakdown_risk, available_from, available_until,
-                          max_range_km, loading_time_min, unloading_time_min, co2_kg_per_km, express_eligible, refrigerated
-                   FROM vehicles WHERE user_id=?""", (user_id,)
-            )]
-        with self._connect() as conn:
-            provenance = conn.execute("SELECT data_source FROM network_provenance WHERE user_id=?",(user_id,)).fetchone()
-        for objects in (routes, warehouses, vehicles):
-            for obj in objects:
-                obj['data_source'] = provenance[0] if provenance else 'USER_NETWORK'
-        coordinates={_norm(w["name"]):{"lat":w.get("latitude"),"lng":w.get("longitude")} for w in warehouses}
-        for route in routes:
-            route["source_coords"]=coordinates.get(_norm(route["from_location"]))
-            route["destination_coords"]=coordinates.get(_norm(route["to_location"]))
-        return {"routes": routes, "warehouses": warehouses, "vehicles": vehicles}
+        from backend.client_network import network
+        model=copy.deepcopy(network())
+        changes=self._client_changes.get(user_id,{})
+        for vehicle in model['vehicles']:
+            if vehicle['label'] in changes.get('unavailable_vehicles',[]):vehicle['is_available']=0
+        for node in model['warehouses']:
+            if node['name'] in changes.get('unavailable_warehouses',[]):node['is_active']=0
+        for route in model['routes']:
+            if route['route_id'] in changes.get('blocked_route_ids',[]) or [route['from_location'],route['to_location']] in changes.get('blocked_routes',[]) or route['schedule']['service'] in changes.get('unavailable_flights',[]):route['status']='closed'
+        return model
 
     @staticmethod
     def risk_breakdown(legs, vehicle_utilization, vehicles=None, warehouses=None, changes=None):
@@ -137,7 +98,7 @@ class PlanningService:
     def select_vehicles(vehicles: list[dict], source: str, weight: float, mode: str,
                         required_range_km: float = 0, objective: str = "balanced", travel_hours: float = 0, at_time: datetime | None = None) -> tuple[list[dict], float]:
         import json
-        accepted = {"air": {"plane", "aircraft"}, "road": {"truck", "car", "auto", "bike"}}
+        accepted = {"air": {"plane", "aircraft"}, "road": {"truck", "car", "auto", "bike"}, "rail": {"train", "rail"}}
         reference = at_time or datetime.now(timezone.utc)
         now = reference.timestamp()
         valid = []
@@ -280,7 +241,11 @@ class PlanningService:
                     stack.append((target, path + [edge], visited | {target}))
         return found
 
-    def _candidate(self, legs: list[dict], request: PlanningRequest, vehicles: list[dict],
+    def _candidate(self, legs, request, vehicles, changes=None, warehouses=None, start_at=None):
+        from backend.client_planning import calculate
+        return calculate(self, legs, request, vehicles, changes, warehouses, start_at)
+
+    def _legacy_candidate(self, legs: list[dict], request: PlanningRequest, vehicles: list[dict],
                    changes: dict | None = None, warehouses: list[dict] | None = None, start_at: datetime | None = None) -> dict | None:
         if not legs:
             return None
@@ -430,6 +395,8 @@ class PlanningService:
     def plan(self, user_id: int, request: PlanningRequest, network: dict | None = None,
              changes: dict | None = None) -> dict:
         network = copy.deepcopy(network or self.load_network(user_id))
+        from backend.client_network import validate_topology
+        validate_topology(network)
         if not network["warehouses"] or not network["routes"]:
             reason = "Network not loaded. Upload the warehouse, vehicle and route CSVs before planning."
             return {"planning_request": request.model_dump(mode="json"),
@@ -446,7 +413,7 @@ class PlanningService:
             contained = [w for w in network["warehouses"]
                          if wanted and (wanted in _norm(str(w.get("name", "")))
                                         or wanted in _norm(str(w.get("city", "")))
-                                        or _norm(str(w.get("city", ""))) in wanted)]
+                                        or (bool(w.get("city")) and _norm(str(w.get("city", ""))) in wanted))]
             return contained[0]["name"] if len(contained) == 1 else value
 
         requested_source = request.source
@@ -471,6 +438,7 @@ class PlanningService:
         network["warehouses"] = [w for w in network["warehouses"] if _norm(w["name"]) not in unavailable_warehouses]
         blocked_ids = {str(x) for x in changes.get("blocked_route_ids", [])}
         network["routes"] = [r for r in network["routes"] if str(r["route_id"]) not in blocked_ids
+                             and r.get("schedule",{}).get("service") not in changes.get("unavailable_flights",[])
                              and _norm(r["from_location"]) not in unavailable_warehouses
                              and _norm(r["to_location"]) not in unavailable_warehouses]
         candidates = []
@@ -478,7 +446,8 @@ class PlanningService:
         mode_sets = []
         if "road" in request.allowed_modes: mode_sets.append({"road"})
         if "air" in request.allowed_modes: mode_sets.append({"air"})
-        if "multimodal" in request.allowed_modes: mode_sets.append({"road", "air"})
+        if "rail" in request.allowed_modes or set(request.allowed_modes)=={"road","air","multimodal"}: mode_sets.append({"rail"})
+        if "multimodal" in request.allowed_modes: mode_sets.append({"road", "air", "rail"})
         # Enumerate actual simple network paths so an infeasible shortest path
         # cannot hide a feasible alternative. Bound work and disclose truncation.
         search_truncated = False
@@ -781,72 +750,20 @@ class PlanningService:
         return result
 
     def breakdown_recovery(self,user_id:int,vehicle_label:str,current_location:str,destination:str,weight:float,deadline=None,plan_id=None,shipment_id=None,changes=None)->dict:
-        if not current_location:
-            return {"recovery_plan":None,"reason":"Additional breakdown location is required.","missing_fields":["current_location"]}
-        if isinstance(deadline,str):
-            deadline=datetime.fromisoformat(deadline.replace("Z","+00:00"))
-        network=copy.deepcopy(self.load_network(user_id))
-        changes = changes or {}
-        network["routes"] = [r for r in network["routes"] if str(r["route_id"]) not in {str(x) for x in changes.get("blocked_route_ids", [])}]
-        broken=next((v for v in network["vehicles"] if str(v.get("label"))==vehicle_label),None)
+        network=self.load_network(user_id)
+        broken=next((v for v in network['vehicles'] if v['label']==vehicle_label),None)
         if broken is None:
-            return {"recovery_plan":None,"reason":"Failed vehicle is not present in the loaded network.","replacement_vehicles":[]}
-        for value, field in ((current_location,"current_location"),(destination,"destination")):
-            matches=[w["name"] for w in network["warehouses"] if _norm(value) in {_norm(w["name"]),_norm(str(w.get("city") or ""))}]
-            if len(matches)==1:
-                if field=="current_location":current_location=matches[0]
-                else:destination=matches[0]
-        request=PlanningRequest(source=current_location,destination=destination,shipment={"weight_kg":weight,"quantity":1},deadline=deadline)
-        candidates=[]
-        available=[v for v in network["vehicles"] if v.get("label")!=vehicle_label and v.get("is_available") and v.get("is_active",1)]
-        groups={}
-        for v in available:
-            mode="air" if str(v.get("type")).casefold() in {"plane","aircraft"} else "road"
-            groups.setdefault((v.get("current_location"),mode),[]).append(v)
-        for (location,mode),vehicles in groups.items():
-            approaches=[[]] if _norm(str(location))==_norm(current_location) else self._paths(network["routes"],str(location),current_location,{mode},set())
-            for approach in approaches:
-                approach_distance=sum(float(x.get("distance") or 0) for x in approach)
-                moved=[]
-                for v in vehicles:
-                    if v.get("max_range_km") and float(v["max_range_km"])<=approach_distance:
-                        continue
-                    moved.append({**v,"current_location":current_location,
-                                  "max_range_km":float(v["max_range_km"])-approach_distance if v.get("max_range_km") else None})
-                recovery=self.plan(user_id,request.model_copy(update={"allowed_modes":[mode]}),{**network,"vehicles":moved},changes=changes)
-                plan=recovery.get("recommended_plan")
-                if not plan:
-                    continue
-                labels={v["label"] for v in plan["vehicles"]}
-                selected=[v for v in vehicles if v["label"] in labels]
-                approach_plan=self._candidate(approach,request.model_copy(update={"source":str(location),"destination":current_location,"shipment":request.shipment.model_copy(update={"weight_kg":1})}),selected) if approach else None
-                if approach and approach_plan is None:
-                    continue
-                cost=approach_plan["operational_cost"] if approach_plan else 0
-                hours=approach_plan["duration_hours"] if approach_plan else 0
-                plan["replacement_approach_legs"]=approach
-                plan["replacement_arrival_hours"]=hours
-                plan["repositioning_cost"]=cost
-                plan["transfer_time_hours"]=max((float(v.get("loading_time_min") or 0)/60 for v in selected),default=0)
-                plan["duration_hours"]=round(plan["duration_hours"]+hours+plan["transfer_time_hours"],2)
-                plan["cost_breakdown"]["other_cost"]+=cost
-                plan["operational_cost"]=round(sum(plan["cost_breakdown"].values()),2)
-                plan["selling_price"]=plan["expected_revenue"]=round(plan["operational_cost"]/(1-request.target_margin),2)
-                plan["profit"]=round(plan["selling_price"]-plan["operational_cost"],2)
-                plan["eta"]=(datetime.now(timezone.utc)+timedelta(hours=plan["duration_hours"])).isoformat()
-                if deadline:
-                    slack=(deadline.timestamp()-datetime.fromisoformat(plan["eta"]).timestamp())/3600
-                    plan.update(sla_met=slack>=0,sla_slack_hours=round(max(0,slack),2),sla_delay_hours=round(max(0,-slack),2))
-                candidates.append(plan)
-        ranked=self._rank(candidates,request)
-        plan=ranked[0] if ranked else None
-        return {"plan_id":plan_id,"shipment_id":shipment_id,"broken_vehicle":broken,
-                "remaining_journey":{"source":current_location,"destination":destination},"replacement_vehicles":plan["vehicles"] if plan else [],
-                "transfer_load_kg":weight,"recovery_plan":plan,"candidate_plans":ranked,
-                "additional_cost":plan["operational_cost"] if plan else None,
-                "additional_cost_basis":"Gross replacement transport and repositioning spend; original sunk charges and refunds are not supplied.",
-                "new_eta":plan["eta"] if plan else None,"sla_met":plan["sla_met"] if plan else None,
-                "reason":"Use the ranked feasible replacement plan." if plan else "No remaining compatible vehicle combination can reach the recovery location and complete the route within its capacity and range."}
+            return {'recovery_plan':None,'replacement_vehicles':[],'reason':'Resource is absent from the client simulation dataset.'}
+        service_id=broken['service_id']
+        network=copy.deepcopy(network)
+        network['routes']=[r for r in network['routes'] if r['route_id']==service_id]
+        network['vehicles']=[v for v in network['vehicles'] if v['service_id']==service_id and v['label']!=vehicle_label]
+        request=PlanningRequest(source=current_location,destination=destination,shipment={'weight_kg':weight},deadline=deadline)
+        result=self.plan(user_id,request,network=network)
+        plan=result.get('recommended_plan')
+        return {'recovery_plan':plan,'replacement_vehicles':plan['vehicles'] if plan else [],
+            'reason':'Replacement belongs to the same supplied service.' if plan else 'No available same-service resource can carry this load. No spare resource or route was invented.',
+            'service_id':service_id,'live_data_changed':False}
 
     def future_replan(self,user_id:int,vehicle_label:str,delay_hours:float)->dict:
         import json
@@ -918,6 +835,11 @@ class PlanningService:
 
     def schedule_shipment(self,user_id:int,data:dict)->dict:
         import json
+        model=self.load_network(user_id)
+        route=next((r for r in model['routes'] if r['route_id']==data.get('route_id') and r['from_location']==data['source'] and r['to_location']==data['destination']),None)
+        if route is None:raise ValueError('Shipment must reference a supplied client service and its exact endpoints')
+        labels={v['label'] for v in model['vehicles'] if v['service_id']==route['route_id']}
+        if not set(data.get('assigned_vehicle_labels',[]))<=labels:raise ValueError('Shipment resources must belong to this client service')
         with self._connect() as conn:
             conn.execute("""INSERT OR REPLACE INTO shipments(shipment_id,user_id,source,destination,weight_kg,quantity,sku,deadline,status,
                 assigned_vehicle_ids,route_id,scheduled_start,scheduled_end,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -1061,29 +983,13 @@ class PlanningService:
             if self.db_path != ":memory:":
                 with self._connect() as conn: conn.execute("UPDATE planning_scenarios SET status='discarded',updated_at=? WHERE scenario_id=?", (datetime.now(timezone.utc).isoformat(),scenario_id))
             return {"scenario_id": scenario_id, "status": "discarded", "live_data_changed": False}
-        # Live resources are changed only here, after the explicit apply action.
-        if self.db_path != ":memory:":
+        self._client_changes[user_id]=copy.deepcopy(item.get('changes',{}))
+        applied_at=datetime.now(timezone.utc).isoformat()
+        if self.db_path != ':memory:':
             with self._connect() as conn:
-                changes=item.get("changes",{})
-                for label in changes.get("unavailable_vehicles",[]):
-                    conn.execute("UPDATE vehicles SET is_available=0,status='unavailable' WHERE user_id=? AND label=?",(user_id,label))
-                for name in changes.get("unavailable_warehouses",[]):
-                    conn.execute("UPDATE warehouses SET is_active=0 WHERE user_id=? AND lower(name)=lower(?)",(user_id,name))
-                for update in changes.get("inventory_changes",[]):
-                    conn.execute("UPDATE warehouse_inventory SET inventory=? WHERE user_id=? AND warehouse_name=?",(update["inventory"],user_id,update["warehouse"]))
-                for pair in changes.get("blocked_routes",[]):
-                    ids=[r[0] for r in conn.execute("SELECT route_id FROM nodes WHERE user_id=? AND lower(from_location)=lower(?) AND lower(to_location)=lower(?) UNION SELECT route_id FROM nodes_air WHERE user_id=? AND lower(from_location)=lower(?) AND lower(to_location)=lower(?)",(user_id,pair[0],pair[1],user_id,pair[0],pair[1]))]
-                    for route_id in ids:
-                        conn.execute("INSERT INTO route_conditions(user_id,route_id,operational_risk,reliability,status) VALUES(?,?,1,0,'closed') ON CONFLICT(user_id,route_id) DO UPDATE SET operational_risk=1,reliability=0,status='closed'",(user_id,route_id))
-                for route_id in changes.get("blocked_route_ids",[]):
-                    known=conn.execute("SELECT route_id FROM nodes WHERE user_id=? AND route_id=? UNION SELECT route_id FROM nodes_air WHERE user_id=? AND route_id=?",(user_id,route_id,user_id,route_id)).fetchone()
-                    if not known:raise ValueError("Scenario route ID is not in the owner's network")
-                    conn.execute("INSERT INTO route_conditions(user_id,route_id,operational_risk,reliability,status) VALUES(?,?,1,0,'closed') ON CONFLICT(user_id,route_id) DO UPDATE SET operational_risk=1,reliability=0,status='closed'",(user_id,route_id))
-                applied_at=datetime.now(timezone.utc).isoformat()
                 conn.execute("UPDATE planning_scenarios SET status='applied',updated_at=?,applied_at=? WHERE scenario_id=?", (applied_at,applied_at,scenario_id))
-                plan = item["scenario"]["recommended_plan"]
-                conn.execute("INSERT INTO planning_plans(plan_id,user_id,scenario_id,status,plan_json,created_at) VALUES(?,?,?,?,?,?)",
-                             (plan["plan_id"],user_id,scenario_id,"approved",__import__('json').dumps(plan),datetime.now(timezone.utc).isoformat()))
+                plan=item['scenario']['recommended_plan']
+                conn.execute("INSERT INTO planning_plans(plan_id,user_id,scenario_id,status,plan_json,created_at) VALUES(?,?,?,?,?,?)",(plan['plan_id'],user_id,scenario_id,'approved',__import__('json').dumps(plan),applied_at))
         item["status"] = "applied"
         return {"scenario_id": scenario_id, "status": "applied", "live_data_changed": self.db_path != ":memory:",
                 "approved_plan": item["scenario"]["recommended_plan"],

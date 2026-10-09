@@ -1,42 +1,28 @@
-import { useState } from 'react';
-import apiClient from '../api/client';
-import { useAppStore } from '../store/appStore';
+import {useEffect,useState} from 'react';
+import api from '../api/client';
 
-type UploadFiles = { warehouse?: File; vehicle?: File; routes?: File };
-
-export const formatUploadError = (error: any): string => {
-  const status = error.response?.status;
-  if (status === 401) return 'Network upload failed: authentication required. Please sign in again.';
-  if (status === 403) return 'Network upload failed: you do not have permission to upload.';
-  if (status >= 500) return 'Network upload failed: the server could not complete the import. Please try again.';
-  if (!error.response) return 'Network upload failed: unable to reach the API. Check that the backend is running and allows this frontend origin.';
-  const detail = error.response?.data?.detail;
-  if (Array.isArray(detail)) return detail.map((item: any) => `${item.loc?.at(-1) || 'request'}: ${item.msg || 'Invalid value'}`).join('\n');
-  if (typeof detail === 'string') return detail;
-  if (detail && typeof detail === 'object') return Object.entries(detail).map(([key, value]) => `${key}: ${String(value)}`).join('\n');
-  return error.message || 'Network upload failed';
+export const formatUploadError=(error:any):string=>{
+ const status=error.response?.status;
+ if(status===401)return 'Network unavailable: authentication required. Please sign in again.';
+ if(status===403)return 'Network unavailable: permission denied.';
+ if(status>=500)return 'Schedule workbook unavailable. Check the backend configuration.';
+ if(!error.response)return 'Unable to reach the network API. Check that the backend is running and allows this frontend origin.';
+ const detail=error.response?.data?.detail;
+ if(Array.isArray(detail))return detail.map((item:any)=>`${item.loc?.at(-1)||'request'}: ${item.msg||'Invalid value'}`).join('\n');
+ return typeof detail==='string'?detail:'Schedule workbook unavailable. Check the backend configuration.';
 };
 
-export const NetworkUpload = () => {
-  const warehouses=useAppStore(state=>state.warehouses); const vehicles=useAppStore(state=>state.vehicles); const activeRoutes=useAppStore(state=>state.activeRoutes);
-  const [files,setFiles]=useState<UploadFiles>({});
-  const [result,setResult]=useState<any>(()=>{const saved=sessionStorage.getItem('networkUploadResult'); if(saved) sessionStorage.removeItem('networkUploadResult'); return saved?JSON.parse(saved):undefined});
-  const [busy,setBusy]=useState(false);
-  const [progress,setProgress]=useState(0);
-  const choose=(key:keyof UploadFiles,file?:File)=>setFiles(current=>({...current,[key]:file}));
-  const upload=async()=>{if(!files.warehouse||!files.vehicle||!files.routes)return; const formData=new FormData(); formData.append('warehouse_csv',files.warehouse); formData.append('vehicle_csv',files.vehicle); formData.append('routes_csv',files.routes); setBusy(true); setResult(undefined);
-    setProgress(0);
-    try{const data=(await apiClient.post('/upload-network',formData,{timeout:120000,headers:{'Content-Type':undefined},onUploadProgress:event=>setProgress(event.total?Math.round(event.loaded/event.total*100):0)})).data; sessionStorage.setItem('networkUploadResult',JSON.stringify(data)); window.location.reload();}catch(e:any){setResult({error:formatUploadError(e),status:e.response?.status}); setBusy(false)}};
-  const activeCount=Object.values(activeRoutes).filter(route=>route.isActive!==false&&!route.routeData?.planning).length;
-  const uploadCounts=result?.counts||result?.data?.counts||result;
-  return <div className="network-tools">
-    <section className="network-upload-card"><div className="section-title"><span>Upload Network Data</span><small>3 CSV files · atomic import</small></div><div className="network-upload-fields">
-      {(['warehouse','vehicle','routes'] as const).map(key=><label key={key}><span>{key==='warehouse'?'Warehouse':key==='vehicle'?'Vehicle':'Routes'} CSV</span><span className="file-picker"><b>{files[key]?.name||'Choose file'}</b><input type="file" accept=".csv,text/csv" onChange={e=>choose(key,e.target.files?.[0])}/></span></label>)}
-      <button disabled={busy||!files.warehouse||!files.vehicle||!files.routes} onClick={upload}>{busy?(progress<100?`Uploading ${progress}%…`:'Processing…'):'Upload & Process'}</button>
-    </div>{result?.error&&<div role="alert" className="upload-error"><strong>Upload failed{result.status?` (HTTP ${result.status})`:''}</strong><span>{result.error}</span></div>}{result?.success&&<div className="upload-success"><strong>{result.rows!=null?'Schedules ready':'Network ready'}</strong><span>{result.rows!=null?`${result.rows} synthetic schedules imported`:uploadCounts.processing_ms!=null?`${uploadCounts.processing_ms} ms`: 'Upload processed successfully'}</span></div>}</section>
-    {result?.success&&result.rows==null&&<p role="status">Imported {uploadCounts.warehouses??'—'} warehouses · {uploadCounts.vehicles??'—'} vehicles · {uploadCounts.routes??'—'} routes{result.processing_time_ms!=null?` · ${result.processing_time_ms} ms`:''}</p>}
-    <section className="network-upload-card"><strong>Schedule import</strong>
-    <label>Import separate synthetic schedule CSV<input type="file" accept=".csv" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;const form=new FormData();form.append('file',file);try{const r=await apiClient.post('/operations/schedules/import',form,{headers:{'Content-Type':undefined}});setResult(r.data);}catch(error){setResult({error:formatUploadError(error)});}}}/></label><small>Schedules remain separate from network fleet and FedEx workbook provenance. Schedule uploads are ephemeral.</small></section>
-    <section className="network-summary"><div className="section-title"><span>Network Summary</span><i></i></div><dl><div><dt>Warehouses</dt><dd>{warehouses.length}</dd></div><div><dt>Vehicles</dt><dd>{vehicles.length}</dd></div><div><dt>Routes</dt><dd>{activeCount}</dd></div></dl></section>
-  </div>;
+// Retain the component name for workspace compatibility. Topology is read-only.
+export const NetworkUpload=({compact=false}:{compact?:boolean})=>{
+ const [search,setSearch]=useState('');
+ const [model,setModel]=useState<any>();const [error,setError]=useState('');
+ useEffect(()=>{let active=true;api.get('/client-network').then(r=>{if(active)setModel(r.data);}).catch(e=>{if(active)setError(formatUploadError(e));});return()=>{active=false;};},[]);
+ const stats=model?.summary;
+ return <div className="network-tools" aria-label="Network overview">
+ {error&&<p role="alert">{error}</p>}
+ <section className="network-summary"><div className="section-title"><span>Network</span><small>Source topology · simulated operational attributes</small></div><dl>
+ {stats&&Object.entries({'Services':stats.client_services,'Stations':stats.client_nodes,'Air Runs':stats.air_runs,'Surface Runs':stats.surface_runs,'Train Runs':stats.train_runs,'Resources':stats.generated_resources,'Simulated Shipments':stats.simulated_shipments,'Simulated Volume (kg)':stats.simulated_volume_kg,'Utilization (%)':stats.utilization_percentage}).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{Number(value).toLocaleString('en-IN')}</dd></div>)}
+ </dl>{!stats&&!error&&<p>Loading network…</p>}</section>
+ {!compact&&model&&<><p>{stats.source_validation_issues} source records require validation. Resource capacities, shipments, costs and risk are simulated. Source schedules remain unchanged.</p><label>Search network<input aria-label="Search network" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Location name, code, lane or service"/></label><div className="operations-table"><table><caption>Supplied services</caption><thead><tr>{['Lane','Origin','Gateway','Mode','Run','Service','Resources','Capacity (kg)','Load (kg)'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{model.routes.filter((route:any)=>[route.from_location,route.to_location,model.locations?.[route.from_location]?.label,model.locations?.[route.to_location]?.label,...(model.locations?.[route.from_location]?.aliases||[]),...(model.locations?.[route.to_location]?.aliases||[]),route.schedule.lane,route.schedule.service].join(" ").toLowerCase().includes(search.toLowerCase())).map((route:any)=>{const resources=model.vehicles.filter((v:any)=>v.service_id===route.route_id);return <tr key={route.route_id}><td>{route.schedule.lane}</td><td>{model.locations?.[route.from_location]?.label||route.from_location}</td><td>{model.locations?.[route.to_location]?.label||route.to_location}</td><td>{route.schedule.source_mode}</td><td>{route.schedule.run}</td><td>{route.schedule.service}</td><td>{resources.length}</td><td>{resources.reduce((sum:number,v:any)=>sum+v.capacity,0).toLocaleString()}</td><td>{resources.reduce((sum:number,v:any)=>sum+v.assigned_load_kg,0).toLocaleString()}</td></tr>;})}</tbody></table></div></>}
+ </div>;
 };

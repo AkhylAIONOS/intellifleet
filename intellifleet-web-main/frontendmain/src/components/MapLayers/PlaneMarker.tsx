@@ -1,3 +1,4 @@
+import {movementIcon} from './movementIcon';
 import { useEffect, useRef } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -38,24 +39,7 @@ export const PlaneMarker = ({ planeId, routeId, sourceAirport, destAirport }: Pl
     };
 
     // Create a divIcon with rotatable inner element
-    const createPlaneIcon = (bearing: number) => {
-        return L.divIcon({
-            className: 'plane-marker-container',
-            html: `<div style="
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transform: rotate(${bearing}deg);
-                transform-origin: center;
-            ">
-                <span style="font-size: 28px;">✈️</span>
-            </div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-        });
-    };
+    const createPlaneIcon = (bearing: number) => movementIcon('AIR',bearing);
 
     const animate = (time: number) => {
         if (!pathRef.current || pathRef.current.length < 2) return;

@@ -22,6 +22,7 @@ class ImportInput(BaseModel):
 
 class PlaybackInput(SimulationInput):
     demo_playback: bool = False
+    autoplay: bool = False
 
 
 class SyntheticActionInput(BaseModel):
@@ -84,9 +85,24 @@ class ConInput(BaseModel):
         return value
 
 
+def current_source_run(row):
+    from backend.client_network import network
+    source=next((s for s in network()['schedules'] if s['schedule_id']==row.get('schedule_id')),None)
+    given=row.get('schedule',{})
+    return source is not None and all(given.get(k)==source.get(k) for k in ('origin_station','gateway','lane','run','mode','service','source'))
+
+
+def enforce_source(value):
+    if isinstance(value,dict):
+        if 'schedule' in value and 'schedule_id' in value and not current_source_run(value):
+            raise HTTPException(410,'This archived run is not part of the current client workbook')
+        if 'run' in value and isinstance(value['run'],dict):enforce_source(value['run'])
+    return value
+
+
 def invoke(fn,*args,**kwargs):
     try:
-        return fn(*args,**kwargs)
+        return enforce_source(fn(*args,**kwargs))
     except KeyError as exc:
         raise HTTPException(404,str(exc)) from exc
     except (ValueError,TypeError) as exc:
@@ -111,19 +127,42 @@ def import_plan(request: ImportInput,user=Depends(get_current_user)):
     return {'runs':invoke(service.import_network,user['user_id'],schedules(),request.service_date)}
 
 
+class BatchPlaybackInput(BaseModel):
+    service_date: date
+
+
+@router.post('/control-tower/playback')
+def playback(request:BatchPlaybackInput,user=Depends(get_current_user)):
+    from backend.fedex.models import DEFAULT_PLAYBACK_SPEED
+    rows=[r for r in service.runs(user['user_id'],request.service_date) if current_source_run(r)]
+    started=[];skipped=[]
+    for row in rows:
+        if not row['schedule']['valid']:
+            skipped.append({'run_id':row['run_id'],'reason':'Source schedule requires validation'});continue
+        try:
+            result=service.link_simulation(user['user_id'],row['run_id'],PlaybackInput(
+                origin_station=row['schedule']['origin_station'],gateway=row['schedule']['gateway'],
+                simulation_date=request.service_date,shipment_ready_datetime=datetime.combine(request.service_date,datetime.min.time()),
+                demo_playback=True,autoplay=True,schedule_based_geometry=True))
+            started.append(result['run_id'])
+        except (ValueError,KeyError) as exc:skipped.append({'run_id':row['run_id'],'reason':str(exc)})
+    return {'started':started,'skipped':skipped,'playback_speed':DEFAULT_PLAYBACK_SPEED,
+            'notice':'Simulated movement along approximate city-centre lanes; source ETD/ETA unchanged.'}
+
+
 @router.get('/control-tower/runs')
 def runs(service_date:date|None=None,mode:Literal['AIR','SURFACE','RAIL']|None=None,status:str|None=None,
          critical:bool|None=None,search:str='',sort:Literal['lane','status','eta']='lane',offset:int=0,limit:int=100,user=Depends(get_current_user)):
     if offset<0 or not 1<=limit<=200:
         raise HTTPException(422,'Invalid pagination')
-    rows=service.runs(user['user_id'],service_date,mode,status,critical,search)
+    rows=[r for r in service.runs(user['user_id'],service_date,mode,status,critical,search) if current_source_run(r)]
     rows.sort(key=lambda r:r['status'] if sort=='status' else (r['current_eta'] or '') if sort=='eta' else r['schedule']['lane'])
     return {'runs':rows[offset:offset+limit],'total':len(rows),'source':'FEDEX_SOURCE'}
 
 
 @router.get('/control-tower/summary')
 def summary(service_date:date|None=None,user=Depends(get_current_user)):
-    return service.summary(service.runs(user['user_id'],service_date))
+    return service.summary([r for r in service.runs(user['user_id'],service_date) if current_source_run(r)])
 
 
 @router.get('/control-tower/runs/{run_id}')

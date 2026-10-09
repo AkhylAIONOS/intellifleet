@@ -42,7 +42,7 @@ def scenario_action(scenario_id: str, action: str, current_user=Depends(get_curr
 
 @router.post("/expansion")
 def expansion(request: ExpansionRequest, current_user=Depends(get_current_user)):
-    return service.expansion(request)
+    raise HTTPException(422, "Network expansion is disabled: only supplied workbook topology is allowed")
 
 
 @router.post("/consolidation")
@@ -80,4 +80,5 @@ def global_plan(request:PlanningRequest,current_user=Depends(get_current_user)):
 
 @router.post("/shipments")
 def schedule_shipment(request:ShipmentScheduleRequest,current_user=Depends(get_current_user)):
-    return service.schedule_shipment(current_user["user_id"],request.model_dump(mode="json"))
+    try:return service.schedule_shipment(current_user["user_id"],request.model_dump(mode="json"))
+    except ValueError as exc:raise HTTPException(422,str(exc)) from exc

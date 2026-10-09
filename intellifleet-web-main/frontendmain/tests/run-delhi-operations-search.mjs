@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import path from 'node:path';
+import {randomBytes} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {JSDOM} from 'jsdom';
@@ -24,7 +27,7 @@ with tempfile.TemporaryDirectory() as directory:
  responses={q:client.get('/operations/control-tower/runs',params={'service_date':'2030-01-01','mode':'SURFACE','search':q,'limit':25}).json() for q in queries}
  print(json.dumps(responses))
 `;
-const generated=spawnSync(backend+'.venv/bin/python',['-c',python],{cwd:backend,encoding:'utf8',maxBuffer:8*1024*1024});
+const generated=spawnSync(process.env.UNIFLEET_TEST_PYTHON || (existsSync(backend+'.venv/bin/python')?backend+'.venv/bin/python':path.resolve(backend,'../../IntelliFleet/intellifleet-server-backendmcp/.venv/bin/python')),['-c',python],{cwd:backend,env:{...process.env,PYTHONDONTWRITEBYTECODE:'1',SECRET_KEY:randomBytes(32).toString('hex')},encoding:'utf8',maxBuffer:8*1024*1024});
 assert.equal(generated.status,0,generated.stderr);const responses=JSON.parse(generated.stdout);
 const dom=new JSDOM('<html><body></body></html>',{url:'http://localhost/'});
 for(const key of ['window','document','HTMLElement','Element','Node','navigator','localStorage'])Object.defineProperty(globalThis,key,{value:dom.window[key],configurable:true});
@@ -35,7 +38,7 @@ try{
  const {ControlTower}=await server.ssrLoadModule('/src/components/ControlTower.tsx');
  const sent=[];
  api.runs=async params=>{sent.push(params.search||'');return responses[params.search||''];};
- api.summary=async()=>({total_runs:38,air_runs:10,surface_runs:28,statuses:{SCHEDULED:38},critical_lanes:0,critical_lanes_at_risk:0});
+ api.summary=async()=>({total_runs:38,air_runs:10,surface_runs:21,statuses:{SCHEDULED:38},critical_lanes:0,critical_lanes_at_risk:0});
  api.recipients=async()=>({emails:[]});
  const ui=render(React.createElement(ControlTower));await act(async()=>{});
  const search=ui.getByPlaceholderText('City, station, lane, run or carrier');
@@ -47,11 +50,11 @@ try{
   if(query==='Atlantis')assert.ok(ui.getByText(/No matching operational runs/));
   if(query==='Delhi'){
    assert.ok(ui.getByRole('button',{name:'AGRGA-DELGW',exact:true}));
-   assert.ok(ui.getAllByRole('button',{name:'DDU-NDLS',exact:true}).length);
+   assert.equal(ui.queryByRole('button',{name:'DDU-NDLS',exact:true}),null,'Train service must not appear in Surface results');
   }
  }
- assert.equal(responses[''].total,28);
+ assert.equal(responses[''].total,21);
  assert.equal(responses.Delhi.total,responses.delhi.total);
  assert.equal(responses.Delhi.total,responses.DEL.total);
- console.log('PASS: DELGW, NDLS, Delhi/delhi/DEL, clear restores 28 Surface rows, clean empty state; real backend endpoint responses rendered through UI');
+ console.log('PASS: DELGW, NDLS, Delhi/delhi/DEL, clear restores 21 Surface rows; Train services remain separate, clean empty state; real backend endpoint responses rendered through UI');
 }finally{cleanup();await server.close();dom.window.close();}

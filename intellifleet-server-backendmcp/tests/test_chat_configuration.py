@@ -19,6 +19,8 @@ def test_missing_azure_deployment_returns_actionable_error_without_ainvoke(monke
     from backend.agents import supervisor as supervisor_module
 
     monkeypatch.setattr(supervisor_module.settings, "AI_PROVIDER", "azure")
+    monkeypatch.setattr(supervisor_module.settings, "AZURE_AI_ENDPOINT", "https://unit.invalid")
+    monkeypatch.setattr(supervisor_module.settings, "AZURE_AI_API_KEY", "unit-test-placeholder")
     monkeypatch.setattr(supervisor_module.settings, "AZURE_AI_DEPLOYMENT", None)
     instance = SchemaAwareSupervisor()
     result = asyncio.run(instance.process_message(5, "Plan 8,000 kg from Delhi to Kochi"))
@@ -29,9 +31,14 @@ def test_missing_azure_deployment_returns_actionable_error_without_ainvoke(monke
     assert "NoneType" not in result["response"]
 
 
-def test_foundry_responses_payload_uses_supported_string_input():
+def test_foundry_responses_payload_uses_supported_string_input(monkeypatch):
     from backend.llm import create_chat_model
 
+    from backend.config.config import settings
+    monkeypatch.setattr(settings, "AI_PROVIDER", "azure")
+    monkeypatch.setattr(settings, "AZURE_AI_ENDPOINT", "https://unit.invalid")
+    monkeypatch.setattr(settings, "AZURE_AI_API_KEY", "unit-test-placeholder")
+    monkeypatch.setattr(settings, "AZURE_AI_DEPLOYMENT", "unit-test-deployment")
     model = create_chat_model()
     payload = model._get_request_payload([
         SystemMessage(content="system rules"),

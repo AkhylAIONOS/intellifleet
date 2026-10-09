@@ -46,6 +46,8 @@ export interface AuthResponse {
 // Warehouse Types
 // Warehouse Types
 export interface Warehouse {
+  display_name?: string;
+  location_aliases?: string[];
   id: number;                // Map from warehouse_id
   warehouse_id?: number;     // Keep original field for reference
   user_id?: number;

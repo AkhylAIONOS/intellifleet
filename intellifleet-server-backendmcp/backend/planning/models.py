@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 Objective = Literal["cheapest", "fastest", "lowest-risk", "balanced"]
-Mode = Literal["road", "air", "multimodal"]
+Mode = Literal["road", "air", "rail", "multimodal"]
 
 
 MODE_ALIASES = {
@@ -132,6 +132,7 @@ class PlanningRequest(BaseModel):
     destination: str
     shipment: Shipment
     objective: Objective = "balanced"
+    shipment_ready_datetime: datetime | None = None
     deadline: datetime | None = None
     allowed_modes: list[Mode] = Field(default_factory=lambda: ["road", "air", "multimodal"])
     required_mode_sequence: list[Literal["road", "air"]] = Field(default_factory=list)

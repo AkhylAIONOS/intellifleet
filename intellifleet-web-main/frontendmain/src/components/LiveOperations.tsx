@@ -1,89 +1,45 @@
-import {operationalTime} from '../utils/operationalTime';
-import {lazy,Suspense,useEffect,useRef,useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {useAppStore} from '../store/appStore';
-import {fedexApi} from '../api/fedex';
-import api from '../api/client';
-import {pollMovements} from '../api/operations';
-import {movementMatches,visibleAiMovement,useOperationsStore,type Movement} from '../store/operationsStore';
+import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {controlTowerApi,type TowerRun} from '../api/controlTower';
 import {useControlTowerStore} from '../store/controlTowerStore';
+import {operationalTime} from '../utils/operationalTime';
+import {OperationalMap} from './OperationalMap';
+import {WorkspaceSplitLayout} from './PlanningSplit';
+import {ResizablePane} from './ResizablePane';
+import './LiveOperations.css';
+import {TransportVisual} from './TransportVisual';
 import {LocationInput} from './LocationInput';
-const ControlTower=lazy(()=>import('./ControlTower').then(module=>({default:module.ControlTower})));
-export function LiveOperations({active=true}:{active?:boolean}={}){
- const [view,setView]=useState('Movement Map');
- const warehouses=useAppStore(s=>s.warehouses); const [origin,setOrigin]=useState('');const [destination,setDestination]=useState('');
- const [weight,setWeight]=useState('');const [playback,setPlayback]=useState(120);
- const state=useOperationsStore(); const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
- const showing=useRef(false);
- useEffect(()=>{
-  let active=true;
-  void api.get('/operations/movements').then(({data})=>{
-   if(!active)return;
-   // Backend fleet discovery must never recreate a previous chat's AI scope.
-   if(!showing.current)useOperationsStore.getState().patch({movements:data.movements});
-  }).catch(()=>{});
-  return()=>{active=false;};
- },[]);
- useEffect(()=>{
-  if(!state.enabled||(!active&&state.viewMode!=='AI'))return;
-  let cancelled=false; let timer:ReturnType<typeof setTimeout>;
-  const poll=async()=>{try{const movements=await pollMovements();if(!cancelled){state.patch({movements});setError('');}}
-   catch{if(!cancelled)setError('Live network unavailable; last received positions retained.');}
-   finally{if(!cancelled)timer=setTimeout(poll,document.hidden?10000:view==='Network Overview'?5000:1000);}};
-  void poll();return()=>{cancelled=true;clearTimeout(timer);};
- },[state.enabled,state.viewMode,active,view]);
- const showAll=async()=>{
-  useControlTowerStore.getState().select(null);
-  if(showing.current)return;
-  showing.current=true;setBusy(true);
-  try{
-   const {data}=await api.post('/operations/movements/initialize');
-   state.patch({enabled:true,viewMode:'LIVE',filter:'ALL',movements:data.movements});
-   setError(data.skipped?.length ? `${data.skipped.length} loaded vehicles could not be initialized: ${[...new Set(data.skipped.map((s:{reason:string})=>s.reason))].join('; ')}`
-    : data.movements.some((m:Movement)=>m.status!=='SCHEDULE_TEMPLATE'&&!m.stopped) ? ''
-    : 'No active movements or available loaded vehicles with compatible routes.');
-  }catch(e:any){setError(e.response?.data?.detail||'Unable to populate movements. Load the network and retry.');}
-  finally{showing.current=false;setBusy(false);}
- };
- const demo=async(count:number)=>{setBusy(true);try{const r=await api.post('/operations/demo',{count,seed:42});state.patch({enabled:true,viewMode:'LIVE',movements:r.data.movements,fit:state.fit+1});setError('');}
- catch(e:any){setError(e.response?.data?.detail||'Unable to start demo');}finally{setBusy(false);}};
- const selected=state.movements.find(m=>m.simulation_id===state.selected);
- const operate=async(action:string)=>{if(!selected)return;setBusy(true);try{if(action==='delay')await fedexApi.event(selected.simulation_id,30);else if(action==='breakdown')await api.post(`/fedex/simulations/${selected.simulation_id}/events`,{event_type:'BREAKDOWN',expected_delay_minutes:30});else await fedexApi.control(selected.simulation_id,action,playback);const r=await api.get('/operations/movements');state.patch({movements:r.data.movements});setError('');}catch(e:any){setError(e.response?.data?.detail||'Action unavailable');}finally{setBusy(false);}};
- const filtered=state.movements.filter(m=>!m.stopped && m.status!=='SCHEDULE_TEMPLATE' && movementMatches(m,state.filter) && (state.viewMode!=='AI'||visibleAiMovement(m,state)));
- return <section className="fedex-panel" aria-label="Live network">
-  <nav className="fedex-controls" aria-label="Live Operations view">{['Network Overview','Movement Map'].map(tab=><button key={tab} aria-pressed={view===tab} onClick={()=>{setView(tab);if(tab==='Movement Map')useControlTowerStore.getState().select(null);}}>{tab}</button>)}</nav>
-  {active&&view==='Network Overview'&&<Suspense fallback={<p role="status">Loading Control Tower…</p>}><ControlTower/></Suspense>}
-  <div hidden={view!=='Movement Map'}>
-  <div className="fedex-controls"><button
-    aria-pressed={state.viewMode==='LIVE'}
-    disabled={busy}
-    onClick={()=>{
-      if(state.viewMode==='LIVE'){
-        state.patch({
-          enabled:state.aiSimulationIds.length>0,
-          viewMode:state.aiSimulationIds.length>0?'AI':'OFF',
-          filter:'ALL',
-          selected:null
-        });
-      }else{
-        void showAll();
-      }
-    }}
-  >
-    {state.viewMode==='LIVE'
-      ? 'HIDE ALL MOVEMENTS'
-      : 'SHOW ALL MOVEMENTS'}
-  </button>
-  <label>Filter<select value={state.filter} onChange={e=>state.patch({filter:e.target.value})}>{['ALL','SURFACE','AIR','RAIL','FEDEX','SYNTHETIC'].map(f=><option key={f}>{f}</option>)}</select></label>
-  <button onClick={()=>state.patch({fit:state.fit+1})}>Fit network</button>
-  <details><summary>Advanced simulation testing</summary>{[10,50,100].map(n=><button disabled={busy} key={n} onClick={()=>demo(n)}>Simulate {n}</button>)}</details></div>
-  <div className="fedex-controls"><label>Origin<LocationInput value={origin} onChange={setOrigin} locations={warehouses.map(w=>w.name)} placeholder="Select loaded warehouse"/></label><label>Destination<LocationInput value={destination} onChange={setDestination} locations={warehouses.map(w=>w.name)} placeholder="Select loaded warehouse"/></label>
-  <label>Shipment weight (kg)<input type="number" min="0.01" step="any" value={weight} onChange={e=>setWeight(e.target.value)}/></label>
-  <button disabled={busy||!origin||!destination||origin===destination||!Number.isFinite(Number(weight))||Number(weight)<=0} onClick={async()=>{setBusy(true);try{const r=await api.post('/operations/route-simulation',{origin,destination,weight:Number(weight)});state.patch({enabled:true,viewMode:'LIVE',selected:r.data.simulation_id,fit:state.fit+1});setError('');}catch(e:any){setError(e.response?.data?.detail||'Route unavailable');}finally{setBusy(false);}}}>Plan & simulate</button></div>
-  <p className="fedex-note">Python simulated telemetry · Schedule templates are not live vehicles. Network demo runs are hypothetical; they do not reserve fleet capacity.</p>
-  {selected&&selected.status!=='SCHEDULE_TEMPLATE'&&<div aria-label="Selected movement"><strong>{selected.shipment_id} · {selected.status} · ETA {operationalTime(selected.current_eta)}</strong><p>{selected.mode} · {selected.origin_station} → {selected.gateway} · Position {selected.latitude?.toFixed(5)}, {selected.longitude?.toFixed(5)} · Progress {((selected.progress||0)*100).toFixed(1)}% · ETD {operationalTime(selected.scheduled_etd)} · Delay {selected.delay_minutes} min</p>{selected.route_source&&<p className="fedex-note">{selected.route_source} · {selected.optimization_mode || 'Mode-specific geometry'} · {selected.route_distance_km?.toFixed(1)} km · Simulated GPS; existing plan/schedule timing retained.</p>}<div className="fedex-controls"><button disabled={busy||selected.stopped} onClick={()=>operate(selected.paused||selected.status==='DELAYED'?'resume':'pause')}>{selected.paused||selected.status==='DELAYED'?'Resume':'Pause'}</button><button disabled={busy||selected.stopped||selected.paused||!['IN_TRANSIT','DELAYED'].includes(selected.status)} onClick={()=>operate('delay')}>Inject 30 minute delay</button>{selected.mode==='SURFACE'&&<button disabled={busy||selected.stopped||selected.paused||selected.status!=='IN_TRANSIT'} onClick={()=>operate('breakdown')}>Breakdown +30 min</button>}<button disabled={busy||selected.stopped} onClick={()=>operate('stop')}>Stop movement</button><label>Playback speed<select value={playback} onChange={e=>setPlayback(Number(e.target.value))}>{[60,120,300,600].map(s=><option key={s} value={s}>{s}×</option>)}</select></label><button disabled={busy||selected.stopped} onClick={()=>operate('speed')}>Apply playback speed</button><span>Current: {selected.simulation_speed || 120}×</span></div>{selected.alerts?.slice(-1).map((a,i)=><p role="status" key={i}>{a.impact} · {a.previous_eta&&<>Previous ETA {operationalTime(a.previous_eta)} · </>}{a.recommended_action}</p>)}</div>}
-  {selected?.baseline_sla_met!=null&&<p>Baseline SLA: {selected.baseline_sla_met?'MET':'MISSED'} · Current projected SLA: {selected.current_sla_met?'MET':'MISSED'} · Synthetic operational projection</p>}
-  {error&&<p role="alert">{error}</p>}
-  {state.enabled&&<details><summary>{filtered.length} movements · inspect or select</summary><div style={{maxHeight:180,overflow:'auto'}}>{filtered.map(m=><div key={m.simulation_id}><button onClick={()=>state.patch({selected:m.simulation_id})}>{m.shipment_id} · {m.origin_station} → {m.gateway}</button> {m.mode} · {m.status} · {m.data_source} · ETA {operationalTime(m.current_eta)} · Delay {m.delay_minutes} min</div>)}</div></details>}
-  </div>
- </section>;
+import {locationLabel,locationSearch} from '../utils/locationLabels';
+export const serviceToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+export function ModeIcon({mode}:{mode:string}){return <svg role="img" aria-label={mode==='AIR'?'Aircraft':mode==='RAIL'?'Train':'Surface vehicle'} viewBox="0 0 32 32" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7">{mode==='AIR'?<path d="M16 2l3 11 11 7v3l-11-3v8l3 2-6-1-6 1 3-2v-8L2 23v-3l11-7z"/>:mode==='RAIL'?<><rect x="6" y="3" width="20" height="23" rx="4"/><path d="M9 8h14v8H9zM9 30l3-4m11 4-3-4"/><circle cx="11" cy="21" r="1"/><circle cx="21" cy="21" r="1"/></>:<><path d="M2 7h18v16H2zM20 12h6l4 6v5H20"/><circle cx="8" cy="25" r="3"/><circle cx="25" cy="25" r="3"/></>}</svg>;}
+export function filterOperationalRuns(runs:TowerRun[],mode:string,status:string,critical:boolean,search:string,origin:string,destination:string){const q=search.trim().toLowerCase();return runs.filter(r=>(!mode||r.schedule.mode===mode)&&(!status||r.status===status)&&(!critical||r.critical)&&(!origin||r.schedule.origin_station===origin)&&(!destination||r.schedule.gateway===destination)&&(!q||[r.schedule.lane,r.schedule.run,r.schedule.service,r.schedule.origin_city,r.schedule.origin_station,r.schedule.gateway,locationSearch(r.schedule.origin_station,useAppStore.getState().warehouses),locationSearch(r.schedule.gateway,useAppStore.getState().warehouses),...(r.cons||[]).map(c=>c.con_number)].join(' ').toLowerCase().includes(q)));}
+export function scenarioEta(run:TowerRun,minutes:number){return run.current_eta?new Date(new Date(run.current_eta).getTime()+minutes*60000).toISOString():null;}
+export function LiveOperations({active=true,chatOverlay}:{active?:boolean;chatOverlay?:ReactNode}={}){
+ const navigate=useNavigate();
+ const warehouses=useAppStore(s=>s.warehouses);
+ const [date,setDate]=useState(()=>useControlTowerStore.getState().selected?.service_date||useControlTowerStore.getState().serviceDate||serviceToday()),[runs,setRuns]=useState<TowerRun[]>([]),[mode,setMode]=useState(''),[status,setStatus]=useState(''),[critical,setCritical]=useState(false),[search,setSearch]=useState(''),[origin,setOrigin]=useState(''),[destination,setDestination]=useState('');
+ const [loading,setLoading]=useState(false),[error,setError]=useState(''),[con,setCon]=useState('');
+ const epoch=useRef(0),selected=useControlTowerStore(s=>s.selected),select=useControlTowerStore(s=>s.select);
+ const [playback,setPlayback]=useState(false),[playbackNotice,setPlaybackNotice]=useState('');
+ const [scenario,setScenario]=useState<{id:string;minutes:number;unavailable:boolean}|null>(null);
+ const refresh=useCallback(async()=>{const token=++epoch.current;setLoading(true);try{const rows=await controlTowerApi.allRuns(date);if(token===epoch.current&&useControlTowerStore.getState().serviceDate===date){setRuns(rows);const current=useControlTowerStore.getState().selected;if(current){const updated=rows.find(r=>r.run_id===current.run_id);if(updated)useControlTowerStore.getState().select({...current,...updated});}setError('');}}catch{if(token===epoch.current)setError('Operational runs unavailable. Check the local backend connection.');}finally{if(token===epoch.current)setLoading(false);}},[date]);
+ useEffect(()=>{if(!active)return;useControlTowerStore.getState().setServiceDate(date);void refresh();const timer=setInterval(()=>{if(!document.hidden)void refresh();},playback?1000:10000);return()=>{epoch.current++;clearInterval(timer);};},[date,active,refresh,playback]);
+ useEffect(()=>{setScenario(null);},[selected?.run_id]);
+ const visible=useMemo(()=>filterOperationalRuns(runs,mode,status,critical,search,origin,destination),[runs,mode,status,critical,search,origin,destination]);
+ const focus=async(run:TowerRun)=>{select(run);try{const detail=await controlTowerApi.detail(run.run_id);if(useControlTowerStore.getState().selected?.run_id===run.run_id)select(detail);}catch{setError('Run details unavailable; last received source facts retained.');}};
+ const cards=[['Total Runs',runs.length],['Air',runs.filter(r=>r.schedule.mode==='AIR').length],['Surface',runs.filter(r=>r.schedule.mode==='SURFACE').length],['Train',runs.filter(r=>r.schedule.mode==='RAIL').length],['Delayed / Expected Delay',runs.filter(r=>['DELAYED','EXPECTED DELAY'].includes(r.status)).length],['Critical / At Risk',runs.filter(r=>r.critical&&['DELAYED','EXPECTED DELAY'].includes(r.status)).length]];
+ const overlay=selected&&scenario?.id===selected.run_id?scenario:null;
+ return <section className="live-operations live-split-workspace" aria-label="Live Operations"><WorkspaceSplitLayout label="live operations" storageKey="unifleet-live-operations-split" overlay={chatOverlay} left={<div className="live-left-content">
+ <header className="workspace-heading"><div><span className="eyebrow">NETWORK OPERATIONS</span><h2>Live Operations</h2><p>Air, Surface and Train runs · source timings preserved · all times IST</p></div><button disabled={loading} onClick={async()=>{setMode('');setStatus('');setCritical(false);setSearch('');setOrigin('');setDestination('');select(null);try{const result=await controlTowerApi.startPlayback(date);setPlayback(true);setPlaybackNotice(`Simulated playback · ${result.playback_speed}× · ${result.started.length} movements · ${result.skipped.length} source records unavailable for playback`);await refresh();}catch{setError('Unable to start playback. Import the schedule workbook first.');}}}>Show All Movements</button></header>
+ <div className="operation-kpis">{cards.map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
+ <div className="operations-toolbar"><div className="mode-tabs" role="group" aria-label="Transport mode">{[['','All'],['AIR','Air'],['SURFACE','Surface'],['RAIL','Train']].map(([value,label])=><button key={value} aria-pressed={mode===value} onClick={()=>setMode(value)}>{label}</button>)}</div><label>Service date<input type="date" value={date} onChange={e=>{setDate(e.target.value);select(null);setRuns([]);}}/></label><label>Search runs<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Lane, service, run, station or associated CON"/></label><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{['','SCHEDULED','ON TIME','EXPECTED DELAY','DELAYED','ARRIVED'].map(s=><option key={s} value={s}>{s||'All statuses'}</option>)}</select></label><label className="critical-check"><input type="checkbox" checked={critical} onChange={e=>setCritical(e.target.checked)}/>Critical only</label></div>
+ <div className="operations-toolbar secondary"><label>Origin<LocationInput label="Origin" value={origin} onChange={setOrigin} locations={[...new Set(runs.map(r=>r.schedule.origin_station))].sort()} placeholder="All origins"/></label><label>Destination<LocationInput label="Destination" value={destination} onChange={setDestination} locations={[...new Set(runs.map(r=>r.schedule.gateway))].sort()} placeholder="All destinations"/></label><button disabled={loading} onClick={async()=>{setLoading(true);try{await controlTowerApi.importPlan(date);await refresh();}catch{setError('Unable to import the provided workbook.');setLoading(false);}}}>Import schedule workbook</button><form onSubmit={async e=>{e.preventDefault();try{const result=await controlTowerApi.con(con);await focus(result.run);}catch{setError('No operational CON association found.');}}}><input aria-label="Locate CON" value={con} onChange={e=>setCon(e.target.value)} placeholder="Associated CON"/><button disabled={!con.trim()}>Locate CON</button></form></div>
+ {playbackNotice&&<p className="playback-notice" role="status">{playbackNotice}. Approximate lane geometry; source timings unchanged.</p>}{error&&<p role="alert">{error}</p>}{loading&&<p role="status">Loading operational runs…</p>}
+ <div className="operations-body"><div className="operations-primary"><div className="operations-table"><table><caption>{visible.length} matching operational runs · {runs.length} imported for {date}</caption><thead><tr>{['Lane','Mode','Run / Service','Origin','Destination','Status','Location','ETA','Delay','Critical'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{visible.map(run=><tr key={run.run_id} onClick={()=>void focus(run)} className={selected?.run_id===run.run_id?'selected':''}><td><button onClick={e=>{e.stopPropagation();void focus(run);}}>{run.schedule.lane==='UNSUPPORTED_FORMULA'?`${run.schedule.origin_station} → ${run.schedule.gateway}`:run.schedule.lane}</button></td><td><span className="mode-cell"><ModeIcon mode={run.schedule.mode}/>{run.schedule.mode==='AIR'?'Air':run.schedule.mode==='RAIL'?'Train':'Surface'}</span></td><td>{run.schedule.run}<small>{run.schedule.service||'Unavailable'}</small></td><td>{locationLabel(run.schedule.origin_station,warehouses)}</td><td>{locationLabel(run.schedule.gateway,warehouses)}</td><td><span className={`status-chip ${run.status.toLowerCase().replaceAll(' ','-')}`}>{run.status}</span></td><td>{run.location_source==='FEDEX_SCAN'&&run.latest_location?'Reported scan':run.visualization?.position?'Estimated position':'Unavailable'}</td><td>{run.current_eta?operationalTime(run.current_eta):'Unavailable'}</td><td>{run.delay_hours==null?'Unavailable':`${Math.round(run.delay_hours*60)} min`}</td><td>{run.critical?'Critical':'—'}</td></tr>)}</tbody></table>{!loading&&!error&&!visible.length&&<p className="empty-state">No matching imported runs. Import the schedule workbook or adjust filters.</p>}</div>
+ </div>
+ {selected&&<div className="run-detail-overlay"><ResizablePane side="left" label="run details" storageKey="unifleet-run-details" initial={340} min={300} max={480}><aside className="run-drawer" aria-label="Operational run details"><header><h3>Run details</h3><button onClick={()=>select(null)}>Close details</button></header><TransportVisual mode={selected.schedule.mode}/><h2>{selected.schedule.lane}</h2><span className="mode-cell"><ModeIcon mode={selected.schedule.mode}/>{selected.schedule.mode} · Run {selected.schedule.run}</span><h4>Overview</h4><dl>{Object.entries({'Run identifier':selected.run_id,'Origin':locationLabel(selected.schedule.origin_station,warehouses),'Destination':locationLabel(selected.schedule.gateway,warehouses),'Service':selected.schedule.service,'Status':selected.status,'Critical':selected.critical?'Yes':'No','Source':'Schedule workbook','Execution source':selected.actual_source||'No execution event supplied','Location':selected.location_source==='FEDEX_SCAN'?'Reported scan location':selected.visualization?.position?'Schedule-derived position (city-centre estimate)':'Unavailable'}).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v||'Unavailable'}</dd></div>)}</dl><button onClick={async()=>{try{const updated=await controlTowerApi.critical(selected.run_id,!selected.critical);select(updated);await refresh();}catch{setError('Unable to update critical lane metadata.');}}}>{selected.critical?'Unmark critical':'Mark critical'}</button>{selected.movement&&<div className="playback-detail"><p>Simulation clock: {operationalTime(selected.movement.simulation_timestamp)} · {selected.movement.simulation_speed}×</p><progress aria-label="Run progress" value={selected.movement.progress||0} max={1}/><p>Progress: {((selected.movement.progress||0)*100).toFixed(1)}% · Elapsed: {((selected.elapsed_hours||0)*60).toFixed(1)} min · Remaining: {((selected.estimated_time_left_hours||0)*60).toFixed(1)} min</p></div>}<h4>Timeline</h4><dl>{Object.entries({'Scheduled departure':selected.planned_etd,'Scheduled arrival':selected.planned_eta,'Current ETA':selected.current_eta,'Actual departure':selected.actual_departure_at,'Actual arrival':selected.actual_arrival_at}).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v?operationalTime(v):'Unavailable'}</dd></div>)}</dl><p>Transit: {selected.schedule.transit_minutes==null?'Unavailable':`${Math.round(selected.schedule.transit_minutes*100)/100} min`} · Delay: {selected.delay_hours==null?'Unavailable':`${Math.round(selected.delay_hours*60)} min`}</p>
+ <h4>Simulation resources & load</h4><p>Generated on this supplied service · capacities are simulation assumptions.</p>{selected.resources?.map(resource=><dl key={resource.id}><div><dt>Resource</dt><dd>{resource.label}</dd></div><div><dt>Capacity</dt><dd>{resource.capacity.toLocaleString()} kg</dd></div><div><dt>Assigned load</dt><dd>{resource.assigned_load_kg.toLocaleString()} kg</dd></div><div><dt>Available capacity</dt><dd>{resource.available_capacity_kg.toLocaleString()} kg</dd></div><div><dt>Utilization</dt><dd>{resource.utilization_percentage}%</dd></div></dl>)}<p>{selected.simulated_shipments?.length||0} simulated shipments</p><h4>Scenario / What-if</h4><button onClick={()=>{const origin=selected.schedule.origin_station;const destination=warehouses.find(w=>String((w as unknown as {nearest_airport_iata?:string}).nearest_airport_iata)===selected.schedule.gateway)?.name||selected.schedule.gateway;navigate(`/planning?section=planner&recovery=${encodeURIComponent(selected.run_id)}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&unavailable=${overlay?.unavailable?'true':'false'}`);}}>Calculate recovery in Planning</button><p>Analysis overlay · imported source record retained.</p><button onClick={()=>setScenario({id:selected.run_id,minutes:30,unavailable:false})}>Evaluate +30 minute delay</button><button onClick={()=>setScenario({id:selected.run_id,minutes:0,unavailable:true})}>Assume lane unavailable</button>{overlay&&<div className="scenario-overlay" role="status">Scenario: {overlay.unavailable?'Lane unavailable. Open Planning to calculate recovery alternatives using supplied services.':`+${overlay.minutes} min · Revised ETA ${scenarioEta(selected,overlay.minutes)?operationalTime(scenarioEta(selected,overlay.minutes)):'Unavailable'}`}<button onClick={()=>setScenario(null)}>Clear scenario</button></div>}
+ <details><summary>Source Details</summary><p>Network version {selected.network_version} · service date {selected.service_date}</p><dl>{Object.entries(selected.schedule.source).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v||'Unavailable'}</dd></div>)}</dl>{Object.entries(selected.schedule.source_formulas||{}).map(([k,v])=><p key={k}>{k}: {v} · {selected.schedule.source_value_provenance?.[k]}</p>)}</details><details><summary>Events, CON and alerts</summary>{selected.events?.length?selected.events.map(e=><p key={e.event_id}>{e.event_type} · {operationalTime(e.event_at)} · {e.source}</p>):<p>No associated events supplied.</p>}{selected.cons?.length?selected.cons.map(c=><p key={c.con_number}>{c.con_number} · {c.source}</p>):<p>No associated CON supplied.</p>}{selected.schedule.warnings.map(w=><p key={w}>{w}</p>)}</details></aside></ResizablePane></div>}
+ </div></div>} right={<OperationalMap runs={selected&&visible.some(r=>r.run_id===selected.run_id)?visible.filter(r=>r.run_id===selected.run_id):visible}/>}/></section>;
 }

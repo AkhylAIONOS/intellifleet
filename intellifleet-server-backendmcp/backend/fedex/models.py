@@ -3,7 +3,14 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-DEFAULT_PLAYBACK_SPEED = 120
+import os
+
+def playback_speed():
+    value=float(os.environ.get('DEMO_PLAYBACK_SPEED_MULTIPLIER','600'))
+    if not 1<=value<=10000:raise ValueError('DEMO_PLAYBACK_SPEED_MULTIPLIER must be between 1 and 10000')
+    return value
+
+DEFAULT_PLAYBACK_SPEED = playback_speed()
 
 Mode = Literal['AIR', 'SURFACE', 'RAIL']
 
@@ -59,6 +66,7 @@ class SimulationInput(EligibilityInput):
     speed: float = Field(default=DEFAULT_PLAYBACK_SPEED, ge=1, le=10000, allow_inf_nan=False)
     seed: int = 42
     random_events: bool = False
+    schedule_based_geometry: bool = False
 
 
 class DisruptionInput(BaseModel):

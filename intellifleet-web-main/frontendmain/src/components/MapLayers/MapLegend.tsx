@@ -13,10 +13,10 @@ export function MapLegend() {
     if(network.length)rows.push('<span><i></i>Base Network</span>');
     if(plan)rows.push('<span><i class="selected"></i>Selected Plan</span>');
     if(network.some(route=>route.routeData?.optimal_routes?.[0]?.isOptimal===false))rows.push('<span><i class="alternative"></i>Alternative</span>');
-    if(plan?.route_legs.some(leg=>leg.route_type==='road'))rows.push('<span>🚚 Ground</span>');
-    if(plan?.route_legs.some(leg=>leg.route_type==='air'))rows.push('<span>✈ Air</span>');
-    if(live)rows.push('<span>🚚 ✈ ▣ Simulated fleet (mode filter)</span>');
-    if(selectedLive)rows.push('<span>┄ Selected live operation</span>');
+    if(plan?.route_legs.some(leg=>leg.route_type==='road'))rows.push('<span>Ground</span>');
+    if(plan?.route_legs.some(leg=>leg.route_type==='air'))rows.push('<span>Air</span>');
+    if(live)rows.push('<span>Planning journey simulation</span>');
+    if(selectedLive)rows.push('<span>┄ Selected schedule simulation</span>');
     if(warehouses.length)rows.push('<span>▣ Warehouse</span>');
     if(!rows.length)return;
     const control=new L.Control({position:'bottomright'});

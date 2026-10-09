@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from backend.control_tower import routes
@@ -25,14 +25,14 @@ def test_cjb_blr_explicit_demo_has_location_and_starts_at_etd(tmp_path,monkeypat
     started=response.json()
     assert started['location_source']=='SYNTHETIC_TELEMETRY' and started['latest_location']
     movement=started['movement']
-    assert movement['progress']==0  # No fabricated progress at initialization.
-    assert movement['simulation_timestamp']==movement['scheduled_etd']
+    assert 0 < movement['progress'] < 0.001  # Existing explicit playback advances one second.
+    assert datetime.fromisoformat(movement['simulation_timestamp'])==datetime.fromisoformat(movement['scheduled_etd'])+timedelta(seconds=1)
     assert movement['location_notice'].startswith('Approximate city centres')
     clock[0]=1
     tower.observe(1)
     active=tower.detail(1,row['run_id'])
     assert active['status']=='ON TIME' and active['actual_departure_at']
-    assert active['movement']['progress']>0 and active['latest_location']!=started['latest_location']
+    assert active['movement']['progress']>0 and active['latest_location']==started['latest_location']  # Quick controls remain paused between steps.
     assert active['schedule']['source']==original
     assert len(tower.runs(1))==38
     repeated=client.post('/operations/control-tower/runs/'+row['run_id']+'/simulation',json=request).json()

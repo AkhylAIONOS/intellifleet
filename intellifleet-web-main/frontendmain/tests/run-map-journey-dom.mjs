@@ -61,7 +61,7 @@ try {
   await act(async()=>fireEvent.pointerDown(map.getContainer()));const panCount=panCalls.length;
   await advance(9000);assert.equal(panCalls.length,panCount,'Manual interaction relinquishes follow');
   await act(async()=>store.applyPlanningMapPlan({recommended_plan:air}));
-  assert.equal(markers().length,1);assert.match(markers()[0].getElement().textContent,/✈/);assert.equal(frames.size,1);assert.equal(fitCalls.length,2);
+  assert.equal(markers().length,1);assert.equal(markers()[0].getElement().querySelector('svg').getAttribute('aria-label'),'plane');assert.equal(frames.size,1);assert.equal(fitCalls.length,2);
   assert.match(markers()[0].getPopup().getContent().textContent,/Test Aircraft/);assert.doesNotMatch(document.body.textContent,/Test Truck/);
   await advance(10000);await advance(20000);assert.equal(markers()[0].getLatLng().lng,28);assert.equal(frames.size,0);
   await act(async()=>fireEvent.click(mounted.getByRole('button',{name:'Replay Journey'})));assert.equal(frames.size,1);assert.equal(markers()[0].getLatLng().lng,25);
@@ -78,8 +78,8 @@ try {
   await act(async()=>store.applyPlanningMapPlan({recovery_plan:null}));assert.equal(markers()[0].getLatLng().lng,28);assert.match(useAppStore.getState().planNotice,/No feasible revised plan/);
   await act(async()=>store.clearPlanningVisuals());assert.equal(markers().length,0);assert.equal(frames.size,0);assert.equal(motionListeners.size,0);
   await act(async()=>{reduced=false;store.applyPlanningMapPlan({recommended_plan:{...road,mode:'multimodal',vehicles:[truck,plane],route_legs:[leg(start,mid),leg(mid,end,'air')]}});});
-  assert.equal(frames.size,1);assert.match(markers()[0].getElement().textContent,/🚚/);
-  await advance(30000);await advance(39500);assert.match(markers()[0].getElement().textContent,/✈/);
+  assert.equal(frames.size,1);assert.equal(markers()[0].getElement().querySelector('svg').getAttribute('aria-label'),'truck');
+  await advance(30000);await advance(39500);assert.equal(markers()[0].getElement().querySelector('svg').getAttribute('aria-label'),'plane');
   assert.match(markers()[0].getPopup().getContent().textContent,/Test Aircraft/);
   mounted.unmount();assert.equal(frames.size,0);assert.equal(motionListeners.size,0);cleanup();
   console.log('PASS: actual Leaflet DOM with 30 warehouses/97 vehicles/62 base routes: fit/padding, route overlay, animation, camera follow/manual release, aircraft replacement, popup assignments, replay, warehouse focus/no-coordinates, reduced motion, infeasible retention and unmount cleanup');

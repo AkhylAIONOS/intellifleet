@@ -36,42 +36,8 @@ try{
  }
  await act(async()=>useOperationsStore.getState().patch({filter:'ALL',selected:'m0'}));assert.equal(fits,0);assert.ok(map.getCenter().equals(center));
  await act(async()=>useOperationsStore.getState().patch({fit:1}));assert.equal(fits,1,'Fit network explicitly fits');
- const {LiveOperations}=await server.ssrLoadModule('/src/components/LiveOperations.tsx');
+ let backendMovements=movements;
  const {default:api}=await server.ssrLoadModule('/src/api/client.ts');
- let backendMovements=useOperationsStore.getState().movements,created=0,posts=0,gets=0;
- api.get=async()=>{gets++;return {data:{movements:backendMovements}};};
- api.post=async(path,body)=>{
-  assert.equal(path,'/operations/movements/initialize');assert.equal(body,undefined);posts++;
-  if(!backendMovements.some(m=>!m.shipment_id.startsWith('PLAN-'))){created++;backendMovements=[...backendMovements,...movements];}
-  return {data:{movements:backendMovements}};
- };
- const controls=render(React.createElement(LiveOperations));
- const beforeShowAll=map.getCenter(),zoomBefore=map.getZoom(),fitsBefore=fits;
- await act(async()=>controls.getByRole('button',{name:'HIDE ALL MOVEMENTS'}).click());
- await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
- assert.equal(fits,fitsBefore);assert.equal(map.getZoom(),zoomBefore);assert.ok(map.getCenter().equals(beforeShowAll));
- assert.equal(created,0);assert.equal(posts,1);
- const beforeFollow=map.getCenter();document.querySelector('.journey-controls button').click();
- assert.equal(map.getZoom(),11);assert.ok(!map.getCenter().equals(beforeFollow));
- map.getContainer().dispatchEvent(new window.Event('pointerdown'));map.panTo([19,72],{animate:false});const manual=map.getCenter();
- await act(async()=>useOperationsStore.getState().patch({movements:movements.map(m=>({...m,latitude:m.latitude+.2}))}));assert.ok(map.getCenter().equals(manual));
- let path;map.eachLayer(l=>{if(l instanceof L.Polyline)path=l;});assert.equal(path.getLatLngs().length,3);
- // A fresh fleet with one retained AI journey must initialize wider operations once.
- const ai={...movements[0],simulation_id:'ai-only',shipment_id:'PLAN-only'};
- backendMovements=[ai];
- await act(async()=>useOperationsStore.getState().patch({enabled:true,viewMode:'AI',filter:'ALL',aiSimulationIds:['ai-only'],movements:[ai]}));
- assert.equal(markers().length,1);
- await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
- assert.equal(created,1);assert.equal(markers().length,101);assert.equal(paths().length,101);
- for(const filter of ['ALL','SURFACE','AIR','RAIL']){
-  await act(async()=>useOperationsStore.getState().patch({filter}));
-  assert.equal(markers().length,backendMovements.filter(m=>movementMatches(m,filter)).length);
- }
- await act(async()=>useOperationsStore.getState().patch({filter:'ALL'}));
- await act(async()=>controls.getByRole('button',{name:'HIDE ALL MOVEMENTS'}).click());
- assert.equal(markers().length,1);assert.equal(useOperationsStore.getState().viewMode,'AI');assert.equal(backendMovements.length,101);
- await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
- assert.equal(created,1);assert.equal(markers().length,101);assert.ok(gets<10,'bounded polling during toggles');
  const {pollMovements}=await server.ssrLoadModule('/src/api/operations.ts');
  const pollOptions=[];
  api.get=async(path,options)=>{pollOptions.push(options);return {data:{movements:backendMovements.map(({route,...m})=>m)}};};
@@ -80,13 +46,6 @@ try{
  }
  assert.equal(pollOptions.length,3);assert.ok(pollOptions.every(o=>o?.params?.include_geometry===false));
  api.get=async()=>({data:{movements:backendMovements}});
- const preserved=backendMovements.map(m=>m.simulation_id);
- await act(async()=>useOperationsStore.getState().patch({enabled:false,viewMode:'AI',aiSimulationIds:[],selected:null}));
- assert.equal(markers().length,0);
- await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
- assert.equal(markers().length,101);assert.deepEqual(useOperationsStore.getState().aiSimulationIds,[]);
- await act(async()=>controls.getByRole('button',{name:'HIDE ALL MOVEMENTS'}).click());assert.equal(markers().length,0);
- assert.deepEqual(backendMovements.map(m=>m.simulation_id),preserved);
  backendMovements=movements;
  await act(async()=>useOperationsStore.getState().patch({enabled:true,viewMode:'LIVE',movements,aiSimulationIds:[]}));
  await act(async()=>useFedexStore.getState().begin({...movements[0],sequence:1}));assert.equal(markers().length,99);
@@ -113,8 +72,5 @@ try{
  map.panTo([16,75],{animate:false});const scanCenter=map.getCenter();
  await act(async()=>tower.getState().select({...location,latest_location:{latitude:12.1,longitude:72}}));
  assert.ok(map.getCenter().equals(scanCenter),'location updates preserve manual pan');
- await act(async()=>controls.getByRole('button',{name:'HIDE ALL MOVEMENTS'}).click());
- await act(async()=>controls.getByRole('button',{name:'SHOW ALL MOVEMENTS'}).click());
- assert.equal(tower.getState().selected,null);assert.equal(markers().length,100,'Show All clears operational focus without duplication');
- console.log('PASS: 100 Leaflet entities; truck/plane/train icons; hover fields; filters; batched movement; pan preserved; arbitrary 3-node path; selected run deduplication; show-all off');
+ console.log('PASS: 100 Leaflet entities; truck/plane/train icons; hover fields; filters; batched movement; pan preserved; arbitrary 3-node path; selected run deduplication; legacy movement-layer contracts retained; workbook Show All tested separately');
 }finally{cleanup();await server.close();dom.window.close();}
